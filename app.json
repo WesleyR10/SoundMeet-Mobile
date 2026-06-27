@@ -1,25 +1,60 @@
 {
   "expo": {
-    "name": "soundmeet-mobile",
-    "slug": "soundmeet-mobile",
+    "name": "SoundMeet",
+    "slug": "soundmeet",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/logo/logo-verde.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0C0C14",
+    "splash": {
+      "image": "./assets/logo/logo-verde.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0C0C14"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.soundmeet.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Necessário para escanear QR codes de músicos",
+        "NSMicrophoneUsageDescription": "Necessário para o afinador cromático"
+      }
     },
     "android": {
+      "package": "com.soundmeet.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/logo/logo-verde.png",
+        "backgroundColor": "#0C0C14"
       },
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "VIBRATE"
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/logo/logo-verde.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-camera",
+        { "cameraPermission": "Necessário para escanear QR codes de músicos" }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/logo/logo-verde.png",
+          "color": "#00E0B8"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "afdfdfb9-9122-4c02-a3bd-cd34ce15d10e"
+      }
+    },
+    "scheme": "soundmeet"
   }
 }
