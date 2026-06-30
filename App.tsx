@@ -1,41 +1,59 @@
-import { StatusBar } from 'expo-status-bar';
-import { StatusBar as RNStatusBar, Text, TouchableOpacity, View } from 'react-native';
-import { ThemeProvider } from './src/shared/services/ThemeContext';
-import { useTheme } from './src/shared/hooks/useTheme';
+import { useEffect } from 'react';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { QueryClientProvider } from '@tanstack/react-query';
 
-function Root() {
-  const { colors, isDark, toggle } = useTheme();
+// @expo-google-fonts — mapeados para os nomes exatos do design-system/tokens.ts
+import {
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
+} from '@expo-google-fonts/space-grotesk';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+} from '@expo-google-fonts/inter';
+import { JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
 
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg.primary }}>
-      {/* RNStatusBar → backgroundColor Android | expo StatusBar → estilo dos ícones */}
-      <RNStatusBar backgroundColor={colors.bg.primary} barStyle={isDark ? 'light-content' : 'dark-content'} />
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+import { ThemeProvider } from '@/shared/services/ThemeContext';
+import { queryClient } from '@/shared/services/query/query-client';
+import { RootNavigator } from '@/navigation/RootNavigator';
 
-      <Text style={{ color: colors.brand.primary, fontSize: 28, fontWeight: 'bold' }}>
-        SoundMeet
-      </Text>
-      <Text style={{ color: colors.text.secondary, fontSize: 15, marginTop: 8 }}>
-        Onde o som encontra pessoas
-      </Text>
-
-      {/* Toggle temporário para teste — será removido quando a Settings screen existir */}
-      <TouchableOpacity
-        onPress={toggle}
-        style={{ marginTop: 32, padding: 12, borderRadius: 8, backgroundColor: colors.brand.muted }}
-      >
-        <Text style={{ color: colors.brand.primary, fontWeight: '600' }}>
-          {isDark ? '☀️  Modo Claro' : '🌙  Modo Escuro'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
+// Impede o splash screen de sumir antes de as fontes carregarem
+SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  const [fontsLoaded, fontError] = useFonts({
+    'SpaceGrotesk-Medium':   SpaceGrotesk_500Medium,
+    'SpaceGrotesk-SemiBold': SpaceGrotesk_600SemiBold,
+    'SpaceGrotesk-Bold':     SpaceGrotesk_700Bold,
+    'Inter-Regular':         Inter_400Regular,
+    'Inter-Medium':          Inter_500Medium,
+    'Inter-SemiBold':        Inter_600SemiBold,
+    'JetBrainsMono-Regular': JetBrainsMono_400Regular,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Mantém splash screen enquanto fontes carregam — evita flash de UI sem fonte
+  if (!fontsLoaded && !fontError) return null;
+
   return (
-    <ThemeProvider>
-      <Root />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <RootNavigator />
+          </QueryClientProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
