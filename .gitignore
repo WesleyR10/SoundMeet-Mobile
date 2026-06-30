@@ -46,3 +46,8 @@ google-play-key.json
 # generated native folders
 /ios
 /android
+
+# Claude 
+.claude/
+CLAUDE.md
+Claude Design/
