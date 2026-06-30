@@ -341,25 +341,36 @@ O músico usa o app em condições adversas:
 
 Use estes prompts no Google Stitch ou outra ferramenta de design por IA:
 
-### Prompt — Tela Principal do Músico (Ao Vivo)
+### Prompt — Play Mode / Cifra ao Vivo (tela que o músico vê enquanto toca)
+
+> ⚠️ CORREÇÃO: A tela que o músico usa NO PALCO enquanto toca não é de gerenciamento
+> de pedidos — é a cifra + letra sincronizada. O músico não consegue ler cards de
+> pedido enquanto está tocando. O celular no palco = teleprompter musical.
+> Pedidos são revisados ENTRE músicas via notificação rápida.
+> Referência: roadmap-frontend.md item 4D.2 (Play Mode no Repertório).
 
 ```
-Dark mode mobile app screen for a musician performing live at a bar.
-Primary background: #0C0C14. Brand color: #7C3AED (violet).
-Energy accent: #F97316 (orange).
-Font: Space Grotesk for headings, Inter for body.
+Dark mode mobile full-screen app screen for a musician reading chord sheet + lyrics
+while performing live on stage. Background: #0C0C14. Brand teal: #00E0B8.
 
-Show a real-time music request queue with 3-4 request cards.
-Each card shows: song name (bold, large), person who requested it, 
-small avatar, and two action buttons (accept = violet, reject = outlined).
-Cards have glassmorphism effect with subtle violet border glow.
-Accept/reject can be done with swipe gesture (indicate with small arrow icon).
+This screen is a musical teleprompter — full screen, no distractions, maximum
+readability at arm's length in a dark bar environment.
 
-Top area shows: "3 requests" badge, current song playing indicator.
-Bottom: minimal tab bar with 5 icons (home, requests, analytics, wallet, profile).
-Border radius: 16px on cards, 24px on buttons.
-Include subtle animated sound wave visualization in the background (very subtle, decorative).
-Premium, sophisticated, high contrast. Not generic music app aesthetic.
+Layout (top to bottom):
+- Thin top bar: song title (Space Grotesk bold, white) + progress indicator + 
+  small badge showing pending requests count (coral pill, tappable)
+- Main content area (90% of screen): chord sheet rendered token by token
+  - Chords in teal #00E0B8, JetBrains Mono bold, positioned above their lyric word
+  - Lyrics in white Inter, large font (18-20px minimum)
+  - Current line highlighted (brighter white + subtle teal left border)
+  - Past lines in muted grey, future lines in slightly dim white
+  - Section labels (Verso, Refrão, Ponte) in teal small caps
+- Auto-scroll progress: ultra-thin teal line at screen edge indicating position
+- Bottom minimal bar: Previous song ← | ▶ Pausar scroll | → Next song
+
+Visual feel: focused, clean, professional. Like a music stand that glows teal.
+The musician cannot be distracted — only the music exists on this screen.
+Subtle teal glow on the active line only.
 ```
 
 ### Prompt — Tela de Gorjeta (Público)

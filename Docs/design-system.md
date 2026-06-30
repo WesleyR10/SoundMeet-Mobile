@@ -46,57 +46,57 @@ Teal  + #0C0C14 → Matrix/holograma, ultra premium    (backgrounds, dark mode)
 
 | Token | Hex | Uso |
 |-------|-----|-----|
-| `colors.bg.primary` | `#0C0C14` | Background base (azul-preto profundo) |
-| `colors.bg.surface` | `#0D1A18` | Cards, modais, surfaces (teal-tinted) |
-| `colors.bg.elevated` | `#102320` | Elementos elevados, bottom sheets |
-| `colors.bg.overlay` | `rgba(0,0,0,0.72)` | Overlays, backdrops modais |
+| `colors.bg.primary` | #0C0C14 | Background base (azul-preto profundo) |
+| `colors.bg.surface` | #0D1A18 | Cards, modais, surfaces (teal-tinted) |
+| `colors.bg.elevated` | #102320 | Elementos elevados, bottom sheets |
+| `colors.bg.overlay` | rgba(0,0,0,0.72) | Overlays, backdrops modais |
 
 ### Brand — Teal
 
 | Token | Hex | Uso |
 |-------|-----|-----|
-| `colors.brand.primary` | `#00E0B8` | Cor principal — logo, CTAs primários, ativo |
-| `colors.brand.light` | `#33E8C6` | Hover, variante clara, glow |
-| `colors.brand.dark` | `#00B896` | Pressed state, ícones sobre claro |
-| `colors.brand.muted` | `rgba(0,224,184,0.12)` | Backgrounds de badge, chip selecionado |
-| `colors.brand.glow` | `rgba(0,224,184,0.20)` | Box shadow, aura de elementos ativos |
+| `colors.brand.primary` | #00E0B8 | Cor principal — logo, CTAs primários, ativo |
+| `colors.brand.light` | #33E8C6 | Hover, variante clara, glow |
+| `colors.brand.dark` | #00B896 | Pressed state, ícones sobre claro |
+| `colors.brand.muted` | rgba(0,224,184,0.12) | Backgrounds de badge, chip selecionado |
+| `colors.brand.glow` | rgba(0,224,184,0.20) | Box shadow, aura de elementos ativos |
 
 ### Accents
 
 | Token | Hex | Contexto semântico |
 |-------|-----|-----|
-| `colors.accent.coral` | `#FF6B6B` | Gorjetas, CTA principal, energia, ação imediata |
-| `colors.accent.coralDeep` | `#FF2E7A` | Gradiente coral (ponto 2), destaque extremo |
-| `colors.accent.amber` | `#F59E0B` | Pendente, atenção, estrelas, rating |
-| `colors.accent.violet` | `#7C3AED` | Momentos premium, assinatura, badge especial |
-| `colors.accent.violetLight` | `#A855F7` | Hover violeta, variação clara |
+| `colors.accent.coral` | #FF6B6B | Gorjetas, CTA principal, energia, ação imediata |
+| `colors.accent.coralDeep` | #FF2E7A | Gradiente coral (ponto 2), destaque extremo |
+| `colors.accent.amber` | #F59E0B | Pendente, atenção, estrelas, rating |
+| `colors.accent.violet` | #7C3AED | Momentos premium, assinatura, badge especial |
+| `colors.accent.violetLight` | #A855F7 | Hover violeta, variação clara |
 
 ### Estados Semânticos
 
 | Token | Hex | Quando usar |
 |-------|-----|-----|
-| `colors.status.success` | `#10B981` | PIX confirmado, pedido aceito, online |
-| `colors.status.warning` | `#F59E0B` | Pendente, aguardando, atenção |
-| `colors.status.error` | `#EF4444` | Pedido rejeitado, erro, offline |
-| `colors.status.live` | `#00E0B8` | Ao vivo agora (usa a brand color) |
+| `colors.status.success` | #10B981 | PIX confirmado, pedido aceito, online |
+| `colors.status.warning` | #F59E0B | Pendente, aguardando, atenção |
+| `colors.status.error` | #EF4444 | Pedido rejeitado, erro, offline |
+| `colors.status.live` | #00E0B8 | Ao vivo agora (usa a brand color) |
 
 ### Texto
 
 | Token | Hex | Uso |
 |-------|-----|-----|
-| `colors.text.primary` | `#F8FAFC` | Texto principal |
-| `colors.text.secondary` | `#94A3B8` | Texto secundário, placeholders |
-| `colors.text.muted` | `#475569` | Desabilitado, timestamps, captions |
-| `colors.text.inverse` | `#0C0C14` | Texto sobre fundos claros/teal |
-| `colors.text.brand` | `#00E0B8` | Links, valores em teal, destaques |
+| `colors.text.primary` | #F8FAFC | Texto principal |
+| `colors.text.secondary` | #94A3B8 | Texto secundário, placeholders |
+| `colors.text.muted` | #475569 | Desabilitado, timestamps, captions |
+| `colors.text.inverse` | #0C0C14 | Texto sobre fundos claros/teal |
+| `colors.text.brand` | #00E0B8 | Links, valores em teal, destaques |
 
 ### Borders e Separadores
 
 | Token | Hex | Uso |
 |-------|-----|-----|
-| `colors.border.default` | `#0F2E28` | Bordas sutis (teal-tinted) |
-| `colors.border.strong` | `#1A4A3C` | Bordas visíveis, separadores |
-| `colors.border.brand` | `rgba(0,224,184,0.30)` | Bordas de cards ativos, focus ring |
+| `colors.border.default` | #0F2E28 | Bordas sutis (teal-tinted) |
+| `colors.border.strong` | #1A4A3C | Bordas visíveis, separadores |
+| `colors.border.brand` | rgba(0,224,184,0.30) | Bordas de cards ativos, focus ring |
 
 ---
 
@@ -104,14 +104,14 @@ Teal  + #0C0C14 → Matrix/holograma, ultra premium    (backgrounds, dark mode)
 
 | Token | Hex | Uso |
 |-------|-----|-----|
-| `colors.bg.primary` | `#F0FEFA` | Background levemente teal (não branco puro) |
-| `colors.bg.surface` | `#FFFFFF` | Cards, surfaces |
-| `colors.bg.elevated` | `#E0FAF5` | Elementos elevados |
-| `colors.brand.primary` | `#008F74` | Teal mais escuro para contraste no claro |
-| `colors.brand.light` | `#00B896` | Hover no light mode |
-| `colors.text.primary` | `#081A17` | Quase preto com tom teal |
-| `colors.text.secondary` | `#2D5047` | Cinza esverdeado |
-| `colors.border.default` | `#C0EDE5` | Bordas suaves |
+| `colors.bg.primary` | #F0FEFA | Background levemente teal (não branco puro) |
+| `colors.bg.surface` | #FFFFFF | Cards, surfaces |
+| `colors.bg.elevated` | #E0FAF5 | Elementos elevados |
+| `colors.brand.primary` | #008F74 | Teal mais escuro para contraste no claro |
+| `colors.brand.light` | #00B896 | Hover no light mode |
+| `colors.text.primary` | #081A17 | Quase preto com tom teal |
+| `colors.text.secondary` | #2D5047 | Cinza esverdeado |
+| `colors.border.default` | #C0EDE5 | Bordas suaves |
 
 ---
 
@@ -119,11 +119,11 @@ Teal  + #0C0C14 → Matrix/holograma, ultra premium    (backgrounds, dark mode)
 
 ```typescript
 gradients: {
-  brand:   ['#00E0B8', '#00B896'],          // teal suave — headers, cards ativos
-  energy:  ['#FF6B6B', '#FF2E7A'],          // coral → magenta — gorjeta, CTA quente
-  premium: ['#7C3AED', '#4D9CFF'],          // violeta → azul — momentos especiais
-  warm:    ['#F59E0B', '#FF6B6B'],          // âmbar → coral — destaques quentes
-  dark:    ['#0C0C14', '#0D1A18'],          // fundo → surface — subtle bg
+  brand:   [ #00E0B8, #00B896],          // teal suave — headers, cards ativos
+  energy:  [ #FF6B6B, #FF2E7A],          // coral → magenta — gorjeta, CTA quente
+  premium: [ #7C3AED, #4D9CFF],          // violeta → azul — momentos especiais
+  warm:    [ #F59E0B, #FF6B6B],          // âmbar → coral — destaques quentes
+  dark:    [ #0C0C14, #0D1A18],          // fundo → surface — subtle bg
   live:    ['rgba(0,224,184,0.0)', '#00E0B8'], // fade-in teal — indicador ao vivo
 }
 ```
