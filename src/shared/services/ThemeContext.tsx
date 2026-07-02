@@ -1,6 +1,5 @@
-import React, { createContext, useState, useCallback, useMemo, useEffect } from 'react';
+import React, { createContext, useState, useCallback, useMemo } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { useColorScheme } from 'nativewind';
 import { colors as darkTokens, lightColors } from '../design-system/tokens';
 
 export type ThemeMode = 'dark' | 'light';
@@ -80,7 +79,6 @@ const light: ThemeColors = {
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Leitura síncrona no lazy initializer → sem flash de tema na startup
   const [mode, setMode] = useState<ThemeMode>(() => {
     try {
       const saved = SecureStore.getItem(THEME_KEY);
@@ -90,17 +88,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Sincroniza NativeWind dark: classes com o modo atual
-  const { setColorScheme } = useColorScheme();
-
-  useEffect(() => {
-    setColorScheme(mode);
-  }, [mode, setColorScheme]);
-
   const toggle = useCallback(() => {
     setMode((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
-      // Persiste de forma assíncrona (fire-and-forget)
       void SecureStore.setItemAsync(THEME_KEY, next);
       return next;
     });
