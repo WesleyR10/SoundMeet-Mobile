@@ -32,16 +32,48 @@
 
 > Bloqueia tudo. Sem auth não existe sessão, nem chamadas autenticadas à API.
 
-- [ ] **1.1** — Auth service: `src/shared/services/auth/keycloak.service.ts` com `login()` via `expo-auth-session` (PKCE flow) e `logout()`
-- [ ] **1.2** — Token storage: `src/shared/services/storage/token.storage.ts` (expo-secure-store — access token, refresh token, expiry)
-- [ ] **1.3** — Interceptor Axios JWT: attach `Authorization: Bearer <token>` em toda requisição
-- [ ] **1.4** — Interceptor Axios refresh: detectar 401 → renovar token → retentar requisição original; 401 em refresh → logout
-- [ ] **1.5** — Auth guard no `RootNavigator`: redirecionar para `AuthStack` se não autenticado; para `MusicianTabs` se autenticado
-- [ ] **1.6** — Tela: `OnboardingScreen` (splash de boas-vindas, logo animada, botão "Entrar com SoundMeet")
-- [ ] **1.7** — Tela: `LoginScreen` (inicia o PKCE flow via `keycloak.service.ts`)
-- [ ] **1.8** — Claims do token: extrair `musician_id`, `roles` do JWT e popular `auth.store.ts`
+- [x] **1.1** — Auth service: `src/shared/services/auth/keycloak.service.ts` com `login()` via `expo-auth-session` (PKCE flow) e `logout()`
+- [x] **1.2** — Token storage: `src/shared/services/storage/token.storage.ts` (expo-secure-store — access token, refresh token, expiry)
+- [x] **1.3** — Interceptor Axios JWT: attach `Authorization: Bearer <token>` em toda requisição
+- [x] **1.4** — Interceptor Axios refresh: detectar 401 → renovar token → retentar requisição original; 401 em refresh → logout
+- [x] **1.5** — Auth guard no `RootNavigator`: redirecionar para `AuthStack` se não autenticado; para `MusicianTabs` se autenticado
+- [x] **1.6** — Tela: `OnboardingScreen` (splash de boas-vindas, logo animada, botão "Entrar com SoundMeet")
+- [x] **1.7** — Tela: `LoginScreen` (inicia o PKCE flow via `keycloak.service.ts`)
+- [x] **1.8** — Claims do token: extrair `musician_id`, `roles` do JWT e popular `auth.store.ts`
 
 **Pré-requisito backend:** Keycloak configurado com redirect URI `soundmeet://auth/callback` ✅
+
+---
+
+## Bloco 1.5 — Signup & Role Selection
+
+> **Pré-requisito crítico:** `realm-soundmeet.json` tem `registrationAllowed: false` e `identityProviders: []`.
+> Nenhum usuário consegue se cadastrar atualmente. Este bloco desbloqueia isso.
+
+- [x] **1.9** — Backend: `POST /api/v1/auth/register` implementado — ver `soundmeet-backend/Docs/roadmap.md` (Bloco 4E) e `soundmeet-backend/Docs/auth/keycloak.md`. Recebe `{ name, email, password, role }`, cria usuário no Keycloak (Admin API), atribui role, cria aggregate `Musician`/`Audience` (ID == `sub` do Keycloak) e retorna tokens via Direct Access Grants (client `soundmeet-mobile`).
+- [ ] **1.10** — Tela: `RoleSelectionScreen` — tela dedicada após COMEÇAR; dois cards grandes: "Sou Músico 🎸" e "Sou Fã 🎵"; sem estabelecimento (web only); role armazenada localmente até o aggregate ser criado
+- [ ] **1.11** — Tela: `RegisterScreen` — formulário base idêntico para músico e fã: nome, e-mail, senha; nenhum campo de role aqui (vem do `RoleSelectionScreen`); após submit chama diretamente `POST /api/v1/auth/register` com `{ name, email, password, role }` — **sem PKCE, sem redirect de browser** (Option B, já implementada no backend em 1.9). A resposta já contém `access_token`, `refresh_token` e `profile_id`; popular `auth.store` diretamente com esses dados
+- [~] **1.12** — ~~Pós-registro: criar aggregate mínimo no backend via `POST /musicians`/`POST /audiences`~~ — **obsoleto**: o `POST /auth/register` (1.9) já cria o aggregate atomicamente no backend e retorna `profile_id` na mesma resposta. Chamar `POST /musicians`/`POST /audiences` depois causaria erro 409 (perfil já existe) ou, pior, um segundo perfil com ID diferente do `sub` do Keycloak, quebrando o ownership guard. Nenhuma ação adicional necessária além de armazenar `profile_id` (recebido em 1.11) como `musician_id`/`audience_id` no `auth.store`
+- [ ] **1.13** — Wizard do músico — 3 steps pós-login (pré-home, não pula sem completar step 1 e 2):
+  - Step 1: nome artístico (`stage_name`) + bio curta
+  - Step 2: instrumentos[] + gêneros[] (multi-select visual)
+  - Step 3: "Seu QR Code está pronto 🎉" — preview do QR + CTA "Ir para minha home"
+- [ ] **1.14** — Auth guard de wizard incompleto: músico que fez login mas não tem `stage_name` → redirecionar para Wizard step 1 antes de exibir as tabs
+- [ ] **1.15** — Atualizar `types.ts` de navegação: adicionar `RoleSelection`, `Register`, `MusicianSetupWizard: { step: 1 | 2 | 3 }` em `AuthStackParamList`
+- [ ] **1.16** — Google OAuth (V2 pré-App Store):
+  - Backend: preencher `GOOGLE_KEYCLOAK_CLIENT_ID` + `GOOGLE_KEYCLOAK_CLIENT_SECRET` no `.env` + rodar `npm run keycloak:sync:local`
+  - Mobile: botão "Continuar com Google" na `LoginScreen` e `RegisterScreen` → abre Chrome Custom Tab (overlay, não sai do app) via `expo-web-browser`
+  - Nota: Google login usa PKCE no Chrome Custom Tab (obrigatório pelo Google ToS — não tem alternativa in-app segura); email/senha continua via formulário nativo (Direct Access Grants)
+  - Apple Sign In: descartado — requer Apple Developer Program pago
+
+**Decisão arquitetural fechada:**
+- Auth por e-mail + senha (MVP). Telefone como campo opcional no perfil, não no signup.
+- Login e registro: 100% in-app via formulários React Native (Direct Access Grants); Google usa Chrome Custom Tab (overlay, não troca de app).
+- `COMEÇAR` no Onboarding → `RoleSelectionScreen` (genérico, sem mencionar músico no botão do onboarding).
+- Google / Apple OAuth: Google planejado para V2 pré-App Store; Apple descartado.
+- Fã (audience): não passa pelo wizard — vai direto para home após criar account.
+
+**Pré-requisito backend:** `POST /api/v1/auth/register` implementado (item 1.9 acima) ✅ — `registrationAllowed` permanece `false`, cadastro é feito exclusivamente por esse endpoint.
 
 ---
 
@@ -167,11 +199,24 @@
 
 ---
 
+## Bloco 10.5 — Multi-Role / Account Switching
+
+> Transversal. Implementar após Bloco 2 (músico) e Bloco 11 (fã) estarem operacionais, pois depende de ambos os aggregates existirem.
+
+- [ ] **10.5.1** — Header de perfil com avatar tappable → bottom sheet com roles ativas (ex.: "Conta Músico ✓ | Conta Fã") — switch instantâneo entre contextos
+- [ ] **10.5.2** — CTA "Quero ser Músico também" (visível apenas para usuário com role `audience` only) → aciona wizard do músico (1.13)
+- [ ] **10.5.3** — CTA "Quero ser Fã também" (visível apenas para usuário com role `musician` only) → cria aggregate audience + muda para contexto fã
+- [ ] **10.5.4** — Após adicionar nova role: backend adiciona role no Keycloak (Admin API) → app executa token refresh silencioso para obter token atualizado com nova role no JWT; transparente para o usuário
+
+**Regra de negócio fechada:** um usuário pode acumular `musician` e `audience` simultaneamente (suportado pelo Keycloak do backend). A troca de contexto não faz logout — apenas altera qual view/tabs o app exibe.
+
+---
+
 ## Bloco 11 — MVP Público (Fase 2)
 
 > Iniciar somente após Bloco 9 estar completo.
 
-- [ ] **11.1** — Fluxo de auth do público: tela de registro/login diferente do músico (role `audience`)
+- [ ] **11.1** — Reutilizar `RoleSelectionScreen` (Bloco 1.10) e `RegisterScreen` (Bloco 1.11) para novo usuário fã; após registro → home do fã (sem wizard)
 - [ ] **11.2** — Scanner QR: `QRScannerScreen` (expo-camera) → parse `soundmeet://musician/:id` → navegar para perfil
 - [ ] **11.3** — Tela: `MusicianPublicProfileScreen` (readonly) — foto, nome, stats, CTA pedido e gorjeta
 - [ ] **11.4** — Tela: `SongRequestScreen` — buscar música + enviar pedido + votação em pedidos existentes
@@ -203,3 +248,21 @@
 | Push notification service | ⏳ Expo Notifications + FCM/APNs (configurar EAS) |
 | Monitoramento de erros | ⏳ Sentry React Native |
 | Algoritmo afinador: YIN vs autocorrelação | ⏳ Definir no Bloco 8 |
+
+## Decisões fechadas
+
+| Decisão | Resolução |
+|---------|-----------|
+| Tela de seleção de papel (músico/fã) | Tela dedicada `RoleSelectionScreen` após COMEÇAR — não integrada ao carrossel de onboarding |
+| Cadastro de músico vs fã | Formulário base idêntico (nome + e-mail + senha); diferença acontece pós-login |
+| Coleta de dados do músico | Wizard 3 steps pós-login (stage_name + bio → instrumentos + gêneros → QR pronto); não no signup |
+| Coleta de dados do fã | Sem wizard — vai direto para home; perfil completa progressivamente |
+| Autenticação por telefone | Descartado para MVP; telefone como campo opcional no perfil (chave PIX) |
+| Email OU telefone no login | Descartado para MVP — custom Keycloak SPI; reavaliar V2 |
+| Google OAuth | V2 pré-App Store; realm já tem identityProvider + keycloak-sync.mjs atualizado; preencher env vars quando pronto |
+| Apple Sign In | Descartado — requer Apple Developer Program pago ($99/ano) |
+| Login sem browser redirect | Direct Access Grants habilitado no soundmeet-mobile client; email/senha via formulário nativo |
+| Google login | Chrome Custom Tab (overlay visual, não troca de app) — obrigatório pelo Google ToS |
+| Estabelecimento no app mobile | Fora do MVP mobile; fluxo completo de estabelecimento fica no dashboard web |
+| Multi-role / role switching | Suportado via avatar → bottom sheet; token refresh silencioso após nova role; Bloco 10.5 |
+| `registrationAllowed` Keycloak | Permanece `false` — registro via `POST /api/v1/auth/register` (Keycloak Admin API) |

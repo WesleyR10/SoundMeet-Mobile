@@ -32,9 +32,9 @@
 | Framework | Expo SDK | 56 |
 | Runtime | React Native | 0.85.3 |
 | Linguagem | TypeScript | ~6.0 |
-| Navegação | React Navigation | v7 (Stack + Bottom Tabs) |
-| Animações | **Reanimated** | **4.x** (não 3 — API pode diferir) |
-| Animações declarativas | Moti | ^0.30 |
+| Navegação | React Navigation | v7 (**native-stack** + Bottom Tabs) |
+| Animações | **Reanimated** | **4.x** — API nativa direta |
+| Gestos | react-native-gesture-handler | ~2.31 — Gesture API (`Gesture.Pan()`, `GestureDetector`) |
 | Animações Lottie | lottie-react-native | ~7.3 |
 | Estado servidor | TanStack Query | v5 |
 | Estado cliente | Zustand | v5 |
@@ -56,7 +56,12 @@
 
 ### Libs incompatíveis com React Native — NUNCA use
 - GSAP, Framer Motion, Barba.js, Anime.js → DOM-only, não funcionam em RN
-- Use **Reanimated 4 + Moti** como substitutos
+- **Moti** → NÃO usar; v0.30 (latest) só suporta Reanimated 3; incompatível com Reanimated 4 + New Architecture (Expo SDK 56). Sem versão compatível disponível (v1.0 não lançada).
+- Use **Reanimated 4 diretamente**: `useSharedValue`, `useAnimatedStyle`, `withTiming`, `withRepeat`, `withDelay`, `withSpring`, `interpolateColor`
+
+### Navegação — decisão crítica
+- **NUNCA usar `@react-navigation/stack`** — usa `InteractionManager` internamente, depreciado no RN 0.85+
+- **Sempre usar `@react-navigation/native-stack`** — animações nativas via `react-native-screens`, sem `InteractionManager`, mais performático
 
 ---
 
@@ -121,6 +126,100 @@ src/
 
 ---
 
+## Convenções de código React Native
+
+### Estilização — quando usar cada abordagem
+
+> **ATENÇÃO — NativeWind desabilitado (Expo SDK 56 + New Architecture):**
+> `react-native-css-interop` v0.2.x substitui o JSX runtime via `createInteropElement()` que
+> é incompatível com o Fabric + Hermes JSI do Expo SDK 56, causando `Cannot read property
+> 'useContext' of null` em qualquer hook filho. O `nativewind/babel` preset foi **removido**
+> do `babel.config.js`. Enquanto isso: **use somente `StyleSheet.create`**. Re-habilitar
+> quando NativeWind v5 (reescrita New Architecture) for compatível com esta stack.
+
+| Situação | Abordagem correta |
+|----------|------------------|
+| Qualquer layout ou estilo | **`StyleSheet.create`** + tokens de `tokens.ts` |
+| Valores animados de Moti/Reanimated | **`style` prop** — sempre |
+| Valores computados em JS (ex: `width: SW * 0.6`) | **`style` prop inline** |
+| Sombras multi-campo | **`StyleSheet`** ou spread do token `shadows.*` |
+
+**Nunca usar número mágico de cor, fonte ou espaçamento.** Toda cor vem de `tokens.ts`; toda tipografia vem de `typography.*`; todo espaçamento vem de `spacing.*`. Nada hardcoded.
+
+Exemplo correto:
+```tsx
+// StyleSheet para tudo (NativeWind babel desabilitado)
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg.primary, paddingHorizontal: spacing.xl },
+});
+
+// Animação → style prop (obrigatório)
+<MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginBottom: spacing.xl }}>
+
+// Sombra → spread do token
+<View style={[s.card, shadows.brand]}>
+```
+
+### `position: absolute` — uso correto
+
+`position: absolute` é válido **apenas** para:
+- Elementos decorativos que flutuam sobre o layout (glows, partículas, overlays)
+- Elementos de UI que precisam se sobrepor ao conteúdo (FAB, badge, tooltip)
+
+**Nunca** usar para estrutura de layout — use Flexbox.
+
+**Regra de coordenadas:** nunca hardcodar `top/left` em pixels absolutos. Use:
+- `Dimensions.get('window')` no nível do módulo (constante de arquivo, portrait-only)
+- Percentuais via `SW * 0.5`
+- Flexbox + `alignSelf` quando possível
+
+> **ATENÇÃO — NativeWind + hooks:** `useWindowDimensions()` dentro de componentes filho
+> causa `Cannot read property 'useContext' of null` porque o NativeWind v4 intercepta
+> o render via `api.js` em um contexto onde o dispatcher do React não está disponível.
+> **Use sempre `Dimensions.get('window')` no nível do módulo** para subcomponentes.
+> O app é `orientation: portrait` (app.json) — a largura nunca muda.
+
+```tsx
+// Correto para subcomponentes com NativeWind
+const SW = Dimensions.get('window').width; // módulo level — portrait-only, seguro
+
+export function OnboardingBackground() {
+  // sem hook, sem problema
+```
+
+### Tamanho de arquivo e componentização
+
+**Limite: ~200 linhas por arquivo.** Acima disso, extrair componentes.
+
+Regra de extração:
+- Tem nome lógico próprio? → componente
+- Tem mais de ~60 linhas de JSX? → componente
+- Pode ser reutilizado em outra tela? → `src/shared/components/`
+- É específico de uma feature? → `src/features/[feature]/ui/components/`
+
+Estrutura padrão de tela grande:
+```
+features/auth/ui/
+  screens/
+    OnboardingScreen.tsx      # orquestra, < 150 linhas
+  components/
+    OnboardingBackground.tsx  # layer decorativo
+    OnboardingHero.tsx        # logo + anéis
+    SlideCarousel.tsx         # slides + dots (reutilizável → shared)
+shared/components/
+  EqBar.tsx                   # reutilizado em múltiplas telas
+  FloatingParticle.tsx        # reutilizado em múltiplas telas
+```
+
+### Dimensões e responsividade
+
+- **`Dimensions.get('window')`** no nível do módulo — app é `portrait` travado (app.json), largura constante
+- **Nunca `useWindowDimensions()`** enquanto NativeWind babel estiver ativo — cria conflito de hooks
+- Preferir Flexbox + percentuais a pixels absolutos
+- Tamanhos mínimos de toque: **48×48px** em todo elemento interativo
+
+---
+
 ## Regras de ouro — NUNCA viole
 
 - **Docs/design-system.md é a fonte de verdade de design** — não inventar tokens fora dele.
@@ -134,6 +233,8 @@ src/
 - Diff mínimo — não refatorar código não solicitado.
 - Nunca implementar features fora da ordem do `Docs/roadmap-frontend.md` sem confirmação.
 - Verificar `package.json` antes de usar qualquer lib — não assumir que está instalada.
+- **Nunca hardcodar número mágico** — toda cor/fonte/espaçamento referencia um token.
+- **Arquivo de screen > 200 linhas?** Extrair componentes antes de continuar.
 
 ---
 
