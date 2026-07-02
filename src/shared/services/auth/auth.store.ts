@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 export interface AuthUser {
+  userId:          string | null; // Keycloak `sub` claim
   musicianId:      string | null;
   audienceId:      string | null;
   establishmentId: string | null;
@@ -30,7 +31,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
   user:            null,
   accessToken:     null,
   isAuthenticated: false,
-  isLoading:       false, // [BLOCO 1] mudar para true e implementar check de token
+  isLoading:       true, // true until restoreSession() resolves on startup
 
   setUser:        (user) => set({ user, isAuthenticated: user !== null }),
   setAccessToken: (accessToken) => set({ accessToken }),
