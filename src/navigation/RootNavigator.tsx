@@ -1,22 +1,29 @@
+import { useEffect } from 'react';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { View, ActivityIndicator } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
+import { restoreSession } from '@/shared/services/auth/keycloak.service';
 import { colors } from '@/shared/design-system/tokens';
 import { AuthNavigator } from './AuthNavigator';
 import { MusicianTabNavigator } from './MusicianTabNavigator';
 import type { RootStackParamList } from './types';
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const isLoading       = useAuthStore((s) => s.isLoading);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  // [BLOCO 1] isLoading ficará true na startup enquanto verifica token no SecureStore
+  useEffect(() => {
+    restoreSession();
+  }, []);
+
   if (isLoading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg.primary }}>
+      <View style={styles.loader}>
+        <StatusBar style="light" />
         <ActivityIndicator color={colors.brand.primary} size="large" />
       </View>
     );
@@ -26,16 +33,29 @@ export function RootNavigator() {
     <NavigationContainer>
       <StatusBar style="light" />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/*
-          [BLOCO 1] Substituir por condicional baseada em isAuthenticated:
-          {isAuthenticated
-            ? <Stack.Screen name="MusicianTabs" component={MusicianTabNavigator} />
-            : <Stack.Screen name="AuthStack" component={AuthNavigator} />
-          }
-        */}
-        <Stack.Screen name="MusicianTabs" component={MusicianTabNavigator} />
-        <Stack.Screen name="AuthStack"    component={AuthNavigator} />
+        {isAuthenticated ? (
+          <Stack.Screen
+            name="MusicianTabs"
+            component={MusicianTabNavigator}
+            options={{ animationTypeForReplace: 'push' }}
+          />
+        ) : (
+          <Stack.Screen
+            name="AuthStack"
+            component={AuthNavigator}
+            options={{ animationTypeForReplace: 'pop' }}
+          />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loader: {
+    flex:            1,
+    alignItems:      'center',
+    justifyContent:  'center',
+    backgroundColor: colors.bg.primary,
+  },
+});
