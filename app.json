@@ -7,11 +7,6 @@
     "icon": "./assets/logo/logo-verde.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0C0C14",
-    "splash": {
-      "image": "./assets/logo/logo-verde.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0C0C14"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.soundmeet.app",
@@ -22,6 +17,7 @@
     },
     "android": {
       "package": "com.soundmeet.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo/logo-verde.png",
         "backgroundColor": "#0C0C14"
@@ -45,6 +41,12 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Necessário para escolher sua foto de perfil"
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/logo/logo-verde.png",
@@ -52,7 +54,35 @@
         }
       ],
       "expo-font",
-      "expo-splash-screen"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo/logo-verde.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0C0C14"
+        }
+      ],
+      "expo-video",
+      "expo-asset",
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": false,
+          "savePhotosPermission": "Precisamos salvar o QR Code na sua galeria.",
+          "isAccessMediaLocationEnabled": false,
+          "granularPermissions": [
+            "photo"
+          ]
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Precisamos do microfone para o afinador cromático ouvir seu instrumento",
+          "enableBackgroundPlayback": false
+        }
+      ]
     ],
     "extra": {
       "eas": {

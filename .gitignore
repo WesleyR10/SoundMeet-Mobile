@@ -40,6 +40,14 @@ yarn-error.*
 # EAS secrets (nunca commitar)
 google-play-key.json
 
+# Firebase (Bloco 4.9 — push notifications)
+# google-services.json: config do app Android, referenciada em app.json (android.googleServicesFile)
+# *firebase-adminsdk*.json: service account key (Project Settings > Service accounts) — só serve
+# pra upload único via `eas credentials` (FCM V1); não é lida pelo app, não devia nem ficar aqui,
+# mas o gitignore protege mesmo assim caso fique.
+google-services.json
+*firebase-adminsdk*.json
+
 # typescript
 *.tsbuildinfo
 
@@ -47,7 +55,13 @@ google-play-key.json
 /ios
 /android
 
-# Claude 
+# Claude
 .claude/
 CLAUDE.md
 Claude Design/
+
+# Remotion pipeline (gera assets/videos/*.mp4 — footage bruto e node_modules não entram no repo)
+remotion/node_modules/
+remotion/public/source/
+remotion/public/source-prepped/
+remotion/out/
