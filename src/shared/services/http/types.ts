@@ -1,5 +1,11 @@
 import type { AxiosError } from 'axios';
 
+// Envelope global do backend (WrapperDataInterceptor): recursos únicos vêm
+// como { data: T }; listas vêm como { data: T[], meta: {...} }.
+export interface ApiEnvelope<T> {
+  data: T;
+}
+
 export interface ApiErrorBody {
   statusCode: number;
   message:    string | string[];

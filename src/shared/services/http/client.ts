@@ -37,12 +37,17 @@ function drainQueue(err: unknown, token: string | null): void {
   queue.length = 0;
 }
 
+// Rotas públicas cujo 401 é resposta de negócio ("credenciais inválidas"), não
+// sessão expirada — nunca devem disparar o fluxo de refresh.
+const AUTH_ENDPOINTS_WITHOUT_REFRESH = ['/auth/login'];
+
 httpClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    const isAuthEndpoint = AUTH_ENDPOINTS_WITHOUT_REFRESH.some((path) => original?.url?.includes(path));
 
-    if (!original || error.response?.status !== 401 || original._retry) {
+    if (!original || error.response?.status !== 401 || original._retry || isAuthEndpoint) {
       return Promise.reject(error);
     }
 

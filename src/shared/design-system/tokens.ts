@@ -71,11 +71,20 @@ export const typography = {
   displayLg: { fontFamily: 'SpaceGrotesk-Bold',     fontSize: 36, lineHeight: 44 },
   displayMd: { fontFamily: 'SpaceGrotesk-SemiBold', fontSize: 28, lineHeight: 36 },
   title:     { fontFamily: 'SpaceGrotesk-SemiBold', fontSize: 22, lineHeight: 30 },
+  // 18px — mínimo exigido pra telas de performance ao vivo (CLAUDE.md), legível
+  // a 1 metro de distância num bar escuro. Nenhum token de body existente cobre
+  // esse mínimo (bodyLg é 17px) — usado em LiveDashboardScreen/RequestCard.
+  liveBody:  { fontFamily: 'Inter-Regular',          fontSize: 18, lineHeight: 27 },
   bodyLg:    { fontFamily: 'Inter-Regular',          fontSize: 17, lineHeight: 26 },
   body:      { fontFamily: 'Inter-Regular',          fontSize: 15, lineHeight: 23 },
   bodySm:    { fontFamily: 'Inter-Regular',          fontSize: 13, lineHeight: 20 },
   caption:   { fontFamily: 'Inter-Medium',           fontSize: 11, lineHeight: 16 },
   mono:      { fontFamily: 'JetBrainsMono-Regular',  fontSize: 14, lineHeight: 22 },
+  // Acorde no Play Mode (Bloco 7) — precisa liderar visualmente sobre
+  // liveBody (18px), já que o acorde é o sinal principal "o que tocar
+  // agora" na tela de palco, não a letra. `mono` (14px) é menor que
+  // liveBody e ficaria subordinado; peso Bold + 19px resolve isso.
+  chordLive: { fontFamily: 'JetBrainsMono-Bold',     fontSize: 19, lineHeight: 24 },
 } as const;
 
 export const shadows = {
