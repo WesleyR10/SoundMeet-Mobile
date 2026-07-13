@@ -7,6 +7,10 @@ export interface AuthUser {
   establishmentId: string | null;
   roles:           string[];
   email:           string | null;
+  // Preenchidos apenas na sessão de cadastro (register) — fonte do
+  // pré-preenchimento do step de chave PIX no wizard do músico.
+  cpf?:            string | null;
+  phone?:          string | null;
 }
 
 interface AuthState {

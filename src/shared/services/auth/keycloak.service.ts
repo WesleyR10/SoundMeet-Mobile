@@ -11,6 +11,7 @@ import {
 import { ENV } from '@/shared/services/config/env';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { AuthUser } from '@/shared/services/auth/auth.store';
+import { usePendingGoogleSessionStore } from '@/shared/services/auth/pendingGoogleSession.store';
 import {
   saveTokens,
   getTokens,
@@ -64,18 +65,22 @@ function decodeJwt(token: string): JwtPayload {
   return JSON.parse(decoded) as JwtPayload;
 }
 
-function buildAuthUser(accessToken: string): AuthUser {
+export function buildAuthUser(accessToken: string): AuthUser {
   const payload = decodeJwt(accessToken);
 
   const realmRoles  = payload.realm_access?.roles ?? [];
   const clientRoles = payload.resource_access?.['soundmeet-api']?.roles ?? [];
+  const roles       = [...new Set([...realmRoles, ...clientRoles])];
 
+  // O aggregate Musician/Audience é criado com ID == sub do Keycloak (roadmap 1.9),
+  // então dá pra derivar o profile id direto da claim de role — sem precisar de um
+  // claim dedicado nem de um fetch de perfil extra no login/restoreSession.
   return {
     userId:          payload.sub,
-    musicianId:      null, // populated in Bloco 2 after profile fetch
-    audienceId:      null,
+    musicianId:      roles.includes('musician') ? payload.sub : null,
+    audienceId:      roles.includes('audience') ? payload.sub : null,
     establishmentId: payload.establishment_ids?.[0] ?? null,
-    roles:           [...new Set([...realmRoles, ...clientRoles])],
+    roles,
     email:           payload.email ?? null,
   };
 }
@@ -106,7 +111,12 @@ function getRedirectUri(): string {
 
 export type LoginResult = 'success' | 'dismissed';
 
-export async function login(): Promise<LoginResult> {
+// Fluxo Authorization Code + PKCE genérico — usado tanto pelo login por browser
+// (Keycloak nativo) quanto pelo login social (com kc_idp_hint), que só difere
+// por um extra param que faz o Keycloak redirecionar direto pro provedor.
+async function runAuthorizationCodeFlow(
+  extraParams?: Record<string, string>,
+): Promise<TokenResponse | 'dismissed'> {
   const redirectUri = getRedirectUri();
 
   const request = new AuthRequest({
@@ -114,6 +124,7 @@ export async function login(): Promise<LoginResult> {
     scopes:      SCOPES,
     redirectUri,
     usePKCE:     true,
+    extraParams,
   });
 
   await request.makeAuthUrlAsync(discovery);
@@ -127,7 +138,7 @@ export async function login(): Promise<LoginResult> {
     return 'dismissed'; // user closed the browser
   }
 
-  const tokens = await exchangeCodeAsync(
+  return exchangeCodeAsync(
     {
       clientId:    CLIENT_ID,
       code:        result.params.code,
@@ -136,9 +147,50 @@ export async function login(): Promise<LoginResult> {
     },
     discovery
   );
+}
+
+export async function login(): Promise<LoginResult> {
+  const tokens = await runAuthorizationCodeFlow();
+  if (tokens === 'dismissed') return 'dismissed';
 
   await persistAndApplyTokens(tokens);
   return 'success';
+}
+
+export type GoogleLoginResult = 'existing-user' | 'needs-role-selection' | 'dismissed';
+
+// Login via Google (broker do realm) — kc_idp_hint pula a tela de login do
+// Keycloak e vai direto pro consentimento do Google. A identidade pode já ter
+// sido cadastrada por senha antes (roles preenchidas) ou pode ser totalmente
+// nova no SoundMeet (roles vazias) — nesse segundo caso NUNCA tocamos em
+// auth.store, pois isAuthenticated=true sem role derrubaria o usuário direto
+// em MusicianTabs sem nunca escolher papel (RootNavigator só verifica
+// isAuthenticated + wizard gate, não a presença de roles).
+export async function loginWithGoogle(): Promise<GoogleLoginResult> {
+  const tokens = await runAuthorizationCodeFlow({ kc_idp_hint: 'google' });
+  if (tokens === 'dismissed') return 'dismissed';
+
+  const user = buildAuthUser(tokens.accessToken);
+
+  if (user.roles.length > 0) {
+    await persistAndApplyTokens(tokens);
+    return 'existing-user';
+  }
+
+  usePendingGoogleSessionStore.getState().setSession({
+    accessToken:  tokens.accessToken,
+    refreshToken: tokens.refreshToken ?? '',
+    expiresAt:    Date.now() + (tokens.expiresIn ?? 900) * 1_000,
+    email:        user.email,
+  });
+  return 'needs-role-selection';
+}
+
+// Wrapper puro sobre refreshAsync — usado só pra renovar o token da sessão
+// Google pendente depois do social-signup atribuir a role (o token antigo foi
+// emitido antes da role existir), sem tocar em nenhuma store.
+export async function refreshWithRefreshToken(refreshToken: string): Promise<TokenResponse> {
+  return refreshAsync({ clientId: CLIENT_ID, refreshToken }, discovery);
 }
 
 export async function logout(): Promise<void> {

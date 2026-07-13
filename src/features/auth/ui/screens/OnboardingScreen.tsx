@@ -82,7 +82,7 @@ export function OnboardingScreen({ navigation }: Props) {
 
       <Animated.View style={[s.ctaBlock, ctaStyle]}>
         <Pressable
-          onPress={() => navigation.navigate('Login')}
+          onPress={() => navigation.navigate('RoleSelection')}
           style={({ pressed }) => [s.ctaBtn, pressed && s.ctaBtnPressed]}
           accessibilityRole="button"
           accessibilityLabel="Começar no SoundMeet"

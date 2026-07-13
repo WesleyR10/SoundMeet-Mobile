@@ -1,300 +1,189 @@
-import { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withRepeat,
-  withDelay,
-} from 'react-native-reanimated';
-import { AlertCircle } from 'lucide-react-native';
-import { login, type LoginResult } from '@/shared/services/auth/keycloak.service';
-import { colors, typography, spacing, radius, shadows } from '@/shared/design-system/tokens';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { PrimaryButton } from '@/shared/components/PrimaryButton';
+import { GoogleAuthButton } from '@/shared/components/GoogleAuthButton';
+import { AuthDivider } from '@/shared/components/AuthDivider';
+import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { AuthGlowBackground } from '../components/AuthGlowBackground';
+import { LoginFormFields } from '../components/LoginFormFields';
+import { loginSchema, type LoginFormValues } from '@/features/auth/domain/auth.validation';
+import { useLogin, getLoginErrorMessage } from '@/features/auth/application/useLogin';
+import { loginWithGoogle } from '@/shared/services/auth/keycloak.service';
 import type { AuthScreenProps } from '@/navigation/types';
-
-type Status = 'loading' | 'error';
 
 type Props = AuthScreenProps<'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
-  const [status, setStatus]       = useState<Status>('loading');
-  const [errorMsg, setErrorMsg]   = useState('');
-  const isMounted                 = useRef(true);
+  const loginMutation = useLogin();
 
-  // Top bar entrance
-  const topBarOpacity = useSharedValue(0);
-  const topBarY       = useSharedValue(-10);
+  const { control, handleSubmit } = useForm<LoginFormValues>({
+    resolver:      zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  });
+  const [bannerError, setBannerError] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const formOpacity = useSharedValue(0);
+  const formY       = useSharedValue(16);
 
   useEffect(() => {
-    topBarOpacity.value = withTiming(1,  { duration: 400 });
-    topBarY.value       = withTiming(0,  { duration: 400 });
-    return () => { isMounted.current = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    formOpacity.value = withTiming(1, { duration: 400 });
+    formY.value       = withTiming(0, { duration: 400 });
+  }, [formOpacity, formY]);
 
-  const topBarStyle = useAnimatedStyle(() => ({
-    opacity:   topBarOpacity.value,
-    transform: [{ translateY: topBarY.value }],
+  const formStyle = useAnimatedStyle(() => ({
+    opacity:   formOpacity.value,
+    transform: [{ translateY: formY.value }],
   }));
 
-  const startLogin = async () => {
-    if (!isMounted.current) return;
-    setStatus('loading');
-
-    let result: LoginResult | undefined;
+  const onSubmit = handleSubmit(async (values) => {
+    setBannerError(null);
     try {
-      result = await login();
+      await loginMutation.mutateAsync({ email: values.email.trim(), password: values.password });
+      // Nenhuma navegação explícita necessária — auth.store.isAuthenticated vira true
+      // dentro de applyTokenSession e o RootNavigator troca de stack reativamente.
     } catch (err) {
-      if (!isMounted.current) return;
-      const msg = err instanceof Error ? err.message : 'Erro ao autenticar';
-      setErrorMsg(msg);
-      setStatus('error');
-      return;
+      setBannerError(getLoginErrorMessage(err));
     }
+  });
 
-    if (!isMounted.current) return;
-
-    if (result === 'dismissed') {
-      navigation.goBack();
+  const onGooglePress = async () => {
+    setBannerError(null);
+    setGoogleLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (result === 'needs-role-selection') {
+        navigation.navigate('RoleSelection');
+      }
+      // 'existing-user': RootNavigator reage sozinho. 'dismissed': usuário fechou o browser.
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Erro ao autenticar com Google');
+    } finally {
+      setGoogleLoading(false);
     }
-    // 'success': auth.store is updated → RootNavigator renders MusicianTabs reactively
   };
 
-  useEffect(() => {
-    startLogin();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const onForgotPassword = () => {
+    Alert.alert('Em breve', 'A recuperação de senha ainda não está disponível.');
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={s.root}>
       <StatusBar style="light" />
+      <AuthGlowBackground variant="subtle" />
 
-      <Animated.View style={[styles.topBar, topBarStyle]}>
-        <Text style={styles.brand}>SoundMeet</Text>
-      </Animated.View>
+      <KeyboardAvoidingView
+        style={s.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+      >
+        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+          <Animated.View style={formStyle}>
+            <Text style={s.brand}>SoundMeet</Text>
+            <Text style={s.title}>Entrar</Text>
+            <Text style={s.subtitle}>Que bom te ver de novo.</Text>
 
-      <View style={styles.content}>
-        {status === 'loading' ? (
-          <LoadingState />
-        ) : (
-          <ErrorState
-            message={errorMsg}
-            onRetry={startLogin}
-            onBack={() => navigation.goBack()}
-          />
-        )}
-      </View>
+            <LoginFormFields control={control} />
+
+            <Pressable
+              onPress={onForgotPassword}
+              hitSlop={8}
+              style={s.forgotBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Esqueci a senha"
+            >
+              <Text style={s.forgotText}>Esqueci a senha</Text>
+            </Pressable>
+
+            {!!bannerError && <ErrorBanner message={bannerError} />}
+
+            <PrimaryButton
+              label="Entrar"
+              onPress={onSubmit}
+              loading={loginMutation.isPending}
+              style={s.submitBtn}
+            />
+
+            <View style={s.socialBlock}>
+              <AuthDivider label="ou entre com" />
+              <GoogleAuthButton onPress={onGooglePress} loading={googleLoading} />
+            </View>
+
+            <Pressable
+              onPress={() => navigation.navigate('RoleSelection')}
+              style={s.registerRow}
+              accessibilityRole="button"
+              accessibilityLabel="Criar conta"
+            >
+              <Text style={s.registerText}>
+                Não tem conta? <Text style={s.registerLink}>Criar conta</Text>
+              </Text>
+            </Pressable>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// ── Loading state ──────────────────────────────────────────────────────────────
-
-function LoadingState() {
-  const opacity  = useSharedValue(0);
-  const scale    = useSharedValue(0.95);
-  const pulseS   = useSharedValue(1);
-  const pulseO   = useSharedValue(0.7);
-  const spinRot  = useSharedValue(0);
-
-  useEffect(() => {
-    opacity.value  = withTiming(1,    { duration: 400 });
-    scale.value    = withTiming(1,    { duration: 400 });
-    pulseS.value   = withRepeat(withTiming(1.12, { duration: 900 }), -1, true);
-    pulseO.value   = withRepeat(withTiming(1,    { duration: 900 }), -1, true);
-    spinRot.value  = withRepeat(withTiming(360,  { duration: 1200 }), -1, false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const wrapStyle   = useAnimatedStyle(() => ({
-    opacity:   opacity.value,
-    transform: [{ scale: scale.value }],
-  }));
-  const pulseStyle  = useAnimatedStyle(() => ({
-    opacity:   pulseO.value,
-    transform: [{ scale: pulseS.value }],
-  }));
-  const spinStyle   = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${spinRot.value}deg` }],
-  }));
-
-  return (
-    <Animated.View style={[styles.stateWrapper, wrapStyle]}>
-      <Animated.View style={[styles.pulseRing, pulseStyle]}>
-        <Animated.View style={[styles.spinnerArc, spinStyle]} />
-      </Animated.View>
-
-      <Text style={styles.loadingTitle}>Abrindo autenticação</Text>
-      <Text style={styles.loadingSubtitle}>Aguarde enquanto a janela segura abre…</Text>
-    </Animated.View>
-  );
-}
-
-// ── Error state ────────────────────────────────────────────────────────────────
-
-function ErrorState({
-  message,
-  onRetry,
-  onBack,
-}: {
-  message: string;
-  onRetry: () => void;
-  onBack:  () => void;
-}) {
-  const opacity = useSharedValue(0);
-  const transY  = useSharedValue(20);
-
-  useEffect(() => {
-    opacity.value = withTiming(1, { duration: 400 });
-    transY.value  = withTiming(0, { duration: 400 });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const animStyle = useAnimatedStyle(() => ({
-    opacity:   opacity.value,
-    transform: [{ translateY: transY.value }],
-  }));
-
-  return (
-    <Animated.View style={[styles.stateWrapper, animStyle]}>
-      <View style={styles.errorIconWrapper}>
-        <AlertCircle size={36} color={colors.accent.coral} strokeWidth={1.5} />
-      </View>
-
-      <Text style={styles.errorTitle}>Falha na autenticação</Text>
-      <Text style={styles.errorMsg}>{message}</Text>
-
-      <Pressable
-        onPress={onRetry}
-        style={({ pressed }) => [styles.retryButton, pressed && styles.buttonPressed]}
-        accessibilityRole="button"
-        accessibilityLabel="Tentar autenticação novamente"
-      >
-        <Text style={styles.retryText}>Tentar novamente</Text>
-      </Pressable>
-
-      <Pressable
-        onPress={onBack}
-        style={({ pressed }) => [styles.backButton, pressed && styles.buttonPressed]}
-        accessibilityRole="button"
-        accessibilityLabel="Voltar para onboarding"
-      >
-        <Text style={styles.backText}>Voltar</Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-// ── Styles ─────────────────────────────────────────────────────────────────────
-
-const PULSE_SIZE = 80;
-
-const styles = StyleSheet.create({
-  container: {
+const s = StyleSheet.create({
+  root: {
     flex:            1,
     backgroundColor: colors.bg.primary,
   },
-  topBar: {
-    alignItems: 'center',
-    paddingTop: spacing.lg,
+  flex: { flex: 1 },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.xxxl,
+    paddingBottom:     spacing.xxxl,
+    gap:               spacing.lg,
   },
   brand: {
     ...typography.title,
-    color:        colors.brand.primary,
+    color:         colors.brand.primary,
     letterSpacing: -0.3,
   },
-  content: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    padding:        spacing.xl,
+  title: {
+    ...typography.displayMd,
+    fontFamily: 'SpaceGrotesk-Bold',
+    color:      colors.text.primary,
+    marginTop:  spacing.lg,
   },
-
-  // Loading
-  stateWrapper: {
-    alignItems: 'center',
-    gap:        spacing.md,
-    maxWidth:   320,
-  },
-  pulseRing: {
-    width:          PULSE_SIZE,
-    height:         PULSE_SIZE,
-    borderRadius:   PULSE_SIZE / 2,
-    borderWidth:    2,
-    borderColor:    colors.brand.primary,
-    alignItems:     'center',
-    justifyContent: 'center',
-    marginBottom:   spacing.sm,
-    ...shadows.brand,
-  },
-  spinnerArc: {
-    width:          PULSE_SIZE - 12,
-    height:         PULSE_SIZE - 12,
-    borderRadius:   (PULSE_SIZE - 12) / 2,
-    borderWidth:    3,
-    borderColor:    'transparent',
-    borderTopColor: colors.brand.primary,
-  },
-  loadingTitle: {
-    ...typography.title,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  loadingSubtitle: {
+  subtitle: {
     ...typography.body,
-    color:     colors.text.muted,
-    textAlign: 'center',
+    color: colors.text.secondary,
   },
-
-  // Error
-  errorIconWrapper: {
-    width:           64,
-    height:          64,
-    borderRadius:    32,
-    backgroundColor: 'rgba(255,107,107,0.12)',
-    alignItems:      'center',
-    justifyContent:  'center',
-    marginBottom:    spacing.sm,
+  forgotBtn: {
+    alignSelf: 'flex-end',
   },
-  errorTitle: {
-    ...typography.title,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  errorMsg: {
+  forgotText: {
     ...typography.bodySm,
-    color:     colors.text.muted,
-    textAlign: 'center',
-    marginBottom: spacing.lg,
-  },
-  retryButton: {
-    backgroundColor:   colors.brand.primary,
-    borderRadius:      radius.xl,
-    paddingVertical:   spacing.md,
-    paddingHorizontal: spacing.xxl,
-    alignSelf:         'stretch',
-    alignItems:        'center',
-    ...shadows.brand,
-  },
-  retryText: {
-    ...typography.body,
     fontFamily: 'Inter-SemiBold',
-    color:      colors.text.inverse,
+    color:      colors.brand.primary,
   },
-  backButton: {
-    paddingVertical:   spacing.md,
-    paddingHorizontal: spacing.xxl,
-    alignSelf:         'stretch',
-    alignItems:        'center',
+  submitBtn: {
+    marginTop: spacing.sm,
   },
-  backText: {
+  socialBlock: {
+    gap:       spacing.lg,
+    marginTop: spacing.sm,
+  },
+  registerRow: {
+    alignItems: 'center',
+    marginTop:  spacing.sm,
+  },
+  registerText: {
     ...typography.body,
-    color: colors.text.muted,
+    color: colors.text.secondary,
   },
-  buttonPressed: {
-    opacity:   0.75,
-    transform: [{ scale: 0.97 }],
+  registerLink: {
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
   },
 });
