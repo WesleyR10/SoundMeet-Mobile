@@ -1,89 +1,45 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text } from 'react-native';
-import { Home, Radio, Music, Wallet, User } from 'lucide-react-native';
-import { colors } from '@/shared/design-system/tokens';
+import { useAuthStore } from '@/shared/services/auth/auth.store';
+import { useRequests } from '@/features/musician/application/useRequests';
+import { useRequestsSocket } from '@/features/musician/application/useRequestsSocket';
+import { usePushRegistration } from '@/features/musician/application/usePushRegistration';
+import { useChatNotificationsSocket } from '@/features/scheduling/application/useChatNotificationsSocket';
+import { LiveDashboardScreen } from '@/features/musician/ui/screens/LiveDashboardScreen';
+import { HomeScreen } from '@/features/musician/ui/screens/HomeScreen';
+import { WalletScreen } from '@/features/payment/ui/screens/WalletScreen';
+import { ProfileStackNavigator } from './ProfileStackNavigator';
+import { RepertoireStackNavigator } from './RepertoireStackNavigator';
+import { MusicianTabBar } from './MusicianTabBar';
 import type { MusicianTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MusicianTabParamList>();
 
-const ICON_SIZE = 24;
-
-// Factory de placeholder — cada screen substituída no seu bloco
-function makePlaceholder(label: string) {
-  return function PlaceholderScreen() {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg.primary }}>
-        <Text style={{ color: colors.brand.primary, fontSize: 20, fontFamily: 'SpaceGrotesk-Bold' }}>
-          {label}
-        </Text>
-        <Text style={{ color: colors.text.muted, fontSize: 12, marginTop: 6, fontFamily: 'Inter-Regular' }}>
-          Em desenvolvimento
-        </Text>
-      </View>
-    );
-  };
-}
-
+// tabBar custom (Bloco 10, ver MusicianTabBar.tsx) — substitui a barra padrão
+// do bottom-tabs; tabBarIcon/tabBarLabel dos Tab.Screen não se aplicam mais
+// (o tab bar custom define seus próprios ícones/labels por nome de rota).
 export function MusicianTabNavigator() {
+  const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
+
+  // Escopo de sessão (não de tela) — mesma query key que LiveDashboardScreen
+  // usa, cache compartilhado (não duplica request); alimenta o badge/pulse
+  // já pronto em MusicianTabBar/TabBarFabItem, hoje hardcoded em 0.
+  const { data } = useRequests(musicianId, 'pending');
+  useRequestsSocket(musicianId);
+  usePushRegistration(musicianId);
+  // Piggyback no mesmo socket /notifications já aberto acima — sem
+  // connect/disconnect próprio (ver useChatNotificationsSocket.ts).
+  useChatNotificationsSocket(musicianId);
+
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor:    colors.bg.surface,
-          borderTopColor:     colors.border.default,
-          height:             60,
-          paddingBottom:      8,
-          paddingTop:         4,
-        },
-        tabBarActiveTintColor:   colors.brand.primary,
-        tabBarInactiveTintColor: colors.text.muted,
-        tabBarLabelStyle: {
-          fontSize:   11,
-          fontFamily: 'Inter-Medium',
-        },
-      }}
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <MusicianTabBar {...props} pendingCount={data?.pending_count ?? 0} />}
     >
-      <Tab.Screen
-        name="Home"
-        component={makePlaceholder('Início')}
-        options={{
-          tabBarLabel: 'Início',
-          tabBarIcon:  ({ color }) => <Home size={ICON_SIZE} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="LiveDashboard"
-        component={makePlaceholder('Ao Vivo')}
-        options={{
-          tabBarLabel: 'Ao Vivo',
-          tabBarIcon:  ({ color }) => <Radio size={ICON_SIZE} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="Repertoire"
-        component={makePlaceholder('Repertório')}
-        options={{
-          tabBarLabel: 'Repertório',
-          tabBarIcon:  ({ color }) => <Music size={ICON_SIZE} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="Wallet"
-        component={makePlaceholder('Gorjetas')}
-        options={{
-          tabBarLabel: 'Gorjetas',
-          tabBarIcon:  ({ color }) => <Wallet size={ICON_SIZE} color={color} />,
-        }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={makePlaceholder('Perfil')}
-        options={{
-          tabBarLabel: 'Perfil',
-          tabBarIcon:  ({ color }) => <User size={ICON_SIZE} color={color} />,
-        }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="LiveDashboard" component={LiveDashboardScreen} />
+      <Tab.Screen name="Repertoire" component={RepertoireStackNavigator} />
+      <Tab.Screen name="Wallet" component={WalletScreen} />
+      <Tab.Screen name="Profile" component={ProfileStackNavigator} />
     </Tab.Navigator>
   );
 }

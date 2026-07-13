@@ -1,12 +1,39 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { StackScreenProps } from '@react-navigation/stack';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { RegisterRole } from '@/features/auth/domain/auth.types';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export type AuthStackParamList = {
-  Onboarding: undefined;
-  Login:      undefined;
+  Onboarding:              undefined;
+  RoleSelection:           undefined;
+  Register:                { role: RegisterRole };
+  Login:                   undefined;
+  CompleteMusicianSignup:  undefined;
+};
+
+// ── Músico — Perfil (nested stack dentro da tab Profile) ─────────────────────
+
+export type ProfileStackParamList = {
+  ViewProfile: undefined;
+  EditProfile: undefined;
+  QRCode:      undefined;
+  Analytics:   undefined;
+  Tuner:       undefined;
+};
+
+// ── Músico — Repertório (nested stack dentro da tab Repertoire, Bloco 7) ─────
+
+export type RepertoireStackParamList = {
+  RepertoireList:     undefined;
+  RepertoireDetail:   { repertoireId: string };
+  CreateRepertoire:   undefined;
+  EditRepertoire:      { repertoireId: string };
+  RepertoireInvites:  undefined;
+  CifraSearch:        { repertoireId: string };
+  PlayMode:           { repertoireId: string; musicLibraryId: string };
 };
 
 // ── Músico — Tabs ─────────────────────────────────────────────────────────────
@@ -14,16 +41,70 @@ export type AuthStackParamList = {
 export type MusicianTabParamList = {
   Home:          undefined;
   LiveDashboard: undefined;
-  Repertoire:    undefined;
+  Repertoire:    NavigatorScreenParams<RepertoireStackParamList>;
   Wallet:        undefined;
-  Profile:       undefined;
+  Profile:       NavigatorScreenParams<ProfileStackParamList>;
+};
+
+// ── Fã — Stacks compartilhadas (Bloco 11) ────────────────────────────────────
+// Mesmo ParamList usado por DUAS instâncias de native-stack (Home e Explore) —
+// não duas stacks mirroring uma a outra: é o MESMO tipo, registrado duas
+// vezes, então telas de drill-down (EstablishmentDetail/MusicianPublicProfile/
+// SongRequest/TipMusician) tipam idêntico em ambas sem duplicar declaração.
+// `FanHome`/`FanExplore`/`QRScanner` opcionais porque só uma instância usa
+// cada rota-raiz.
+export type FanSharedStackParamList = {
+  FanHome?:    undefined;
+  FanExplore?: undefined;
+  EstablishmentDetail:   { establishmentId: string };
+  // Descoberto durante a implementação (não estava em nenhum bloco do
+  // roadmap): tocar num evento precisa mostrar QUEM toca nele antes do fã
+  // poder escolher pra quem pedir música/dar gorjeta — SongRequest exige
+  // musicianId + eventId juntos, e um evento pode ter mais de um performer.
+  EventPerformers:       { establishmentId: string; eventId: string };
+  MusicianPublicProfile: { musicianId: string; eventId?: string; establishmentId?: string };
+  SongRequest:           { musicianId: string; eventId: string; establishmentId?: string };
+  TipMusician:           { musicianId: string; eventId?: string; establishmentId?: string };
+  QRScanner?: undefined;
+};
+
+export type FanProfileStackParamList = {
+  FanProfile:   undefined;
+  Gamification: undefined;
+  Leaderboard:  undefined;
+};
+
+// ── Fã — Tabs (Bloco 10.4 shell + Bloco 11 telas reais) ──────────────────────
+
+export type FanTabParamList = {
+  Home:    NavigatorScreenParams<FanSharedStackParamList>;
+  Explore: NavigatorScreenParams<FanSharedStackParamList>;
+  Profile: NavigatorScreenParams<FanProfileStackParamList>;
 };
 
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export type RootStackParamList = {
-  AuthStack:    NavigatorScreenParams<AuthStackParamList>;
-  MusicianTabs: NavigatorScreenParams<MusicianTabParamList>;
+  AuthStack:           NavigatorScreenParams<AuthStackParamList>;
+  MusicianSetupWizard: undefined;
+  MusicianTabs:        NavigatorScreenParams<MusicianTabParamList>;
+  FanTabs:             NavigatorScreenParams<FanTabParamList>;
+  // Alcançável via deep link (soundmeet://repertoire/shared/:token),
+  // registrada só quando autenticado (qualquer role) — ver RootNavigator e
+  // shared/services/deep-linking/. Não é filha de MusicianTabs/FanTabs de
+  // propósito: precisa ser alcançável a partir de QUALQUER um dos dois.
+  SharedRepertoire:    { token: string };
+  SharedSongViewer:    { token: string; musicLibraryId: string };
+  // Chat com estabelecimentos (Bloco 9) — mesmo racional de
+  // SharedRepertoire/SharedSongViewer: alcançável a partir da Home do
+  // músico (tile "Agenda", sem stack própria) e do tap numa notificação
+  // push, nenhum dos dois casos é filho natural de MusicianTabs.
+  ConversationList:    undefined;
+  Chat: {
+    conversationId:      string;
+    establishmentName?:  string;
+    establishmentAvatar?: string | null;
+  };
 };
 
 // ── Helpers de tipagem para screens ───────────────────────────────────────────
@@ -37,3 +118,18 @@ export type AuthScreenProps<T extends keyof AuthStackParamList> =
 
 export type MusicianTabScreenProps<T extends keyof MusicianTabParamList> =
   BottomTabScreenProps<MusicianTabParamList, T>;
+
+export type FanTabScreenProps<T extends keyof FanTabParamList> =
+  BottomTabScreenProps<FanTabParamList, T>;
+
+export type ProfileScreenProps<T extends keyof ProfileStackParamList> =
+  StackScreenProps<ProfileStackParamList, T>;
+
+export type RepertoireScreenProps<T extends keyof RepertoireStackParamList> =
+  NativeStackScreenProps<RepertoireStackParamList, T>;
+
+export type FanStackScreenProps<T extends keyof FanSharedStackParamList> =
+  NativeStackScreenProps<FanSharedStackParamList, T>;
+
+export type FanProfileScreenProps<T extends keyof FanProfileStackParamList> =
+  NativeStackScreenProps<FanProfileStackParamList, T>;
