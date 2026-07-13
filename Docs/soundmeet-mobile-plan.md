@@ -437,7 +437,7 @@ The wordmark "SoundMeet" uses Space Grotesk Bold.
 
 ### Pré-requisitos
 - Node.js 20+
-- Expo CLI: `npm install -g @expo/eas-cli`
+- EAS CLI: `npm install -g eas-cli` (pacote correto — `@expo/eas-cli` estava desatualizado/errado nesta doc)
 - EAS CLI logado: `eas login`
 - Conta EAS: já configurada
 
@@ -491,6 +491,35 @@ npx expo install expo-av
 # 3D (quando necessário)
 npm install @react-three/fiber @react-three/drei three
 ```
+
+### Dependências adicionadas por bloco (pós-setup inicial)
+
+Lista acima = bootstrap original do projeto (27/06/2026). Dependências abaixo entraram depois, feature a feature — `package.json` é sempre a fonte de verdade do que está instalado; esta lista é só o histórico de por que cada uma entrou.
+
+```bash
+# Bloco 3 — Compartilhar/salvar QR Code (cartão com marca, não QR cru)
+npx expo install expo-sharing expo-media-library react-native-view-shot
+
+# Bloco 3 — Feedback tátil (haptics) em ações de compartilhar/salvar
+npx expo install expo-haptics
+```
+
+> **Atenção:** módulos nativos (todas as libs acima) só entram no binário em **build novo** do dev client (`npm run build:android:dev` / `npm run build:ios:dev`) — instalar via `npx expo install` atualiza o JS/`package.json`, mas o app já instalado no device continua sem o módulo nativo até reinstalar um dev client rebuildado. Sintoma se esquecer: `Cannot find native module 'X'` em runtime.
+
+### Scripts de build (`package.json`)
+
+Wrappers sobre `eas build` — evita depender de lembrar profile/flags a cada build:
+
+| Script | Equivalente |
+|--------|-------------|
+| `npm run build:android:dev` | `eas build --profile development --platform android` |
+| `npm run build:android:preview` | `eas build --profile preview --platform android` |
+| `npm run build:android:prod` | `eas build --profile production --platform android` |
+| `npm run build:ios:dev` | `eas build --profile development --platform ios` |
+| `npm run build:ios:preview` | `eas build --profile preview --platform ios` |
+| `npm run build:ios:prod` | `eas build --profile production --platform ios` |
+
+Dia a dia (mudança só de JS/TS) continua sendo só `npm run start`/`android`/`ios` — os scripts de `build:*` só são necessários quando algo nativo muda (nova lib com código nativo, ou config de plugin/permissão no `app.json`).
 
 ### EAS Build config
 
@@ -559,3 +588,8 @@ npm install @react-three/fiber @react-three/drei three
 | 27/06/2026 | FSD + Clean Architecture por feature | Consistência com backend DDD, escalável, testável |
 | 27/06/2026 | TanStack Query + Zustand para estado | Pragmático para MVP, sem overhead do Redux |
 | 27/06/2026 | Monorepo simples (sem Turborepo por enquanto) | Evitar complexidade desnecessária no MVP |
+| 06/07/2026 | Moti removido do stack de animação (Reanimated 4 direto, sem wrapper) | v0.30 (única versão publicada) só suporta Reanimated 3; incompatível com Reanimated 4 + New Architecture do Expo SDK 56; sem v1.0 lançada. Corrige a linha acima ("Reanimated 3 + Moti + Skia"), que ficou desatualizada — detalhe em `CLAUDE.md` |
+| 06/07/2026 | `expo-sharing` + `expo-media-library` + `react-native-view-shot` (Bloco 3 — QR Code) | Exportar o `QRFrame` inteiro (bezel + marca + nome) como PNG via `view-shot`, e então compartilhar/salvar — cartão com identidade (estilo Spotify Code), não QR cru |
+| 06/07/2026 | `expo-haptics` (Bloco 3 — feedback tátil) | Tick leve no toque de Compartilhar; notificação de sucesso real (após `Asset.create` confirmar) no Salvar — reforça sensação premium sem inventar um sistema de toast novo |
+| 06/07/2026 | `react-native-worklets` adicionado explicitamente | Peer dependency obrigatória do Reanimated 4 desde a divisão do core em worklets separado; faltando, `expo-doctor` já avisa "app pode crashar fora do Expo Go" — exatamente nosso cenário (dev client) |
+| 06/07/2026 | `expo-av` removido do projeto | Nunca foi usado em `src/` (só reservado pro afinador cromático, ainda não implementado); módulo nativo `VideoViewModule` quebra o boot do app em runtime com New Architecture (`NoClassDefFoundError: LazyKType`) — `expo-doctor` já sinalizava a lib como não mantida. Quando o afinador for implementado (Bloco 1 item 8), usar **`expo-audio`** (substituto atual recomendado pela Expo para gravação/captura de áudio), não `expo-av` |

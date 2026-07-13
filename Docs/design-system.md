@@ -202,6 +202,7 @@ shadows: {
 | **Onboarding / Premium** | Violeta `#7C3AED` | Teal | `premium` |
 | **Scanner QR** | Teal | — | `live` |
 | **Analytics** | Teal + Âmbar | — | `warm` |
+| **Chat / Agenda (músico)** | Violeta `#7C3AED` | Teal | `premium` |
 | **Configurações** | Neutro | Teal | `dark` |
 
 ---

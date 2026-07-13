@@ -43,21 +43,40 @@
 | Ícones | Lucide React Native | ^1.21 |
 | Auth | expo-auth-session | SDK 56 |
 | Storage seguro | expo-secure-store | SDK 56 |
+| Validação de formulário | Zod | ^4 |
+| Formulário (telas standalone) | react-hook-form + @hookform/resolvers | ^7 / ^5 |
 | Câmera / QR | expo-camera | SDK 56 |
 | Notificações push | expo-notifications | SDK 56 |
 | Keep awake | expo-keep-awake | SDK 56 |
-| Áudio / microfone | expo-av | ^16 |
 | SVG | react-native-svg | ^15 |
+| Áudio (permissão de microfone) | expo-audio | SDK 56 |
+| Detecção de pitch (afinador) | react-native-pitchy | ^1.3 |
 
 ### Libs NÃO instaladas — verificar package.json antes de usar
-- `@shopify/react-native-skia` — não instalado ainda
+- `expo-av` — **removido** (06/07/2026): nunca usado em `src/`, causava crash no boot em New Architecture (`NoClassDefFoundError: LazyKType` no `VideoViewModule`). Substituído por **`expo-audio`** (instalado 10/07/2026 pro afinador cromático, Bloco 8 — usado só pela API de permissão de microfone; `react-native-pitchy` faz a captura+detecção de pitch por conta própria, ver seção de áudio/tuner abaixo).
+- `@shopify/react-native-skia` — não instalado ainda (ver Tier 3 na seção de animação abaixo — decisão tomada 10/07/2026: **não usar** no afinador cromático, arco radial com glow em SVG + Reanimated já cobre a necessidade)
+- `@gorhom/bottom-sheet` — não instalado ainda, mas **recomendado** (ver Tier 2 abaixo) — encaixe direto pro item 10.5.1 (bottom sheet de troca de role)
 - `@react-three/fiber` — não instalado ainda
 - Gluestack UI — não instalado ainda
 
 ### Libs incompatíveis com React Native — NUNCA use
 - GSAP, Framer Motion, Barba.js, Anime.js → DOM-only, não funcionam em RN
-- **Moti** → NÃO usar; v0.30 (latest) só suporta Reanimated 3; incompatível com Reanimated 4 + New Architecture (Expo SDK 56). Sem versão compatível disponível (v1.0 não lançada).
+- **Moti** → NÃO usar; v0.30 (latest) só suporta Reanimated 3; incompatível com Reanimated 4 + New Architecture (Expo SDK 56). Sem versão compatível disponível (v1.0 não lançada). Reconfirmado via pesquisa em 06/07/2026 — segue sem suporte oficial a Reanimated 4.
 - Use **Reanimated 4 diretamente**: `useSharedValue`, `useAnimatedStyle`, `withTiming`, `withRepeat`, `withDelay`, `withSpring`, `interpolateColor`
+
+### Libs de animação — pesquisa 06/07/2026 (Tier 1 e 2 aprovados)
+
+> Levantamento feito para decidir a base de animação do app, já que Moti/Framer Motion/GSAP estão descartados (ver acima). Tier 3 (Skia/Skottie) e Tier 4 (Rive) existem mas não estão aprovados aqui — avaliar caso a caso quando surgir a necessidade (celebrações de gamificação). Afinador cromático (Bloco 8) já avaliado 10/07/2026: **Skia não necessário** — arco radial com glow implementado só com `react-native-svg` + `useAnimatedProps`/`interpolateColor` do Reanimated 4, mesma técnica de `WizardProgress.tsx`.
+
+**Tier 1 — já instalado, é a base certa, continuar usando como padrão principal:**
+- `react-native-reanimated` (v4) + `react-native-worklets` — fundação de toda animação; hand-roll direto (`useSharedValue`/`useAnimatedStyle`/`withTiming`/`withSpring`/`interpolateColor`), sem lib de abstração por cima
+- `react-native-gesture-handler` — parear com Reanimated pra interações de gesto (swipe accept/reject de pedidos, drag de bottom sheet)
+- `lottie-react-native` — ilustrações complexas vindas de After Effects (onboarding, wizard); sem interatividade, só reprodução
+- `react-native-svg` — gráficos vetoriais custom (já usado em `WizardProgress.tsx`)
+
+**Tier 2 — recomendado adicionar quando o item 10.5.1 do roadmap for implementado:**
+- `@gorhom/bottom-sheet` v5 — suporte **first-class** confirmado a Reanimated 4 + New Architecture (Fabric). Resolve snap points, backdrop, gesto de arrastar de forma nativa e performática — não vale reinventar isso à mão. Encaixe direto: item **10.5.1** ("Header de perfil com avatar tappable → bottom sheet com roles ativas").
+- Como qualquer módulo nativo instalado depois de um build de dev client existente, requer **novo build EAS dev client** (`eas build --profile development`) antes de aparecer no device — mesma lição já aprendida com `expo-media-library`/`expo-sharing` no Bloco 3.
 
 ### Navegação — decisão crítica
 - **NUNCA usar `@react-navigation/stack`** — usa `InteractionManager` internamente, depreciado no RN 0.85+
@@ -211,6 +230,23 @@ shared/components/
   FloatingParticle.tsx        # reutilizado em múltiplas telas
 ```
 
+### Formulários — Zod + React Hook Form (padrão obrigatório, item 1.21)
+
+Toda validação de formulário usa **schema Zod** (`domain/*.validation.ts`) como fonte única de tipo + regra — nunca `useState` por campo com uma função `validateX` manual escrita à mão.
+
+Dois tratamentos, escolhidos pela arquitetura da tela (não por preferência pontual):
+
+| Situação | Abordagem |
+|----------|-----------|
+| Tela standalone com 1 form e 1 submit (ex.: `LoginScreen`, `RegisterScreen`, `CompleteMusicianSignupScreen`) | Zod schema + `useForm({ resolver: zodResolver(schema) })` + `<Controller>` por campo. Ganho: cada `Controller` isola o próprio re-render (ex. `PasswordStrengthHint` só re-renderiza dentro do `Controller` de senha), schema único como fonte de tipo+validação. |
+| Steps de um wizard multi-tela com estado central (`useReducer`) e botão de avançar **fora** do form (ex. `MusicianSetupWizardScreen`/`StepOneIdentity`/`StepFourPix`) | **Só Zod** (`schema.safeParse`), sem `react-hook-form` — encaixar RHF exigiria `forwardRef`/`useImperativeHandle` só pra um botão externo disparar validação; complexidade desnecessária para 1-2 campos por step. |
+
+Regras:
+- Schemas ficam em `features/[feature]/domain/*.validation.ts` — nunca dentro de `ui/`.
+- Reaproveitar validadores primitivos já existentes em `shared/utils/` (`cpf.ts`, `phone.ts`, `email.ts`) dentro do `.refine()`/`.superRefine()` — nunca duplicar um regex de e-mail/CPF/telefone dentro de um schema.
+- O componente de input (`FormField`) nunca importa de `react-hook-form` — recebe só `value`/`onChangeText`/`onBlur`/`error`, pra funcionar tanto sob `Controller` quanto sob o padrão Zod-only do wizard.
+- Antes de criar um novo formulário (`EditProfileScreen`, onboarding de estabelecimento, etc.), reveja esta seção — não reintroduzir validação manual por `useState`.
+
 ### Dimensões e responsividade
 
 - **`Dimensions.get('window')`** no nível do módulo — app é `portrait` travado (app.json), largura constante
@@ -260,7 +296,7 @@ O músico usa o app em condições adversas (palco, bar escuro, uma mão livre):
 5. Gorjetas recebidas (histórico)
 6. Analytics básico pós-evento
 7. Repertório (criar, listar, Play Mode)
-8. Afinador cromático (`expo-av`)
+8. Afinador cromático (`expo-audio` só pra permissão de microfone + `react-native-pitchy` pra captura/detecção MPM — `expo-av` foi removido, ver seção de libs)
 9. Chat com estabelecimentos (WebSocket)
 
 > **Próxima tarefa = primeiro `[ ]` em `Docs/roadmap-mobile.md`**
@@ -290,6 +326,23 @@ Interceptors obrigatórios:
 1. Attach JWT (`Authorization: Bearer <token>`)
 2. Refresh automático de token expirado
 3. Error handling global (401 → logout, 422 → exibir erros de validação)
+
+### Envelope de resposta do backend — NUNCA esqueça
+
+O backend embrulha **toda** resposta HTTP num envelope via `WrapperDataInterceptor` global (padrão FC3):
+- Recurso único: `{ "data": { ...recurso } }`
+- Lista paginada: `{ "data": [...], "meta": { current_page, per_page, ... } }` (o interceptor pula o wrap quando o body já tem `meta`, ou é falsy)
+
+**Regra obrigatória em todo adapter de `infrastructure/`:** tipar a resposta como
+`ApiEnvelope<T>` (de `src/shared/services/http/types.ts`) e retornar `data.data` —
+nunca `data` cru. Ignorar isso causa campos `undefined` silenciosos (bug real:
+cadastro criava a conta mas o app lia `access_token` undefined e mostrava "erro
+inesperado").
+
+```ts
+const { data } = await httpClient.post<ApiEnvelope<RegisterResponse>>('/auth/register', payload);
+return data.data; // ← desembrulha o envelope
+```
 
 ---
 
