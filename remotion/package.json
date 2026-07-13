@@ -1,0 +1,19 @@
+{
+  "name": "soundmeet-role-bg-remotion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pipeline de build (n\u00e3o faz parte do bundle do app) para gerar os loops de fundo em v\u00eddeo do RoleSelectionScreen a partir de stock footage Pexels via Remotion.",
+  "scripts": {
+    "dev": "remotion studio src/index.ts",
+    "render:musician": "remotion render src/index.ts MusicianLoop out/musician-loop.mp4",
+    "render:fan": "remotion render src/index.ts FanLoop out/fan-loop.mp4 --crf=36",
+    "render": "npm run render:musician && npm run render:fan"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.484",
+    "@remotion/cli": "4.0.484",
+    "@remotion/transitions": "4.0.484"
+  }
+}
