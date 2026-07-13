@@ -1,0 +1,192 @@
+import { useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { ArrowLeft } from 'lucide-react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
+import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
+import { GlowCard } from '@/shared/components/GlowCard';
+import { AnimatedBalance } from '@/shared/components/AnimatedBalance';
+import { useAuthStore } from '@/shared/services/auth/auth.store';
+import { useAnalytics } from '../../application/useAnalytics';
+import { AnalyticsHeroStats } from '../components/AnalyticsHeroStats';
+import { RequestsOutcomeChart } from '../components/RequestsOutcomeChart';
+import { TopSongsList } from '../components/TopSongsList';
+import type { ProfileScreenProps } from '@/navigation/types';
+
+type Props = ProfileScreenProps<'Analytics'>;
+
+// Mesmo padrão hand-rolled de reveal em cascata de WalletScreen (Bloco 5) —
+// sem hook compartilhado, duplicado por tela de propósito (ver CLAUDE.md).
+function useReveal(delay: number) {
+  const opacity = useSharedValue(0);
+  const y = useSharedValue(20);
+
+  useEffect(() => {
+    opacity.value = withDelay(delay, withTiming(1, { duration: 420 }));
+    y.value = withDelay(delay, withTiming(0, { duration: 420 }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: y.value }],
+  }));
+}
+
+// Teal+âmbar (paleta "Analytics" do design-system.md), distinto do
+// coral/rosa da WalletScreen e do teal+violeta default do resto do app.
+const ANALYTICS_GLOWS = [
+  { color: colors.brand.glow, size: 300, top: -100, left: -90, duration: 8000 },
+  { color: `${colors.accent.amber}28`, size: 280, bottom: -100, right: -80, duration: 9500 },
+];
+
+// AnalyticsScreen (Bloco 6) — empurrada na stack de Perfil (não é tab), mesmo
+// padrão de back button de QRCodeScreen. Dado é all-time/global (sem escopo
+// por evento — nenhum endpoint de requests/tips filtra por event_id hoje),
+// por isso o texto evita "gorjetas do evento" e usa "total em gorjetas".
+export function AnalyticsScreen({ navigation }: Props) {
+  const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
+  const { data: analytics, isPending, isError, refetch } = useAnalytics(musicianId);
+
+  const statsStyle = useReveal(60);
+  const tipsStyle = useReveal(140);
+  const chartStyle = useReveal(200);
+  const songsTitleStyle = useReveal(260);
+  const songsStyle = useReveal(320);
+
+  function renderBody() {
+    if (isPending) {
+      return (
+        <View style={s.loaderRoot}>
+          <ActivityIndicator color={colors.brand.primary} size="large" />
+        </View>
+      );
+    }
+
+    if (isError || !analytics) {
+      return (
+        <View style={s.loaderRoot}>
+          <ErrorBanner message="Não conseguimos carregar seus dados de analytics." />
+          <Pressable onPress={() => refetch()} style={s.retryBtn} accessibilityRole="button" accessibilityLabel="Tentar novamente">
+            <Text style={s.retryText}>Tentar novamente</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    return (
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+        <View style={s.content}>
+          <Animated.View style={statsStyle}>
+            <Text style={s.screenTitle}>Analytics</Text>
+            <AnalyticsHeroStats analytics={analytics} />
+          </Animated.View>
+
+          <Animated.View style={tipsStyle}>
+            <GlowCard accentColor={colors.accent.amber} style={s.tipsCard}>
+              <Text style={s.tipsLabel}>Total em gorjetas</Text>
+              <AnimatedBalance value={analytics.total_tips_amount} />
+            </GlowCard>
+          </Animated.View>
+
+          <Animated.View style={chartStyle}>
+            <RequestsOutcomeChart
+              accepted={analytics.accepted_requests_count}
+              rejected={analytics.rejected_requests_count}
+            />
+          </Animated.View>
+
+          <Animated.View style={songsTitleStyle}>
+            <Text style={s.sectionTitle}>Músicas mais pedidas</Text>
+          </Animated.View>
+
+          <Animated.View style={songsStyle}>
+            <TopSongsList songs={analytics.top_requested_songs} />
+          </Animated.View>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={s.root} edges={['top']}>
+      <StatusBar style="light" />
+      <AmbientGlowBackground glows={ANALYTICS_GLOWS} />
+
+      <Pressable
+        onPress={() => navigation.goBack()}
+        style={s.backBtn}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
+        hitSlop={8}
+      >
+        <ArrowLeft size={22} color={colors.text.primary} />
+      </Pressable>
+
+      {renderBody()}
+    </SafeAreaView>
+  );
+}
+
+const s = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.bg.primary,
+  },
+  backBtn: {
+    position: 'absolute',
+    top: spacing.lg,
+    left: spacing.lg,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  loaderRoot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  retryBtn: {
+    backgroundColor: colors.brand.primary,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xxl,
+  },
+  retryText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color: colors.text.inverse,
+  },
+  scroll: {
+    padding: spacing.xl,
+    paddingTop: spacing.xxxl + spacing.lg,
+    paddingBottom: spacing.xxxl,
+  },
+  content: {
+    gap: spacing.xl,
+  },
+  screenTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+  },
+  tipsCard: {
+    gap: spacing.xs,
+  },
+  tipsLabel: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  sectionTitle: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color: colors.text.primary,
+  },
+});
