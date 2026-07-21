@@ -4,7 +4,7 @@
     "slug": "soundmeet",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo/logo-verde.png",
+    "icon": "./assets/logo/icon-1024.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0C0C14",
     "ios": {
@@ -19,7 +19,7 @@
       "package": "com.soundmeet.app",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo/logo-verde.png",
+        "foregroundImage": "./assets/logo/adaptive-foreground-1024.png",
         "backgroundColor": "#0C0C14"
       },
       "permissions": [
@@ -29,7 +29,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/logo/logo-verde.png"
+      "favicon": "./assets/logo/icon-1024.png"
     },
     "plugins": [
       "expo-secure-store",
@@ -49,7 +49,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/logo/logo-verde.png",
+          "icon": "./assets/logo/adaptive-foreground-1024.png",
           "color": "#00E0B8"
         }
       ],
@@ -57,7 +57,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/logo/logo-verde.png",
+          "image": "./assets/logo/logo_verde-removebg-preview.png",
           "resizeMode": "contain",
           "backgroundColor": "#0C0C14"
         }
@@ -81,6 +81,12 @@
         {
           "microphonePermission": "Precisamos do microfone para o afinador cromático ouvir seu instrumento",
           "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Usamos sua localização para mostrar shows e estabelecimentos perto de você."
         }
       ]
     ],
