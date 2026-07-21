@@ -88,7 +88,11 @@ export function FormField({
         )}
 
         <TextInput
-          value={value}
+          // Campos de senha são semi-uncontrolled (defaultValue): o round-trip
+          // do `value` controlado a cada tecla faz setText no EditText do
+          // Android e cancela o preview nativo do último caractere digitado.
+          // O RHF continua sincronizado via onChangeText.
+          {...(secureTextEntry ? { defaultValue: value } : { value })}
           onChangeText={onChangeText}
           onFocus={handleFocus}
           onBlur={handleBlur}

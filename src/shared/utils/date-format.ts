@@ -22,3 +22,26 @@ export function formatListPreviewTime(iso: string): string {
   const sameDay = d.toDateString() === new Date().toDateString();
   return sameDay ? formatHHMM(iso) : formatShortDate(iso);
 }
+
+// Máscara progressiva de digitação DD/MM/AAAA (mesmo racional de formatCpf/
+// formatPhone: só dígitos, separadores reinseridos).
+export function maskBrDate(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8);
+  return digits
+    .replace(/(\d{2})(\d)/, '$1/$2')
+    .replace(/(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+}
+
+// DD/MM/AAAA → Date local à meia-noite, ou null se o formato/calendário for
+// inválido (o rollover do Date aceitaria 31/02 como 02/03 — aqui não).
+export function parseBrDate(value: string): Date | null {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value);
+  if (!match) return null;
+  const day   = Number(match[1]);
+  const month = Number(match[2]);
+  const year  = Number(match[3]);
+  const date  = new Date(year, month - 1, day);
+  const valid =
+    date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  return valid ? date : null;
+}
