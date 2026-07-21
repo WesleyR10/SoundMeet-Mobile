@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import { Asset } from 'expo-asset';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClientProvider } from '@tanstack/react-query';
 
@@ -78,7 +79,10 @@ export default function App() {
       <SafeAreaProvider>
         <ThemeProvider>
           <QueryClientProvider client={queryClient}>
-            <RootNavigator />
+            {/* Sheets de @gorhom/bottom-sheet (RoleSwitchSheet, 10.5.1) montam via portal deste provider */}
+            <BottomSheetModalProvider>
+              <RootNavigator />
+            </BottomSheetModalProvider>
           </QueryClientProvider>
         </ThemeProvider>
       </SafeAreaProvider>

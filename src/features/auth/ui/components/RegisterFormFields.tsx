@@ -41,7 +41,7 @@ export function RegisterFormFields({ control, role }: Props) {
             value={field.value}
             onChangeText={field.onChange}
             onBlur={field.onBlur}
-            placeholder="voce@email.com"
+            placeholder="seuemail@email.com"
             keyboardType="email-address"
             autoComplete="email"
             importantForAutofill="no"

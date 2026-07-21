@@ -45,3 +45,16 @@ export interface SocialSignupResponse {
   role:       RegisterRole;
   profile_id: string;
 }
+
+// Multi-role (Bloco 10.5) — POST /auth/add-role: usuário já cadastrado com um
+// papel adiciona o outro; cpf/phone obrigatórios só para role=musician.
+export interface AddRolePayload {
+  role:   RegisterRole;
+  cpf?:   string;
+  phone?: string;
+}
+
+export interface AddRoleResponse {
+  role:       RegisterRole;
+  profile_id: string;
+}

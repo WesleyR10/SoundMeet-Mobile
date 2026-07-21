@@ -97,10 +97,12 @@ export function SlideCarousel({ slide, onGoto }: Props) {
       const tx = e.translationX;
       const vx = e.velocityX;
 
-      if ((tx < -SWIPE_THRESHOLD || vx < -600) && slide < SLIDE_COUNT - 1) {
-        runOnJS(onGoto)(slide + 1);
-      } else if ((tx > SWIPE_THRESHOLD || vx > 600) && slide > 0) {
-        runOnJS(onGoto)(slide - 1);
+      // wrap circular: do último volta pro primeiro (e vice-versa),
+      // mesmo comportamento do autoplay em OnboardingScreen
+      if (tx < -SWIPE_THRESHOLD || vx < -600) {
+        runOnJS(onGoto)((slide + 1) % SLIDE_COUNT);
+      } else if (tx > SWIPE_THRESHOLD || vx > 600) {
+        runOnJS(onGoto)((slide - 1 + SLIDE_COUNT) % SLIDE_COUNT);
       } else {
         // snap de volta ao slide atual
         dragX.value = withTiming(0, { duration: 250 });

@@ -3,6 +3,8 @@ import { httpClient } from '@/shared/services/http/client';
 import { ENV } from '@/shared/services/config/env';
 import type { ApiEnvelope } from '@/shared/services/http/types';
 import type {
+  AddRolePayload,
+  AddRoleResponse,
   LoginPayload,
   LoginResponse,
   RegisterPayload,
@@ -33,5 +35,13 @@ export async function socialSignup(
     payload,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
+  return data.data;
+}
+
+// POST /auth/add-role — usuário autenticado adiciona o segundo papel
+// (Bloco 10.5). Vai pelo httpClient normal: a sessão principal é a certa e o
+// interceptor de refresh pode agir à vontade.
+export async function addRole(payload: AddRolePayload): Promise<AddRoleResponse> {
+  const { data } = await httpClient.post<ApiEnvelope<AddRoleResponse>>('/auth/add-role', payload);
   return data.data;
 }
