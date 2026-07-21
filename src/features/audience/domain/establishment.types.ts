@@ -54,8 +54,9 @@ export interface Establishment {
 }
 
 // Espelha EstablishmentFilter (backend) — passado como `filter[...]` na
-// query (nested object, não params soltos). Sem geo/raio ainda — ver
-// soundmeet-backend/Docs/roadmap.md Bloco 7.13.
+// query (nested object, não params soltos). Geo/raio implementado no backend
+// em jul/2026 (roadmap 7.13): lat+lng+radius_km juntos ativam o filtro por
+// proximidade e a ordenação por distância.
 export interface EstablishmentFilter {
   name?:             string;
   location_city?:    string;
@@ -64,6 +65,9 @@ export interface EstablishmentFilter {
   capacity_min?:     number;
   capacity_max?:     number;
   is_verified?:      boolean;
+  lat?:              number;
+  lng?:              number;
+  radius_km?:        number;
 }
 
 export interface EstablishmentListParams {

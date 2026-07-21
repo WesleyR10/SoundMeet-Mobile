@@ -6,10 +6,11 @@ export const establishmentsListKey = (params: EstablishmentListParams) => ['esta
 
 // Feed de descoberta (Home) e Explorar/Busca reaproveitam o mesmo hook — só
 // os `params` (filtro) mudam. Sem geo/raio ainda (ver roadmap.md 7.13).
-export function useEstablishments(params: EstablishmentListParams = {}) {
+export function useEstablishments(params: EstablishmentListParams = {}, enabled = true) {
   return useQuery({
     queryKey:  establishmentsListKey(params),
     queryFn:   () => listEstablishments(params),
     staleTime: 30 * 1_000,
+    enabled,
   });
 }

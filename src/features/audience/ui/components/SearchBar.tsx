@@ -5,7 +5,8 @@ import { colors, spacing, radius, typography } from '@/shared/design-system/toke
 type Props = {
   value:        string;
   onChangeText: (v: string) => void;
-  onPressFilter: () => void;
+  // Ausente = esconde o botão de filtro (aba Músicos do FanExplore, 7.13c).
+  onPressFilter?: () => void;
   activeFilterCount?: number;
   placeholder?: string;
 };
@@ -28,19 +29,21 @@ export function SearchBar({ value, onChangeText, onPressFilter, activeFilterCoun
         />
       </View>
 
-      <Pressable
-        onPress={onPressFilter}
-        style={s.filterBtn}
-        accessibilityRole="button"
-        accessibilityLabel="Abrir filtros"
-      >
-        <SlidersHorizontal size={18} color={activeFilterCount > 0 ? colors.brand.primary : colors.text.secondary} />
-        {activeFilterCount > 0 && (
-          <View style={s.badge}>
-            <Text style={s.badgeText}>{activeFilterCount}</Text>
-          </View>
-        )}
-      </Pressable>
+      {onPressFilter && (
+        <Pressable
+          onPress={onPressFilter}
+          style={s.filterBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir filtros"
+        >
+          <SlidersHorizontal size={18} color={activeFilterCount > 0 ? colors.brand.primary : colors.text.secondary} />
+          {activeFilterCount > 0 && (
+            <View style={s.badge}>
+              <Text style={s.badgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </Pressable>
+      )}
     </View>
   );
 }

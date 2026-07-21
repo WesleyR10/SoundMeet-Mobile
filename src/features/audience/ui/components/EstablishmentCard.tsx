@@ -2,11 +2,14 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 import { Star, MapPin, ChevronRight } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
+import { formatDistanceKm } from '@/shared/utils/geo';
 import type { Establishment } from '../../domain/establishment.types';
 
 type Props = {
   establishment: Establishment;
   onPress:       () => void;
+  /** Distância até o usuário (km) — presente quando o filtro de raio está ativo. */
+  distanceKm?:   number | null;
 };
 
 const TYPE_LABEL: Record<Establishment['establishment_type'], string> = {
@@ -16,9 +19,9 @@ const TYPE_LABEL: Record<Establishment['establishment_type'], string> = {
 };
 
 // Card de descoberta (Home/Explorar do fã, Bloco 11.3/11.4) — usa
-// Pressable3DCard pro toque com profundidade; sem "near me"/raio real ainda
-// (ver soundmeet-backend/Docs/roadmap.md 7.13), então sem distância exibida.
-export function EstablishmentCard({ establishment, onPress }: Props) {
+// Pressable3DCard pro toque com profundidade; distância aparece quando o
+// filtro de raio (7.13, jul/2026) está ativo.
+export function EstablishmentCard({ establishment, onPress, distanceKm }: Props) {
   const city = (establishment.profile?.location as { city?: string } | undefined)?.city ?? null;
   const genres = establishment.profile?.preferred_genres ?? [];
 
@@ -46,6 +49,7 @@ export function EstablishmentCard({ establishment, onPress }: Props) {
           <Text style={s.meta} numberOfLines={1}>
             {TYPE_LABEL[establishment.establishment_type]}
             {city ? ` · ${city}` : ''}
+            {distanceKm !== null && distanceKm !== undefined ? ` · ${formatDistanceKm(distanceKm)}` : ''}
           </Text>
 
           <View style={s.bottomRow}>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView, View, Text, Pressable, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { LogOut } from 'lucide-react-native';
+import { LogOut, Users } from 'lucide-react-native';
 import { colors, spacing, typography } from '@/shared/design-system/tokens';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
@@ -12,6 +12,7 @@ import type { FanProfileScreenProps } from '@/navigation/types';
 import { useAudience, useCompleteAudienceProfile } from '../../application/useAudience';
 import { GENRE_OPTIONS, INSTRUMENT_OPTIONS } from '../../domain/audience.constants';
 import { FanProfileHero } from '../components/FanProfileHero';
+import { RoleSwitchSheet } from '@/navigation/components/RoleSwitchSheet';
 
 type Props = FanProfileScreenProps<'FanProfile'>;
 
@@ -29,6 +30,7 @@ export function FanProfileScreen({ navigation }: Props) {
 
   const [genres, setGenres]           = useState<string[]>([]);
   const [instruments, setInstruments] = useState<string[]>([]);
+  const [accountsVisible, setAccountsVisible] = useState(false);
 
   useEffect(() => {
     if (audience) {
@@ -96,11 +98,28 @@ export function FanProfileScreen({ navigation }: Props) {
 
         <PrimaryButton label="Salvar preferências" onPress={handleSave} loading={completeMutation.isPending} />
 
+        {/* Multi-role (10.5): troca de conta + CTA "Quero ser Músico também" */}
+        <Pressable
+          onPress={() => setAccountsVisible(true)}
+          style={s.accountsRow}
+          accessibilityRole="button"
+          accessibilityLabel="Trocar de conta"
+        >
+          <Users size={18} color={colors.brand.primary} />
+          <Text style={s.accountsText}>Trocar de conta</Text>
+        </Pressable>
+
         <Pressable onPress={handleLogout} style={s.logoutRow} accessibilityRole="button" accessibilityLabel="Sair da conta">
           <LogOut size={18} color={colors.status.error} />
           <Text style={s.logoutText}>Sair da conta</Text>
         </Pressable>
       </ScrollView>
+
+      <RoleSwitchSheet
+        visible={accountsVisible}
+        onClose={() => setAccountsVisible(false)}
+        context="fan"
+      />
     </SafeAreaView>
   );
 }
@@ -130,6 +149,18 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     flexWrap:      'wrap',
     gap:            spacing.sm,
+  },
+  accountsRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.xs,
+    paddingVertical: spacing.md,
+  },
+  accountsText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
   },
   logoutRow: {
     flexDirection: 'row',

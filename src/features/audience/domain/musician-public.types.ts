@@ -18,9 +18,17 @@ export interface MusicianPublicSocialLinks {
   spotify?:   string;
 }
 
+export interface MusicianPublicLocation {
+  city?:      string | null;
+  state?:     string | null;
+  latitude?:  number | null;
+  longitude?: number | null;
+}
+
 export interface MusicianPublicProfileDetails {
-  price_range:  MusicianPublicPriceRange | null;
+  price_ranges: MusicianPublicPriceRange[];
   social_links: MusicianPublicSocialLinks | null;
+  location?:    MusicianPublicLocation | null;
   experience:   number;
   instruments:  string[];
   genres:       string[];
@@ -42,4 +50,25 @@ export interface MusicianPublic {
   display_name:     string;
   is_highly_rated:  boolean;
   profile: MusicianPublicProfileDetails | null;
+}
+
+// Espelha MusicianFilter (backend) — subset relevante pra busca do fã.
+// lat+lng+radius_km juntos ativam o filtro por proximidade (7.13c) e a
+// ordenação por distância, mesmo contrato de EstablishmentFilter.
+export interface MusicianSearchFilter {
+  name?:        string;
+  stage_name?:  string;
+  genres?:      string[];
+  is_verified?: boolean;
+  lat?:         number;
+  lng?:         number;
+  radius_km?:   number;
+}
+
+export interface MusicianListParams {
+  page?:     number;
+  per_page?: number;
+  sort?:     string;
+  sort_dir?: 'asc' | 'desc';
+  filter?:   MusicianSearchFilter;
 }
