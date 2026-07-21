@@ -61,7 +61,7 @@ function EditProfileAccordion({ musician, musicianId, onGoBack }: AccordionProps
   const {
     control, avatarUri, handleChangeAvatar,
     instrumentIds, toggleInstrument, genreIds, toggleGenre,
-    bannerError, sections, location, wallet, qrCode, isDirty,
+    bannerError, sections, location, wallet, qrCode, availability, isDirty,
   } = useEditProfileForm(musician, musicianId);
 
   const toggle = (id: SectionId) => setOpenId((prev) => (prev === id ? null : id));
@@ -109,6 +109,7 @@ function EditProfileAccordion({ musician, musicianId, onGoBack }: AccordionProps
             location={location}
             wallet={wallet}
             qrCode={qrCode}
+            availability={availability}
             openId={openId}
             onToggle={toggle}
           />

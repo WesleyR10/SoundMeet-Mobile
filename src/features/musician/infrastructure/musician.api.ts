@@ -20,6 +20,15 @@ export async function updateMusicianProfile(id: string, payload: UpdateMusicianP
   return data.data;
 }
 
+// PATCH /musicians/:id/open-to-gigs — dedicado (guard de ownership próprio no
+// backend), separado do updateMusician genérico pra refletir que é uma
+// decisão isolada (OpenToGigsDecisionSheet chama isso direto, sem passar
+// pelo resto do accordion de perfil).
+export async function updateOpenToGigs(id: string, open_to_gigs: boolean): Promise<MusicianProfile> {
+  const { data } = await httpClient.patch<ApiEnvelope<MusicianProfile>>(`/musicians/${id}/open-to-gigs`, { open_to_gigs });
+  return data.data;
+}
+
 // PATCH /musicians/:id/push-token — registra/atualiza o Expo push token do
 // device (último dispositivo registrado sobrescreve o anterior no backend).
 export async function registerPushToken(

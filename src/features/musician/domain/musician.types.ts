@@ -8,11 +8,16 @@ export interface WizardMusicianPayload {
   bio?:        string;
   instruments?: string[];
   genres?:      string[];
+  // Opt-in de radar (jul/2026) — tri-state, nunca setado automaticamente pelo
+  // wizard; só a decisão explícita do músico (OpenToGigsDecisionSheet ou
+  // seção "Disponibilidade" do perfil) escreve aqui.
+  open_to_gigs?: boolean | null;
 }
 
 export type PriceRangeModel = 'per_hour' | 'per_event';
 
-// Espelha PriceRangeInput/MusicianProfileOutput["price_range"] do backend.
+// Espelha PriceRangeInput/MusicianProfileOutput["price_ranges"] do backend —
+// uma faixa por modelo de cobrança (por hora e/ou por evento).
 export interface PriceRange {
   model:    PriceRangeModel;
   min:      number;
@@ -34,6 +39,13 @@ export interface MusicianLocation {
   state:     string | null;
   latitude:  number | null;
   longitude: number | null;
+  // Endereço detalhado (opcional, autofill via CEP/ViaCEP) — backend
+  // Location VO estendido em jul/2026; perfis antigos vêm com null.
+  street:       string | null;
+  number:       string | null;
+  complement:   string | null;
+  neighborhood: string | null;
+  zip_code:     string | null;
 }
 
 // Espelha QRCustomization (backend, shared/domain/value-objects/qr-code.vo.ts)
@@ -62,7 +74,7 @@ export interface QRCustomizationPatch {
 export interface MusicianProfileDetails {
   id:           string;
   musician_id:  string;
-  price_range:  PriceRange | null;
+  price_ranges: PriceRange[];
   location:     MusicianLocation;
   social_links: SocialLinks | null;
   experience:   number;
@@ -98,13 +110,24 @@ export interface MusicianProfile {
   is_experienced:   boolean;
   is_highly_rated:  boolean;
   profile:          MusicianProfileDetails | null;
+  // Opt-in de radar (jul/2026) — tri-state: null = ainda não decidiu, nunca
+  // nasce true. Só músico com open_to_gigs === true aparece em GET /musicians
+  // (busca de estabelecimento), no hiring-dashboard e na recomendação de
+  // audiência. Setável em POST/PATCH /musicians e no PATCH .../open-to-gigs
+  // dedicado (useUpdateOpenToGigs).
+  open_to_gigs:     boolean | null;
 }
 
 // Payload aceito por PATCH /musicians/:id/profile (UpdateMusicianProfileInput
 // no backend) — chaves em camelCase, ao contrário do PATCH /musicians/:id.
 export interface UpdateMusicianProfilePayload {
-  priceRange?:  { model: PriceRangeModel; min: number; max: number; currency?: 'BRL'; notes?: string | null } | null;
-  location?:    { city?: string | null; state?: string | null; latitude?: number | null; longitude?: number | null };
+  priceRanges?: { model: PriceRangeModel; min: number; max: number; currency?: 'BRL'; notes?: string | null }[] | null;
+  location?:    {
+    city?: string | null; state?: string | null;
+    latitude?: number | null; longitude?: number | null;
+    street?: string | null; number?: string | null; complement?: string | null;
+    neighborhood?: string | null; zip_code?: string | null;
+  };
   experience?:  number;
   instruments?: string[];
   genres?:      string[];

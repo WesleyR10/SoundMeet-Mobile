@@ -7,7 +7,7 @@ import { musicianProfileKey } from '../../application/useMusician';
 import { musicianWizardGateKey } from '../../application/useMusicianWizardGate';
 import { resolveLabels, INSTRUMENT_OPTIONS, GENRE_OPTIONS } from '../../domain/musician.constants';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
-import type { PriceRangeModel } from '../../domain/musician.types';
+import type { PriceRangeModel, UpdateMusicianProfilePayload } from '../../domain/musician.types';
 
 type Args = {
   musicianId:    string;
@@ -92,14 +92,39 @@ export function useEditProfileSectionSubmits({ musicianId, getValues, trigger, i
 
   const onSavePrice = async (): Promise<boolean> => {
     setPriceError(null);
-    const valid = await trigger(['priceModel', 'priceMin', 'priceMax', 'priceNotes']);
+    const valid = await trigger([
+      'priceHourEnabled', 'priceHourMin', 'priceHourMax', 'priceHourNotes',
+      'priceEventEnabled', 'priceEventMin', 'priceEventMax', 'priceEventNotes',
+    ]);
     if (!valid) return false;
-    const { priceModel, priceMin, priceMax, priceNotes } = getValues();
+    const {
+      priceHourEnabled, priceHourMin, priceHourMax, priceHourNotes,
+      priceEventEnabled, priceEventMin, priceEventMax, priceEventNotes,
+    } = getValues();
+    // Substitui o conjunto inteiro no backend (uma faixa por modelo); array
+    // vazio vira null para limpar tudo — semântica de PATCH priceRanges.
+    const priceRanges: NonNullable<UpdateMusicianProfilePayload['priceRanges']> = [];
+    if (priceHourEnabled) {
+      priceRanges.push({
+        model: 'per_hour' as PriceRangeModel,
+        min: Number(priceHourMin),
+        max: Number(priceHourMax),
+        currency: 'BRL',
+        notes: priceHourNotes || null,
+      });
+    }
+    if (priceEventEnabled) {
+      priceRanges.push({
+        model: 'per_event' as PriceRangeModel,
+        min: Number(priceEventMin),
+        max: Number(priceEventMax),
+        currency: 'BRL',
+        notes: priceEventNotes || null,
+      });
+    }
     try {
       await updateProfile.mutateAsync({
-        priceRange: priceModel
-          ? { model: priceModel as PriceRangeModel, min: Number(priceMin), max: Number(priceMax), currency: 'BRL', notes: priceNotes || null }
-          : null,
+        priceRanges: priceRanges.length ? priceRanges : null,
       });
       return true;
     } catch (err) {

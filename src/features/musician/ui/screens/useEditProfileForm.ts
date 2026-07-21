@@ -11,20 +11,27 @@ import { useEditProfileSectionSubmits } from './useEditProfileSectionSubmits';
 import { useEditLocationSection } from './useEditLocationSection';
 import { useEditWalletSection } from './useEditWalletSection';
 import { useEditQRCodeSection } from './useEditQRCodeSection';
+import { useEditAvailabilitySection } from './useEditAvailabilitySection';
 import type { MusicianProfile } from '../../domain/musician.types';
 
 function toDefaultValues(musician: MusicianProfile): EditProfileFormValues {
-  const priceRange = musician.profile?.price_range ?? null;
+  const priceRanges = musician.profile?.price_ranges ?? [];
+  const hourRange = priceRanges.find((range) => range.model === 'per_hour') ?? null;
+  const eventRange = priceRanges.find((range) => range.model === 'per_event') ?? null;
   const socialLinks = musician.profile?.social_links ?? null;
 
   return {
     stageName:       musician.stage_name ?? '',
     bio:             musician.bio ?? '',
     experienceYears: musician.profile?.experience ?? musician.experience_years ?? 0,
-    priceModel:      priceRange?.model ?? null,
-    priceMin:        priceRange ? String(priceRange.min) : '',
-    priceMax:        priceRange ? String(priceRange.max) : '',
-    priceNotes:      priceRange?.notes ?? '',
+    priceHourEnabled:  !!hourRange,
+    priceHourMin:      hourRange ? String(hourRange.min) : '',
+    priceHourMax:      hourRange ? String(hourRange.max) : '',
+    priceHourNotes:    hourRange?.notes ?? '',
+    priceEventEnabled: !!eventRange,
+    priceEventMin:     eventRange ? String(eventRange.min) : '',
+    priceEventMax:     eventRange ? String(eventRange.max) : '',
+    priceEventNotes:   eventRange?.notes ?? '',
     instagram:       socialLinks?.instagram ?? '',
     youtube:         socialLinks?.youtube ?? '',
     spotify:         socialLinks?.spotify ?? '',
@@ -77,6 +84,7 @@ export function useEditProfileForm(musician: MusicianProfile, musicianId: string
   const location = useEditLocationSection(musicianId, musician.profile?.location);
   const wallet    = useEditWalletSection(musicianId, musician.email, musician.phone);
   const qrCode    = useEditQRCodeSection(musicianId, musician);
+  const availability = useEditAvailabilitySection(musicianId, musician.open_to_gigs);
 
   const sameIds = (a: string[], b: string[]) =>
     a.length === b.length && [...a].sort().join() === [...b].sort().join();
@@ -100,6 +108,7 @@ export function useEditProfileForm(musician: MusicianProfile, musicianId: string
     location,
     wallet,
     qrCode,
+    availability,
     isDirty,
   };
 }

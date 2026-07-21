@@ -1,7 +1,8 @@
 import type { Control } from 'react-hook-form';
-import { UserRound, Music, Clock, Wallet, AtSign, MapPin, Landmark, QrCode } from 'lucide-react-native';
+import { UserRound, Music, Clock, Wallet, AtSign, MapPin, Landmark, QrCode, Radar } from 'lucide-react-native';
 import { colors } from '@/shared/design-system/tokens';
 import { AccordionSection } from '@/shared/components/AccordionSection';
+import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { EditIdentitySection } from './EditIdentitySection';
 import { EditTagsSection } from './EditTagsSection';
 import { EditExperienceSection } from './EditExperienceSection';
@@ -10,12 +11,13 @@ import { EditSocialLinksSection } from './EditSocialLinksSection';
 import { EditLocationSection } from './EditLocationSection';
 import { EditWalletSection } from './EditWalletSection';
 import { EditQRCodeSection } from './EditQRCodeSection';
+import { EditAvailabilitySection } from './EditAvailabilitySection';
 import { AccordionSaveFooter } from './AccordionSaveFooter';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
 import type { MusicianProfile } from '../../domain/musician.types';
 import type { useEditProfileForm } from '../screens/useEditProfileForm';
 
-export type SectionId = 'identity' | 'tags' | 'experience' | 'price' | 'social' | 'location' | 'wallet' | 'qrcode';
+export type SectionId = 'identity' | 'availability' | 'tags' | 'experience' | 'price' | 'social' | 'location' | 'wallet' | 'qrcode';
 
 type EditProfileFormResult = ReturnType<typeof useEditProfileForm>;
 
@@ -32,6 +34,7 @@ type Props = {
   location:            EditProfileFormResult['location'];
   wallet:              EditProfileFormResult['wallet'];
   qrCode:              EditProfileFormResult['qrCode'];
+  availability:        EditProfileFormResult['availability'];
   openId:   SectionId | null;
   onToggle: (id: SectionId) => void;
 };
@@ -42,7 +45,7 @@ type Props = {
 export function EditProfileAccordionList({
   musician, control, avatarUri, handleChangeAvatar,
   instrumentIds, toggleInstrument, genreIds, toggleGenre,
-  sections, location, wallet, qrCode, openId, onToggle,
+  sections, location, wallet, qrCode, availability, openId, onToggle,
 }: Props) {
   return (
     <>
@@ -57,6 +60,19 @@ export function EditProfileAccordionList({
       >
         <EditIdentitySection control={control} avatarUri={avatarUri} onChangeAvatarUri={handleChangeAvatar} />
         <AccordionSaveFooter onSave={sections.identity.onSave} isSaving={sections.identity.isSaving} error={sections.identity.error} />
+      </AccordionSection>
+
+      <AccordionSection
+        title="Disponibilidade"
+        subtitle={availability.value ? 'Radar ligado' : (availability.isDecided ? 'Radar desligado' : 'Ainda não decidido')}
+        icon={Radar}
+        accentColor={colors.brand.primary}
+        isComplete={availability.isDecided}
+        isOpen={openId === 'availability'}
+        onToggle={() => onToggle('availability')}
+      >
+        <EditAvailabilitySection value={availability.value} onChange={availability.onChange} disabled={availability.isSaving} />
+        {!!availability.error && <ErrorBanner message={availability.error} />}
       </AccordionSection>
 
       <AccordionSection
@@ -92,10 +108,10 @@ export function EditProfileAccordionList({
 
       <AccordionSection
         title="Faixa de preço"
-        subtitle={musician.profile?.price_range ? 'Definida' : 'Não definida'}
+        subtitle={musician.profile?.price_ranges?.length ? 'Definida' : 'Não definida'}
         icon={Wallet}
         accentColor={colors.accent.amber}
-        isComplete={!!musician.profile?.price_range}
+        isComplete={!!musician.profile?.price_ranges?.length}
         isOpen={openId === 'price'}
         onToggle={() => onToggle('price')}
       >
@@ -126,6 +142,18 @@ export function EditProfileAccordionList({
         onToggle={() => onToggle('location')}
       >
         <EditLocationSection
+          cep={location.cep}
+          onChangeCep={location.onChangeCep}
+          cepLoading={location.cepLoading}
+          cepError={location.cepError}
+          street={location.street}
+          onChangeStreet={location.setStreet}
+          number={location.number}
+          onChangeNumber={location.setNumber}
+          complement={location.complement}
+          onChangeComplement={location.setComplement}
+          neighborhood={location.neighborhood}
+          onChangeNeighborhood={location.setNeighborhood}
           city={location.city}
           onChangeCity={location.setCity}
           state={location.state}

@@ -64,10 +64,13 @@ export function resolveIds(labels: string[], options: TagOption[]): string[] {
 
 // Usado pelo ViewProfileScreen (Bloco 2) para exibir a faixa de preço salva
 // pelo EditProfileScreen. `null` quando o músico não definiu preço.
-export function formatPriceRange(priceRange: PriceRange | null): string | null {
-  if (!priceRange) return null;
-  const suffix = priceRange.model === 'per_hour' ? '/hora' : '/evento';
+export function formatPriceRange(priceRanges: PriceRange[] | null | undefined): string | null {
+  if (!priceRanges?.length) return null;
   const fmt = (n: number) => `R$${Number.isInteger(n) ? n : n.toFixed(2)}`;
-  if (priceRange.min === priceRange.max) return `${fmt(priceRange.min)}${suffix}`;
-  return `${fmt(priceRange.min)}–${fmt(priceRange.max)}${suffix}`;
+  const formatOne = (range: PriceRange) => {
+    const suffix = range.model === 'per_hour' ? '/hora' : '/evento';
+    if (range.min === range.max) return `${fmt(range.min)}${suffix}`;
+    return `${fmt(range.min)}–${fmt(range.max)}${suffix}`;
+  };
+  return priceRanges.map(formatOne).join(' · ');
 }

@@ -87,28 +87,40 @@ export const editProfileSchema = z.object({
   // direto via field.onChange (nunca vem de um TextInput) — coerce criaria
   // um descompasso entre o tipo de entrada e saída do schema no zodResolver.
   experienceYears: z.number().min(0, 'Não pode ser negativo').max(100, 'Valor muito alto'),
-  priceModel: z.enum(['per_hour', 'per_event']).nullable(),
-  priceMin:   z.string().trim(),
-  priceMax:   z.string().trim(),
-  priceNotes: z.string().trim().max(PRICE_NOTES_MAX, 'Nota muito longa').optional().or(z.literal('')),
+  // Uma faixa por modelo de cobrança — o músico pode ativar "por hora" e
+  // "por evento" ao mesmo tempo, cada uma com min/max/notas independentes
+  // (backend: MusicianProfile.priceRanges).
+  priceHourEnabled:  z.boolean(),
+  priceHourMin:      z.string().trim(),
+  priceHourMax:      z.string().trim(),
+  priceHourNotes:    z.string().trim().max(PRICE_NOTES_MAX, 'Nota muito longa').optional().or(z.literal('')),
+  priceEventEnabled: z.boolean(),
+  priceEventMin:     z.string().trim(),
+  priceEventMax:     z.string().trim(),
+  priceEventNotes:   z.string().trim().max(PRICE_NOTES_MAX, 'Nota muito longa').optional().or(z.literal('')),
   instagram: z.string().trim().optional().or(z.literal('')),
   youtube:   z.string().trim().optional().or(z.literal('')),
   spotify:   z.string().trim().optional().or(z.literal('')),
 }).superRefine((data, ctx) => {
-  if (!data.priceModel) return;
+  const validateRange = (enabled: boolean, minRaw: string, maxRaw: string, minPath: string, maxPath: string) => {
+    if (!enabled) return;
 
-  const min = Number(data.priceMin);
-  const max = Number(data.priceMax);
+    const min = Number(minRaw);
+    const max = Number(maxRaw);
 
-  if (!data.priceMin || Number.isNaN(min) || min < 0) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Informe um valor mínimo válido', path: ['priceMin'] });
-  }
-  if (!data.priceMax || Number.isNaN(max) || max < 0) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Informe um valor máximo válido', path: ['priceMax'] });
-  }
-  if (!Number.isNaN(min) && !Number.isNaN(max) && max < min) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'O valor máximo deve ser maior ou igual ao mínimo', path: ['priceMax'] });
-  }
+    if (!minRaw || Number.isNaN(min) || min < 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Informe um valor mínimo válido', path: [minPath] });
+    }
+    if (!maxRaw || Number.isNaN(max) || max < 0) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Informe um valor máximo válido', path: [maxPath] });
+    }
+    if (!Number.isNaN(min) && !Number.isNaN(max) && max < min) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'O valor máximo deve ser maior ou igual ao mínimo', path: [maxPath] });
+    }
+  };
+
+  validateRange(data.priceHourEnabled, data.priceHourMin, data.priceHourMax, 'priceHourMin', 'priceHourMax');
+  validateRange(data.priceEventEnabled, data.priceEventMin, data.priceEventMax, 'priceEventMin', 'priceEventMax');
 });
 
 export type EditProfileFormValues = z.infer<typeof editProfileSchema>;

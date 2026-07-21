@@ -37,7 +37,7 @@ const KEYBOARD_TYPE: Record<PixKeyType, 'number-pad' | 'email-address' | 'defaul
 const PLACEHOLDER: Record<PixKeyType, string> = {
   cpf:    '000.000.000-00',
   phone:  '(00) 00000-0000',
-  email:  'voce@email.com',
+  email:  'seuemail@email.com',
   random: 'Cole sua chave aleatória',
 };
 

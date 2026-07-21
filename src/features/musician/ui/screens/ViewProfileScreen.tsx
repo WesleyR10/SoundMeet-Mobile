@@ -1,24 +1,38 @@
-import { useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import { Star, Clock, Wallet, QrCode } from 'lucide-react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { QrCode } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
+import { logout } from '@/shared/services/auth/keycloak.service';
+import { RoleSwitchSheet } from '@/navigation/components/RoleSwitchSheet';
 import { useMusician } from '../../application/useMusician';
-import { formatPriceRange } from '../../domain/musician.constants';
-import { ProfileStatCard } from '../components/ProfileStatCard';
-import { ProfileHeader } from '../components/ProfileHeader';
-import { ProfileTagPills } from '../components/ProfileTagPills';
+import { useMyBands } from '../../application/useBands';
+import { ProfileIdentityBlock } from '../components/ProfileIdentityBlock';
+import { ProfileInfoSection } from '../components/ProfileInfoSection';
 import { ProfileSocialLinks } from '../components/ProfileSocialLinks';
-import { ProfileLogoutButton } from '../components/ProfileLogoutButton';
-import type { ProfileScreenProps } from '@/navigation/types';
+import { ProfileMenuGroups } from '../components/ProfileMenuGroups';
+import type { ProfileScreenProps, MusicianTabParamList, RootStackParamList } from '@/navigation/types';
 
 type Props = ProfileScreenProps<'ViewProfile'>;
+
+function confirmLogout() {
+  Alert.alert(
+    'Sair da conta',
+    'Você precisará entrar novamente para acessar o app.',
+    [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Sair', style: 'destructive', onPress: () => { void logout(); } },
+    ],
+  );
+}
 
 // Stagger por seção (header → stats → tags → socials), inspirado no reveal em
 // cascata do mockup de referência (Home do Músico.dc.html, `data-reveal` +
@@ -43,12 +57,25 @@ function useReveal(delay: number) {
 export function ViewProfileScreen({ navigation }: Props) {
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data: musician, isPending, isError, refetch } = useMusician(musicianId);
+  // Mesma query de MyBandsScreen (cache compartilhado, sem fetch extra) — só
+  // pra contar convites de banda pendentes e alimentar o badge do menu.
+  const { data: bands } = useMyBands(musicianId);
+  const pendingBandInvites = (bands ?? []).filter(
+    (b) => b.members.some((m) => m.musician_id === musicianId && m.status === 'pending'),
+  ).length;
+  const [accountsVisible, setAccountsVisible] = useState(false);
 
-  const headerStyle = useReveal(60);
-  const statsStyle  = useReveal(140);
-  const tagsStyle   = useReveal(220);
-  const socialStyle = useReveal(300);
-  const logoutStyle = useReveal(380);
+  // ViewProfile fica dois níveis abaixo do Root (Root → MusicianTabs →
+  // ProfileStack → ViewProfile) — um getParent() alcança a tab irmã
+  // (Wallet/Repertoire), dois alcançam o Root (Agenda/ConversationList/Plans).
+  // Mesmo racional documentado em HomeScreen.tsx, só que ali Home é filha
+  // direta da tab, então um getParent() já chega no Root.
+  const tabNavigation = navigation.getParent<BottomTabNavigationProp<MusicianTabParamList>>();
+  const rootNavigation = tabNavigation?.getParent<NativeStackNavigationProp<RootStackParamList>>();
+
+  const menuStyle   = useReveal(260);
+  const infoStyle   = useReveal(340);
+  const socialStyle = useReveal(420);
 
   if (isPending) {
     return (
@@ -71,8 +98,6 @@ export function ViewProfileScreen({ navigation }: Props) {
     );
   }
 
-  const priceLabel = formatPriceRange(musician.profile?.price_range ?? null);
-
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="light" />
@@ -80,30 +105,41 @@ export function ViewProfileScreen({ navigation }: Props) {
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={s.content}>
-          <Animated.View style={headerStyle}>
-            <ProfileHeader musician={musician} />
+          <ProfileIdentityBlock musician={musician} />
+
+          <Animated.View style={menuStyle}>
+            <ProfileMenuGroups
+              onPressQrCode={() => navigation.navigate('QRCode')}
+              onPressRepertoire={() => tabNavigation?.navigate('Repertoire', { screen: 'RepertoireList' })}
+              onPressTuner={() => navigation.navigate('Tuner')}
+              onPressAnalytics={() => navigation.navigate('Analytics')}
+              onPressWallet={() => tabNavigation?.navigate('Wallet')}
+              onPressPlans={() => rootNavigation?.navigate('Plans')}
+              onPressBands={() => navigation.navigate('MyBands')}
+              bandsBadgeCount={pendingBandInvites}
+              onPressAgenda={() => rootNavigation?.navigate('Agenda')}
+              onPressConversations={() => rootNavigation?.navigate('ConversationList')}
+              onPressEditProfile={() => navigation.navigate('EditProfile')}
+              onPressSwitchAccount={() => setAccountsVisible(true)}
+              onPressLogout={confirmLogout}
+            />
           </Animated.View>
 
-          <Animated.View style={[s.statsRow, statsStyle]}>
-            <ProfileStatCard icon={Clock} value={String(musician.profile?.experience ?? musician.experience_years)} label="anos de palco" />
-            <ProfileStatCard icon={Star} value={musician.rating.toFixed(1)} label="nota média" accentColor={colors.accent.amber} />
-            <ProfileStatCard icon={Wallet} value={priceLabel ?? '—'} label="faixa de preço" accentColor={colors.accent.violet} />
-          </Animated.View>
-
-          <Animated.View style={[s.tagsGroup, tagsStyle]}>
-            <ProfileTagPills title="Instrumentos" items={musician.instruments} color={colors.brand.primary} />
-            <ProfileTagPills title="Gêneros musicais" items={musician.genres} color={colors.accent.coral} />
+          <Animated.View style={infoStyle}>
+            <ProfileInfoSection musician={musician} />
           </Animated.View>
 
           <Animated.View style={socialStyle}>
             <ProfileSocialLinks socialLinks={musician.profile?.social_links ?? null} />
           </Animated.View>
-
-          <Animated.View style={logoutStyle}>
-            <ProfileLogoutButton />
-          </Animated.View>
         </View>
       </ScrollView>
+
+      <RoleSwitchSheet
+        visible={accountsVisible}
+        onClose={() => setAccountsVisible(false)}
+        context="musician"
+      />
 
       <View style={s.footer}>
         <Pressable
@@ -152,13 +188,6 @@ const s = StyleSheet.create({
     paddingBottom: 140,
   },
   content: {
-    gap: spacing.xxl,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap:            spacing.md,
-  },
-  tagsGroup: {
     gap: spacing.xxl,
   },
   footer: {
