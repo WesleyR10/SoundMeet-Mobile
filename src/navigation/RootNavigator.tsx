@@ -11,6 +11,9 @@ import { SharedRepertoireScreen } from '@/features/shared-repertoire/ui/screens/
 import { SharedSongViewerScreen } from '@/features/shared-repertoire/ui/screens/SharedSongViewerScreen';
 import { ConversationListScreen } from '@/features/scheduling/ui/screens/ConversationListScreen';
 import { ChatScreen } from '@/features/scheduling/ui/screens/ChatScreen';
+import { AgendaScreen } from '@/features/scheduling/ui/screens/AgendaScreen';
+import { AvailabilityEditorScreen } from '@/features/scheduling/ui/screens/AvailabilityEditorScreen';
+import { PlansPaywallScreen } from '@/features/musician/ui/screens/PlansPaywallScreen';
 import { useNotificationResponseListener, checkInitialNotificationResponse } from '@/shared/services/notifications/useNotificationResponseListener';
 import { useDeepLinkListener, checkInitialDeepLink } from '@/shared/services/deep-linking/useDeepLinkListener';
 import { useDeepLinkStore } from '@/shared/services/deep-linking/deep-link.store';
@@ -126,24 +129,30 @@ export function RootNavigator() {
           />
         ) : (
           <>
+            {/* Fã puro (sem role musician) vê só FanTabs. Usuário com as duas
+                roles (musician+audience) entra em MusicianTabs (visão de
+                músico tem precedência — gate.kind não é 'not-applicable'
+                nesse caso, ver useMusicianWizardGate.ts) e ganha FanTabs
+                registrada como irmã: o item "Ir para conta Fã" do
+                HomeAvatarMenu navega pra ela (push; voltar = back). O switch
+                completo com bottom sheet + refresh de token é o Bloco 10.5. */}
             {isAudience && gate.kind === 'not-applicable' ? (
-              // Fã (sem role musician) — antes disso, qualquer audience caía
-              // aqui e via MusicianTabs por omissão (Bloco 10.4). Usuário com as
-              // duas roles (musician+audience) continua em MusicianTabs, porque
-              // gate.kind não será 'not-applicable' nesse caso (ver
-              // useMusicianWizardGate.ts) — visão de músico tem precedência até
-              // o role-switching do Bloco 10.5 existir.
               <Stack.Screen
                 name="FanTabs"
                 component={FanTabNavigator}
                 options={{ animationTypeForReplace: 'push' }}
               />
             ) : (
-              <Stack.Screen
-                name="MusicianTabs"
-                component={MusicianTabNavigator}
-                options={{ animationTypeForReplace: 'push' }}
-              />
+              <>
+                <Stack.Screen
+                  name="MusicianTabs"
+                  component={MusicianTabNavigator}
+                  options={{ animationTypeForReplace: 'push' }}
+                />
+                {isAudience && (
+                  <Stack.Screen name="FanTabs" component={FanTabNavigator} />
+                )}
+              </>
             )}
             {/* Alcançável a partir de QUALQUER role (músico ou fã) via deep
                 link — por isso não é filha de MusicianTabs/FanTabs, é uma
@@ -157,6 +166,14 @@ export function RootNavigator() {
                 de MusicianTabs. */}
             <Stack.Screen name="ConversationList" component={ConversationListScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
+            {/* Agenda do músico (item 9, jul/2026) — tile "Agenda" da Home
+                agora abre a agenda real; o chat ganhou entrada própria no
+                HomeHeader (ícone Mensagens). */}
+            <Stack.Screen name="Agenda" component={AgendaScreen} />
+            <Stack.Screen name="AvailabilityEditor" component={AvailabilityEditorScreen} />
+            {/* Paywall de planos (jul/2026) — aberto pelo HomeAvatarMenu;
+                apresentação modal pra reforçar o caráter de oferta. */}
+            <Stack.Screen name="Plans" component={PlansPaywallScreen} options={{ presentation: 'modal' }} />
           </>
         )}
       </Stack.Navigator>

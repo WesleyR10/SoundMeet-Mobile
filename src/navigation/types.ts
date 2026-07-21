@@ -22,6 +22,9 @@ export type ProfileStackParamList = {
   QRCode:      undefined;
   Analytics:   undefined;
   Tuner:       undefined;
+  // Gestão de banda somente-leitura (v1, jul/2026) — ver MyBandsScreen.
+  MyBands:     undefined;
+  BandDetail:  { bandId: string };
 };
 
 // ── Músico — Repertório (nested stack dentro da tab Repertoire, Bloco 7) ─────
@@ -100,6 +103,13 @@ export type RootStackParamList = {
   // músico (tile "Agenda", sem stack própria) e do tap numa notificação
   // push, nenhum dos dois casos é filho natural de MusicianTabs.
   ConversationList:    undefined;
+  // Agenda do músico (disponibilidade + shows do mês) — mesma lógica do chat:
+  // alcançável a partir da Home (tile "Agenda") sem stack própria.
+  Agenda:              undefined;
+  AvailabilityEditor:  undefined;
+  // Paywall de planos do músico — alcançável a partir do HomeAvatarMenu
+  // (linha "Plano X") e, futuramente, dos gates de plano (afinador, QR).
+  Plans:               undefined;
   Chat: {
     conversationId:      string;
     establishmentName?:  string;

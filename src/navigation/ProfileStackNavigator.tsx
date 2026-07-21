@@ -4,6 +4,8 @@ import { EditProfileScreen } from '@/features/musician/ui/screens/EditProfileScr
 import { QRCodeScreen } from '@/features/musician/ui/screens/QRCodeScreen';
 import { AnalyticsScreen } from '@/features/musician/ui/screens/AnalyticsScreen';
 import { TunerScreen } from '@/features/musician/ui/screens/TunerScreen';
+import { MyBandsScreen } from '@/features/musician/ui/screens/MyBandsScreen';
+import { BandDetailScreen } from '@/features/musician/ui/screens/BandDetailScreen';
 import type { ProfileStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
@@ -18,6 +20,8 @@ export function ProfileStackNavigator() {
       <Stack.Screen name="QRCode" component={QRCodeScreen} />
       <Stack.Screen name="Analytics" component={AnalyticsScreen} />
       <Stack.Screen name="Tuner" component={TunerScreen} />
+      <Stack.Screen name="MyBands" component={MyBandsScreen} />
+      <Stack.Screen name="BandDetail" component={BandDetailScreen} />
     </Stack.Navigator>
   );
 }
