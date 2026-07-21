@@ -1,13 +1,18 @@
 import { useState } from 'react';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Eye, EyeOff, User } from 'lucide-react-native';
+import { ChevronDown, Eye, EyeOff, MessageCircle, User } from 'lucide-react-native';
 import { colors, spacing, radius, typography, gradients } from '@/shared/design-system/tokens';
+import { HomeAvatarMenu } from './HomeAvatarMenu';
 import type { MusicianProfile } from '../../domain/musician.types';
 
 type Props = {
   musician: MusicianProfile | null | undefined;
   balance:  number | null;
+  onNavigateProfile: () => void;
+  onNavigatePlans:   () => void;
+  onOpenAccounts:    () => void;
+  onPressMessages:   () => void;
 };
 
 const AVATAR_SIZE = 56;
@@ -24,16 +29,24 @@ function formatBRL(value: number): string {
 }
 
 // Header da Home (Bloco 10.3) — avatar com ring gradiente (mesma técnica de
-// ProfileHeader.tsx, RN não tem conic-gradient nativo, aproximado com
-// LinearGradient diagonal teal→violeta) + saudação + saldo com toggle de
-// visibilidade (olho), como no mockup `Home do Músico.dc.html`.
-export function HomeHeader({ musician, balance }: Props) {
-  const [hidden, setHidden] = useState(false);
+// ProfileHeader.tsx) + saudação + ações à direita (mensagens e saldo com
+// toggle de visibilidade). Identidade à ESQUERDA e ações/valores à DIREITA
+// de propósito (padrão consolidado de UX — leitura em F começa na identidade;
+// zona direita concentra ações). Avatar é tappable → HomeAvatarMenu.
+export function HomeHeader({ musician, balance, onNavigateProfile, onNavigatePlans, onOpenAccounts, onPressMessages }: Props) {
+  const [hidden, setHidden]           = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const name = musician?.stage_name || musician?.name || '';
 
   return (
     <View style={s.root}>
-      <View style={s.identity}>
+      <Pressable
+        style={s.identity}
+        onPress={() => setMenuVisible(true)}
+        accessibilityRole="button"
+        accessibilityLabel="Abrir menu do perfil"
+        hitSlop={4}
+      >
         <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
           <View style={s.avatarInner}>
             {musician?.avatar ? (
@@ -45,22 +58,46 @@ export function HomeHeader({ musician, balance }: Props) {
         </LinearGradient>
         <View style={s.textCol}>
           <Text style={s.greeting}>{greeting()}</Text>
-          <Text style={s.name} numberOfLines={1}>{name}</Text>
+          <View style={s.nameRow}>
+            <Text style={s.name} numberOfLines={1}>{name}</Text>
+            <ChevronDown size={14} color={colors.text.secondary} />
+          </View>
         </View>
+      </Pressable>
+
+      <View style={s.actions}>
+        <Pressable
+          onPress={onPressMessages}
+          style={s.messagesBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Mensagens com estabelecimentos"
+          hitSlop={8}
+        >
+          <MessageCircle size={20} color={colors.text.secondary} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => setHidden((v) => !v)}
+          style={s.balanceWrap}
+          accessibilityRole="button"
+          accessibilityLabel={hidden ? 'Mostrar saldo' : 'Ocultar saldo'}
+          hitSlop={8}
+        >
+          <Text style={s.balance}>
+            {balance === null ? '—' : hidden ? 'R$ •••' : formatBRL(balance)}
+          </Text>
+          {hidden ? <EyeOff size={16} color={colors.text.secondary} /> : <Eye size={16} color={colors.text.secondary} />}
+        </Pressable>
       </View>
 
-      <Pressable
-        onPress={() => setHidden((v) => !v)}
-        style={s.balanceWrap}
-        accessibilityRole="button"
-        accessibilityLabel={hidden ? 'Mostrar saldo' : 'Ocultar saldo'}
-        hitSlop={8}
-      >
-        <Text style={s.balance}>
-          {balance === null ? '—' : hidden ? 'R$ •••' : formatBRL(balance)}
-        </Text>
-        {hidden ? <EyeOff size={16} color={colors.text.secondary} /> : <Eye size={16} color={colors.text.secondary} />}
-      </Pressable>
+      <HomeAvatarMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        planTier={musician?.plan_tier ?? null}
+        onNavigateProfile={onNavigateProfile}
+        onNavigatePlans={onNavigatePlans}
+        onOpenAccounts={onOpenAccounts}
+      />
     </View>
   );
 }
@@ -105,10 +142,28 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.xs,
+  },
   name: {
     ...typography.title,
     color:    colors.text.primary,
-    maxWidth: 160,
+    maxWidth: 140,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  messagesBtn: {
+    width:            40,
+    height:           40,
+    borderRadius:     radius.full,
+    alignItems:      'center',
+    justifyContent:  'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   balanceWrap: {
     flexDirection:    'row',

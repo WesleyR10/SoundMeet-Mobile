@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { ScrollView, RefreshControl, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -6,6 +6,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing } from '@/shared/design-system/tokens';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
+import { RoleSwitchSheet } from '@/navigation/components/RoleSwitchSheet';
+import { OpenToGigsDecisionSheet } from '../components/OpenToGigsDecisionSheet';
 import { useMusician } from '../../application/useMusician';
 import { useMusicianWallet } from '../../application/useMusicianWallet';
 import { useRepertoireCount } from '../../application/useRepertoireCount';
@@ -34,6 +36,11 @@ const HOME_GLOWS = [
 export function HomeScreen({ navigation }: Props) {
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const userId     = useAuthStore((s) => s.user?.userId ?? null);
+  const [accountsVisible, setAccountsVisible] = useState(false);
+  // "Decidir depois" só fecha o sheet nesta sessão (a tab da Home continua
+  // montada) — musician.open_to_gigs continua null, reaparece no próximo
+  // cold start do app (este state não persiste).
+  const [decisionDismissed, setDecisionDismissed] = useState(false);
 
   // Home é uma Tab.Screen direta (sem stack própria) — ConversationList
   // vive no Root, não numa tab irmã, então getParent() aqui sobe pro
@@ -80,7 +87,14 @@ export function HomeScreen({ navigation }: Props) {
           <RefreshControl tintColor={colors.brand.primary} refreshing={isRefreshing} onRefresh={onRefresh} />
         }
       >
-        <HomeHeader musician={musicianQuery.data} balance={walletQuery.data?.balance ?? null} />
+        <HomeHeader
+          musician={musicianQuery.data}
+          balance={walletQuery.data?.balance ?? null}
+          onNavigateProfile={() => navigation.navigate('Profile', { screen: 'ViewProfile' })}
+          onNavigatePlans={() => rootNavigation?.navigate('Plans')}
+          onOpenAccounts={() => setAccountsVisible(true)}
+          onPressMessages={() => rootNavigation?.navigate('ConversationList')}
+        />
 
         <NextShowCard />
 
@@ -90,7 +104,7 @@ export function HomeScreen({ navigation }: Props) {
           onPressRepertoire={() => navigation.navigate('Repertoire', { screen: 'RepertoireList' })}
           onPressAnalytics={() => navigation.navigate('Profile', { screen: 'Analytics' })}
           onPressTuner={() => navigation.navigate('Profile', { screen: 'Tuner' })}
-          onPressAgenda={() => rootNavigation?.navigate('ConversationList')}
+          onPressAgenda={() => rootNavigation?.navigate('Agenda')}
         />
 
         <DiscoveryCard />
@@ -99,6 +113,18 @@ export function HomeScreen({ navigation }: Props) {
 
         <RecentBadgesRow badges={badgesQuery.data ?? []} isLoading={badgesQuery.isPending} />
       </ScrollView>
+
+      <RoleSwitchSheet
+        visible={accountsVisible}
+        onClose={() => setAccountsVisible(false)}
+        context="musician"
+      />
+
+      <OpenToGigsDecisionSheet
+        visible={!decisionDismissed && musicianQuery.data?.open_to_gigs === null}
+        onClose={() => setDecisionDismissed(true)}
+        musicianId={musicianId}
+      />
     </SafeAreaView>
   );
 }
