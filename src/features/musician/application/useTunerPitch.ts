@@ -39,7 +39,15 @@ export function useTunerPitch(enabled: boolean, noiseFilterOn: boolean) {
     initPitchy({ algorithm: 'MPM', bufferSize: 4096, ...mode });
 
     const subscription = subscribePitchy((event: PitchyEvent) => {
-      if (event.pitch <= 0 || !isWithinTunerRange(event.pitch)) {
+      // O gate de minConfidence do Pitchy é documentado como nativo (frame
+      // vira pitch=-1 antes de chegar aqui), mas no Android o Kotlin nunca lê
+      // minConfidence da config — só o iOS aplica de fato. Reforça aqui em JS
+      // pra fechar o buraco no Android sem depender de patch no pacote.
+      if (
+        event.pitch <= 0 ||
+        !isWithinTunerRange(event.pitch) ||
+        event.confidence < mode.minConfidence
+      ) {
         hzHistory.current = [];
         pendingNote.current = null;
         pendingCount.current = 0;

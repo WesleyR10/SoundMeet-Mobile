@@ -11,16 +11,24 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useMusician } from '../../application/useMusician';
 import { useMicrophonePermission } from '../../application/useMicrophonePermission';
 import { useTunerPitch } from '../../application/useTunerPitch';
+import { useGuitarTuning } from '../../application/useGuitarTuning';
 import { TunerNoteDisplay } from '../components/TunerNoteDisplay';
 import { TunerCentsMeter } from '../components/TunerCentsMeter';
+import { TunerCentsPill } from '../components/TunerCentsPill';
+import { TunerHeadstock } from '../components/TunerHeadstock';
+import { TunerStringChips } from '../components/TunerStringChips';
+import { TunerModeToggle } from '../components/TunerModeToggle';
 import { TunerNoiseFilterRow } from '../components/TunerNoiseFilterRow';
+import type { TunerMode } from '../../domain/tuner.types';
 import type { ProfileScreenProps } from '@/navigation/types';
 
 type Props = ProfileScreenProps<'Tuner'>;
 
-// Afinador cromático (Bloco 8) — fullscreen, sem distração, mesma UX de palco
-// do PlayModeScreen (fonte grande, contraste máximo, keep-awake). Cobre
-// guitarra/baixo/violão/cavaquinho/banjo (ver TUNER_MIN_HZ/MAX_HZ no domain).
+// Afinador (Bloco 8, redesign jul/2026) — fullscreen, sem distração, mesma UX
+// de palco do PlayModeScreen (fonte grande, contraste máximo, keep-awake).
+// Dois modos: guitarra (headstock + chips de corda + pílula de cents, layout
+// da referência Pinterest 654781233368977952) e cromático (arco + nota,
+// comportamento original) — detecção MPM idêntica nos dois.
 export function TunerScreen({ navigation }: Props) {
   useKeepAwake();
 
@@ -29,6 +37,7 @@ export function TunerScreen({ navigation }: Props) {
 
   const [permission, requestPermission] = useMicrophonePermission();
   const [noiseFilterOn, setNoiseFilterOn] = useState(false);
+  const [mode, setMode] = useState<TunerMode>('guitar');
 
   // Mesmo padrão de isLocked de useEditQRCodeSection.ts — plan_tier só vem
   // populado pelo GET (useMusician), trata ausência como "não travar" pra
@@ -43,6 +52,7 @@ export function TunerScreen({ navigation }: Props) {
 
   const micGranted = permission?.granted ?? false;
   const pitch = useTunerPitch(micGranted, noiseFilterOn && !noiseFilterLocked);
+  const guitar = useGuitarTuning(pitch);
 
   if (!permission) {
     return <SafeAreaView style={s.root} edges={['top']} />;
@@ -71,16 +81,36 @@ export function TunerScreen({ navigation }: Props) {
       <AmbientGlowBackground />
       <BackButton onPress={() => navigation.goBack()} />
 
-      <View style={s.centerRoot}>
-        <TunerCentsMeter cents={pitch.cents} hasSignal={pitch.hasSignal} />
-        <TunerNoteDisplay
-          note={pitch.note}
-          octave={pitch.octave}
-          frequencyHz={pitch.frequencyHz}
-          cents={pitch.cents}
-          hasSignal={pitch.hasSignal}
-        />
+      <View style={s.toggleWrap}>
+        <TunerModeToggle mode={mode} onChange={setMode} />
       </View>
+
+      {mode === 'guitar' ? (
+        <View style={s.centerRoot}>
+          <TunerCentsPill cents={guitar.reading?.cents ?? null} hasSignal={pitch.hasSignal} />
+          <View style={s.headstockRow}>
+            <TunerStringChips side="left" activeIndex={guitar.reading?.stringIndex ?? null} tunedStrings={guitar.tunedStrings} />
+            <TunerHeadstock />
+            <TunerStringChips side="right" activeIndex={guitar.reading?.stringIndex ?? null} tunedStrings={guitar.tunedStrings} />
+          </View>
+          <Text style={s.guitarHint}>
+            {pitch.hasSignal && pitch.frequencyHz !== null
+              ? `${pitch.note}${pitch.octave} · ${pitch.frequencyHz.toFixed(1)} Hz`
+              : 'Toque uma corda solta'}
+          </Text>
+        </View>
+      ) : (
+        <View style={s.centerRoot}>
+          <TunerCentsMeter cents={pitch.cents} hasSignal={pitch.hasSignal} />
+          <TunerNoteDisplay
+            note={pitch.note}
+            octave={pitch.octave}
+            frequencyHz={pitch.frequencyHz}
+            cents={pitch.cents}
+            hasSignal={pitch.hasSignal}
+          />
+        </View>
+      )}
 
       <TunerNoiseFilterRow locked={noiseFilterLocked} value={noiseFilterOn} onChange={setNoiseFilterOn} />
     </SafeAreaView>
@@ -117,6 +147,22 @@ const s = StyleSheet.create({
     alignItems:     'center',
     justifyContent: 'center',
     gap:             spacing.xxl,
+  },
+  toggleWrap: {
+    marginTop: spacing.lg,
+    // deixa espaço pro BackButton absoluto à esquerda
+    alignItems: 'center',
+  },
+  headstockRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.lg,
+  },
+  guitarHint: {
+    ...typography.body,
+    fontFamily: 'JetBrainsMono-Regular',
+    color:      colors.text.secondary,
   },
   permissionRoot: {
     flex:              1,

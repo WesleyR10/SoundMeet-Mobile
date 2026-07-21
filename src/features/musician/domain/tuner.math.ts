@@ -1,4 +1,11 @@
-import { NOTE_NAMES, TUNER_MAX_HZ, TUNER_MIN_HZ, type TunerNoteReading } from './tuner.types';
+import {
+  GUITAR_STANDARD_TUNING,
+  NOTE_NAMES,
+  TUNER_MAX_HZ,
+  TUNER_MIN_HZ,
+  type GuitarStringReading,
+  type TunerNoteReading,
+} from './tuner.types';
 
 const A4_HZ = 440;
 const A4_MIDI = 69; // número MIDI padrão de A4
@@ -24,4 +31,22 @@ export function frequencyToNote(hz: number): TunerNoteReading {
 
 export function isWithinTunerRange(hz: number): boolean {
   return hz >= TUNER_MIN_HZ && hz <= TUNER_MAX_HZ;
+}
+
+// Modo guitarra: acha a corda standard mais próxima do Hz detectado e o
+// desvio em cents em relação a ELA (não à nota cromática mais próxima) —
+// é o que permite o fluxo "toque a corda solta e gire a tarraxa até zerar".
+export function nearestGuitarString(hz: number): GuitarStringReading {
+  let stringIndex = 0;
+  let cents = Number.POSITIVE_INFINITY;
+
+  GUITAR_STANDARD_TUNING.forEach((string, index) => {
+    const offset = 1200 * Math.log2(hz / string.hz);
+    if (Math.abs(offset) < Math.abs(cents)) {
+      stringIndex = index;
+      cents = offset;
+    }
+  });
+
+  return { stringIndex, cents: Math.round(cents) };
 }
