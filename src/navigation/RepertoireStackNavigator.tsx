@@ -6,6 +6,12 @@ import { EditRepertoireScreen } from '@/features/musician/ui/screens/EditReperto
 import { RepertoireInvitesScreen } from '@/features/musician/ui/screens/RepertoireInvitesScreen';
 import { CifraSearchScreen } from '@/features/musician/ui/screens/CifraSearchScreen';
 import { PlayModeScreen } from '@/features/musician/ui/screens/PlayModeScreen';
+import { PersonalChordSheetListScreen } from '@/features/musician/ui/screens/PersonalChordSheetListScreen';
+import { AddPersonalChordSheetScreen } from '@/features/musician/ui/screens/AddPersonalChordSheetScreen';
+import { PersonalChordSheetEditorScreen } from '@/features/musician/ui/screens/PersonalChordSheetEditorScreen';
+import { CommunityChordSheetListScreen } from '@/features/musician/ui/screens/CommunityChordSheetListScreen';
+import { CommunityChordSheetDetailScreen } from '@/features/musician/ui/screens/CommunityChordSheetDetailScreen';
+import { ImportCommunityChordSheetScreen } from '@/features/musician/ui/screens/ImportCommunityChordSheetScreen';
 import type { RepertoireStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RepertoireStackParamList>();
@@ -23,6 +29,12 @@ export function RepertoireStackNavigator() {
       <Stack.Screen name="RepertoireInvites" component={RepertoireInvitesScreen} />
       <Stack.Screen name="CifraSearch" component={CifraSearchScreen} />
       <Stack.Screen name="PlayMode" component={PlayModeScreen} />
+      <Stack.Screen name="PersonalChordSheetList" component={PersonalChordSheetListScreen} />
+      <Stack.Screen name="AddPersonalChordSheet" component={AddPersonalChordSheetScreen} />
+      <Stack.Screen name="PersonalChordSheetEditor" component={PersonalChordSheetEditorScreen} />
+      <Stack.Screen name="CommunityChordSheetList" component={CommunityChordSheetListScreen} />
+      <Stack.Screen name="CommunityChordSheetDetail" component={CommunityChordSheetDetailScreen} />
+      <Stack.Screen name="ImportCommunityChordSheet" component={ImportCommunityChordSheetScreen} />
     </Stack.Navigator>
   );
 }

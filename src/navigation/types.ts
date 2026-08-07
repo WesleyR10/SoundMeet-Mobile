@@ -1,5 +1,4 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
-import type { StackScreenProps } from '@react-navigation/stack';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { RegisterRole } from '@/features/auth/domain/auth.types';
@@ -37,6 +36,12 @@ export type RepertoireStackParamList = {
   RepertoireInvites:  undefined;
   CifraSearch:        { repertoireId: string };
   PlayMode:           { repertoireId: string; musicLibraryId: string };
+  PersonalChordSheetList:    undefined;
+  AddPersonalChordSheet:     undefined;
+  PersonalChordSheetEditor:  { personalChordSheetId: string };
+  CommunityChordSheetList:   undefined;
+  CommunityChordSheetDetail: { personalChordSheetId: string };
+  ImportCommunityChordSheet: { sourcePersonalChordSheetId: string };
 };
 
 // ── Músico — Tabs ─────────────────────────────────────────────────────────────
@@ -121,10 +126,10 @@ export type RootStackParamList = {
 // Uso: type Props = AuthScreenProps<'Login'>
 
 export type RootScreenProps<T extends keyof RootStackParamList> =
-  StackScreenProps<RootStackParamList, T>;
+  NativeStackScreenProps<RootStackParamList, T>;
 
 export type AuthScreenProps<T extends keyof AuthStackParamList> =
-  StackScreenProps<AuthStackParamList, T>;
+  NativeStackScreenProps<AuthStackParamList, T>;
 
 export type MusicianTabScreenProps<T extends keyof MusicianTabParamList> =
   BottomTabScreenProps<MusicianTabParamList, T>;
@@ -133,7 +138,7 @@ export type FanTabScreenProps<T extends keyof FanTabParamList> =
   BottomTabScreenProps<FanTabParamList, T>;
 
 export type ProfileScreenProps<T extends keyof ProfileStackParamList> =
-  StackScreenProps<ProfileStackParamList, T>;
+  NativeStackScreenProps<ProfileStackParamList, T>;
 
 export type RepertoireScreenProps<T extends keyof RepertoireStackParamList> =
   NativeStackScreenProps<RepertoireStackParamList, T>;

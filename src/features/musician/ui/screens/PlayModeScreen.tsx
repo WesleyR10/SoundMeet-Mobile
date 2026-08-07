@@ -1,21 +1,32 @@
-import { useMemo } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { useMemo, useState } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useKeepAwake } from 'expo-keep-awake';
-import { FileX } from 'lucide-react-native';
-import Animated from 'react-native-reanimated';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing, typography } from '@/shared/design-system/tokens';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
-import { ChordTokenLine, type LineState } from '@/shared/components/ChordTokenLine';
+import type { LineState } from '@/shared/components/ChordTokenLine';
+import { ChordDiagramSheet } from '@/shared/components/ChordDiagramSheet';
+import { ChordSheetControlsSheet } from '@/shared/components/ChordSheetControlsSheet';
+import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { useChordSheetControls } from '@/shared/hooks/useChordSheetControls';
+import { transposeTokenGrid, shouldPreferFlatsForKey } from '@/shared/utils/chord-transpose';
 import { useRepertoire } from '../../application/useRepertoire';
 import { useChordSheet } from '../../application/useChordSheet';
 import { useRequests } from '../../application/useRequests';
+import { useMusician } from '../../application/useMusician';
 import { usePlayModeAutoScroll } from '../../application/usePlayModeAutoScroll';
+import { usePersonalChordSheetExists } from '../../application/usePersonalChordSheets';
+import { useForkChordSheet, getPersonalChordSheetMutationErrorMessage } from '../../application/usePersonalChordSheetMutations';
 import { buildFlatLines } from '../../application/chord-sheet-timing';
 import { PlayModeTopBar } from '../components/PlayModeTopBar';
 import { PlayModeBottomBar } from '../components/PlayModeBottomBar';
-import type { RepertoireScreenProps } from '@/navigation/types';
+import { PlayModeChordSheetView } from '../components/PlayModeChordSheetView';
+import { SectionTransitionBadge } from '../components/SectionTransitionBadge';
+import { ForkChordSheetConfirmSheet } from '../components/ForkChordSheetConfirmSheet';
+import type { MusicianTabParamList, RepertoireScreenProps, RootStackParamList } from '@/navigation/types';
 
 type Props = RepertoireScreenProps<'PlayMode'>;
 
@@ -33,15 +44,48 @@ export function PlayModeScreen({ navigation, route }: Props) {
   // Sempre via repertório (dono OU convidado nominal) — ver fix do gap de
   // convite nominal (Bloco 7 revisão): repertoire.musician_id é o DONO,
   // musicianId (acima) é só quem está logado, podem ser pessoas diferentes.
-  const { data: chordSheet, grid, isPending } = useChordSheet(
+  const { data: chordSheet, grid: rawGrid, isPending } = useChordSheet(
     repertoireId,
     repertoire?.musician_id ?? null,
     musicLibraryId,
   );
   const { data: pendingRequests } = useRequests(musicianId, 'pending');
+  const { data: ownerProfile } = useMusician(repertoire?.musician_id ?? null);
+  const [selectedChord, setSelectedChord] = useState<string | null>(null);
+  const [controlsVisible, setControlsVisible] = useState(false);
+  const [forkVisible, setForkVisible] = useState(false);
+  const [forkError, setForkError] = useState<string | null>(null);
+  const controls = useChordSheetControls();
+  const ownsRepertoire = !!musicianId && repertoire?.musician_id === musicianId;
+  const personalSheet = usePersonalChordSheetExists(
+    ownsRepertoire ? musicianId : null,
+    ownsRepertoire ? musicLibraryId : null,
+  );
+  const fork = useForkChordSheet(musicianId);
+  const tabs = navigation.getParent<BottomTabNavigationProp<MusicianTabParamList>>();
+  const rootNavigation = tabs?.getParent<NativeStackNavigationProp<RootStackParamList>>();
 
+  const preferFlats = shouldPreferFlatsForKey(chordSheet?.meta.key);
+  const grid = useMemo(
+    () => (rawGrid ? transposeTokenGrid(rawGrid, controls.displayShiftSemitones, preferFlats) : null),
+    [rawGrid, controls.displayShiftSemitones, preferFlats],
+  );
   const flatLines = useMemo(() => (grid ? buildFlatLines(grid) : []), [grid]);
   const scroll = usePlayModeAutoScroll(flatLines);
+
+  // label só vem preenchido na primeira linha achatada de cada seção (ver
+  // buildFlatLines) — mapeia sectionIndex -> label uma vez só, pra poder
+  // resolver o rótulo da seção ativa mesmo quando ela não está na linha 0.
+  const sectionLabels = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const line of flatLines) {
+      if (line.label && !map.has(line.sectionIndex)) map.set(line.sectionIndex, line.label);
+    }
+    return map;
+  }, [flatLines]);
+  const activeSectionIndex = flatLines[scroll.activeLineIndex]?.sectionIndex;
+  const activeSectionLabel =
+    activeSectionIndex !== undefined ? sectionLabels.get(activeSectionIndex) : undefined;
 
   const songIndex = repertoire?.songs.findIndex((s) => s.music_library_id === musicLibraryId) ?? -1;
   const prevSong = songIndex > 0 ? repertoire?.songs[songIndex - 1] : null;
@@ -58,6 +102,26 @@ export function PlayModeScreen({ navigation, route }: Props) {
     return 'future';
   }
 
+  function openPersonalChordSheet() {
+    if (personalSheet.existingId) {
+      navigation.navigate('PersonalChordSheetEditor', { personalChordSheetId: personalSheet.existingId });
+      return;
+    }
+    setForkError(null);
+    setForkVisible(true);
+  }
+
+  async function createPersonalChordSheet() {
+    setForkError(null);
+    try {
+      const created = await fork.mutateAsync(musicLibraryId);
+      setForkVisible(false);
+      navigation.navigate('PersonalChordSheetEditor', { personalChordSheetId: created.personal_chord_sheet_id });
+    } catch (error) {
+      setForkError(getPersonalChordSheetMutationErrorMessage(error));
+    }
+  }
+
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
       <StatusBar hidden />
@@ -65,48 +129,64 @@ export function PlayModeScreen({ navigation, route }: Props) {
       <PlayModeTopBar
         title={chordSheet?.title ?? ''}
         artist={chordSheet?.artist ?? ''}
+        avatarUrl={ownerProfile?.avatar ?? null}
         progress={scroll.progressPercent / 100}
         pendingCount={pendingRequests?.pending_count ?? 0}
         onPressBadge={() => navigation.getParent()?.navigate('LiveDashboard')}
         onPressBack={() => navigation.goBack()}
+        onPressSettings={() => setControlsVisible(true)}
+        onPressPersonalChordSheet={ownsRepertoire ? openPersonalChordSheet : undefined}
       />
 
-      {isPending ? (
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+      {!!forkError && (
+        <View style={s.forkError}>
+          <ErrorBanner message={forkError} />
+          <Pressable onPress={() => rootNavigation?.navigate('Plans')}>
+            <Text style={s.planLink}>Ver planos</Text>
+          </Pressable>
         </View>
-      ) : flatLines.length === 0 ? (
-        // Backend sempre retorna 200 mesmo sem chords/lyrics (ex.: análise
-        // ainda não gerou nada usável) — sem esse estado explícito a tela
-        // ficaria em branco, sem nenhuma pista do porquê.
-        <View style={s.centerRoot}>
-          <FileX size={40} color={colors.text.muted} />
-          <Text style={s.emptyTitle}>Sem cifra disponível</Text>
-          <Text style={s.emptySubtitle}>Essa música ainda não tem letra ou acordes prontos pra exibir.</Text>
-        </View>
-      ) : (
-        <Animated.ScrollView
-          ref={scroll.scrollRef}
-          style={s.scroll}
-          contentContainerStyle={s.scrollContent}
-          onScrollBeginDrag={scroll.onScrollBeginDrag}
-          onScrollEndDrag={scroll.onScrollEnd}
-          onMomentumScrollEnd={scroll.onScrollEnd}
-          onContentSizeChange={(_w, h) => scroll.reportContentHeight(h)}
-          showsVerticalScrollIndicator={false}
-        >
-          {flatLines.map((line, index) => (
-            <ChordTokenLine
-              key={`${line.sectionIndex}-${line.lineIndexInSection}`}
-              label={line.label}
-              tokens={line.tokens}
-              index={index}
-              state={lineState(index)}
-              onLayoutY={scroll.reportLineLayout}
-            />
-          ))}
-        </Animated.ScrollView>
       )}
+
+      <View style={s.sectionBadgeSlot}>
+        {activeSectionLabel ? (
+          <SectionTransitionBadge key={`${activeSectionIndex}-${activeSectionLabel}`} label={activeSectionLabel} />
+        ) : null}
+      </View>
+
+      <PlayModeChordSheetView
+        isPending={isPending}
+        flatLines={flatLines}
+        scroll={scroll}
+        lineState={lineState}
+        onPressChord={setSelectedChord}
+      />
+
+      <ChordDiagramSheet
+        visible={!!selectedChord}
+        chordSymbol={selectedChord}
+        instrument={controls.instrument}
+        capoFret={controls.instrument === 'guitar' ? controls.capoFret : null}
+        preferFlats={preferFlats}
+        onClose={() => setSelectedChord(null)}
+      />
+
+      <ChordSheetControlsSheet
+        visible={controlsVisible}
+        onClose={() => setControlsVisible(false)}
+        instrument={controls.instrument}
+        onChangeInstrument={controls.setInstrument}
+        transposeSemitones={controls.transposeSemitones}
+        onChangeTranspose={controls.setTransposeSemitones}
+        capoFret={controls.capoFret}
+        onChangeCapo={controls.setCapoFret}
+      />
+
+      <ForkChordSheetConfirmSheet
+        visible={forkVisible}
+        loading={fork.isPending}
+        onConfirm={createPersonalChordSheet}
+        onClose={() => setForkVisible(false)}
+      />
 
       <PlayModeBottomBar
         isPlaying={scroll.isPlaying}
@@ -129,28 +209,19 @@ const s = StyleSheet.create({
     flex:            1,
     backgroundColor: colors.bg.primary,
   },
-  scroll: {
-    flex: 1,
+  sectionBadgeSlot: {
+    height:         28,
+    alignItems:     'center',
+    justifyContent: 'center',
   },
-  scrollContent: {
-    paddingTop:    spacing.md,
-    paddingBottom: spacing.xxxl * 2,
+  forkError: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.xs,
   },
-  centerRoot: {
-    flex:            1,
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              spacing.sm,
-    padding:          spacing.xl,
-  },
-  emptyTitle: {
-    ...typography.title,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
+  planLink: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color: colors.brand.primary,
     textAlign: 'center',
   },
 });

@@ -1,19 +1,41 @@
+import { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SlidersHorizontal, Music, GitFork } from 'lucide-react-native';
+import { colors, spacing, radius, typography, gradients } from '@/shared/design-system/tokens';
+import { Avatar } from '@/shared/components/Avatar';
 
 type Props = {
-  title:         string;
-  artist:        string;
-  progress:      number; // 0..1, só pra UI — não precisa ser reanimated aqui
-  pendingCount:  number;
-  onPressBadge:  () => void;
-  onPressBack:   () => void;
+  title:            string;
+  artist:           string;
+  avatarUrl?:       string | null;
+  progress:         number; // 0..1 — anima suave via Reanimated (withTiming) aqui dentro
+  pendingCount:     number;
+  onPressBadge:     () => void;
+  onPressBack:      () => void;
+  onPressSettings:  () => void;
+  onPressPersonalChordSheet?: () => void;
 };
 
-// Barra superior fina do Play Mode — título + linha de progresso ultra-fina
-// na borda (per Stitch prompt em soundmeet-mobile-plan.md §11) + badge de
-// pedidos pendentes tappable → LiveDashboard (7.8d).
-export function PlayModeTopBar({ title, artist, progress, pendingCount, onPressBadge, onPressBack }: Props) {
+// Barra superior do Play Mode — avatar do músico (anel gradiente teal,
+// mesmo componente Avatar.tsx já usado no chat) + título/artista + botão de
+// ajustes (instrumento/tom/capotraste, ver ChordSheetControlsSheet) + badge
+// de pedidos pendentes tappable → LiveDashboard (7.8d). Progresso com
+// gradiente animado (não salto por re-render) — acompanha o playhead
+// virtual do usePlayModeAutoScroll com uma suavização própria de 260ms.
+export function PlayModeTopBar({
+  title, artist, avatarUrl, progress, pendingCount, onPressBadge, onPressBack, onPressSettings, onPressPersonalChordSheet,
+}: Props) {
+  const progressValue = useSharedValue(progress);
+  useEffect(() => {
+    progressValue.value = withTiming(progress, { duration: 260, easing: Easing.out(Easing.cubic) });
+  }, [progress, progressValue]);
+
+  const animatedFillStyle = useAnimatedStyle(() => ({
+    width: `${Math.max(0, Math.min(100, progressValue.value * 100))}%`,
+  }));
+
   return (
     <View style={s.root}>
       <View style={s.row}>
@@ -21,10 +43,27 @@ export function PlayModeTopBar({ title, artist, progress, pendingCount, onPressB
           <Text style={s.backText}>Sair</Text>
         </Pressable>
 
+        <Avatar
+          uri={avatarUrl}
+          size={32}
+          fallbackIcon={Music}
+          ringColors={[colors.brand.primary, colors.brand.dark]}
+        />
+
         <View style={s.titleWrap}>
           <Text style={s.title} numberOfLines={1}>{title}</Text>
           <Text style={s.artist} numberOfLines={1}>{artist}</Text>
         </View>
+
+        <Pressable onPress={onPressSettings} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Ajustes da cifra (instrumento, tom, capotraste)" hitSlop={8}>
+          <SlidersHorizontal size={20} color={colors.text.secondary} />
+        </Pressable>
+
+        {onPressPersonalChordSheet && (
+          <Pressable onPress={onPressPersonalChordSheet} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Abrir ou criar cifra pessoal" hitSlop={8}>
+            <GitFork size={20} color={colors.brand.primary} />
+          </Pressable>
+        )}
 
         {pendingCount > 0 ? (
           <Pressable onPress={onPressBadge} style={s.badge} accessibilityRole="button" accessibilityLabel={`${pendingCount} pedidos pendentes`}>
@@ -36,7 +75,14 @@ export function PlayModeTopBar({ title, artist, progress, pendingCount, onPressB
       </View>
 
       <View style={s.progressTrack}>
-        <View style={[s.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
+        <Animated.View style={[s.progressFillWrap, animatedFillStyle]}>
+          <LinearGradient
+            colors={gradients.live}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={s.progressGradient}
+          />
+        </Animated.View>
       </View>
     </View>
   );
@@ -51,11 +97,10 @@ const s = StyleSheet.create({
   row: {
     flexDirection:  'row',
     alignItems:     'center',
-    justifyContent: 'space-between',
     gap:             spacing.sm,
   },
   backBtn: {
-    minWidth:       44,
+    minWidth:       36,
     height:         44,
     justifyContent: 'center',
   },
@@ -64,8 +109,7 @@ const s = StyleSheet.create({
     color: colors.text.secondary,
   },
   titleWrap: {
-    flex:      1,
-    alignItems: 'center',
+    flex: 1,
   },
   title: {
     ...typography.body,
@@ -75,6 +119,14 @@ const s = StyleSheet.create({
   artist: {
     ...typography.caption,
     color: colors.text.secondary,
+  },
+  iconBtn: {
+    width:          40,
+    height:         40,
+    borderRadius:   radius.full,
+    alignItems:     'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
   },
   badge: {
     minWidth:          28,
@@ -86,7 +138,7 @@ const s = StyleSheet.create({
     justifyContent:    'center',
   },
   badgeSpacer: {
-    width: 44,
+    width: 28,
   },
   badgeText: {
     ...typography.caption,
@@ -99,8 +151,10 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     overflow:        'hidden',
   },
-  progressFill: {
-    height:          2,
-    backgroundColor: colors.brand.primary,
+  progressFillWrap: {
+    height: 2,
+  },
+  progressGradient: {
+    flex: 1,
   },
 });

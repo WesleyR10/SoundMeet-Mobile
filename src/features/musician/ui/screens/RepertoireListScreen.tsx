@@ -1,7 +1,7 @@
 import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Plus, Mail } from 'lucide-react-native';
+import { Plus, Mail, FileMusic } from 'lucide-react-native';
 import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
@@ -78,6 +78,15 @@ export function RepertoireListScreen({ navigation }: Props) {
       <View style={s.header}>
         <Text style={s.title}>Repertório</Text>
         <View style={s.headerActions}>
+          <Pressable
+            onPress={() => navigation.navigate('PersonalChordSheetList')}
+            style={s.iconBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Minhas cifras pessoais"
+            hitSlop={8}
+          >
+            <FileMusic size={20} color={colors.brand.primary} />
+          </Pressable>
           <Pressable
             onPress={() => navigation.navigate('RepertoireInvites')}
             style={s.iconBtn}
