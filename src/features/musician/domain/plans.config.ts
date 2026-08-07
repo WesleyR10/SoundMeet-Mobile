@@ -45,6 +45,8 @@ export const MUSICIAN_PLANS: readonly MusicianPlan[] = [
     features: [
       { label: 'Pedidos musicais e gorjetas ilimitados', included: true },
       { label: 'Cifras: acesso e edição',                included: true },
+      { label: 'Até 3 cifras pessoais',                  included: true },
+      { label: 'Compartilhar cifras com a comunidade',   included: false },
       { label: '1 repertório (até 20 músicas)',          included: true },
       { label: 'Afinador cromático',                     included: true },
       { label: 'Analytics básico',                       included: true },
@@ -69,6 +71,7 @@ export const MUSICIAN_PLANS: readonly MusicianPlan[] = [
     ],
     features: [
       { label: 'Tudo do Free',                                 included: true },
+      { label: 'Cifras pessoais ilimitadas + comunidade',      included: true },
       { label: '3 repertórios (até 80 músicas cada)',          included: true },
       { label: 'Compartilhar repertório por link',             included: true },
       { label: 'Afinador com filtro de ruído',                 included: true },
@@ -93,6 +96,7 @@ export const MUSICIAN_PLANS: readonly MusicianPlan[] = [
     ],
     features: [
       { label: 'Tudo do Essencial',                            included: true },
+      { label: 'Cifras pessoais ilimitadas + comunidade',      included: true },
       { label: 'Repertórios e músicas ilimitados',             included: true },
       { label: 'Repertório colaborativo (convites)',           included: true },
       { label: 'QR code customizado',                          included: true },

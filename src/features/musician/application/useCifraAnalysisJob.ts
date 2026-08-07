@@ -46,6 +46,21 @@ export function useStartCifraAnalysis(musicianId: string | null) {
   });
 }
 
+// Variante usada pelo import de cifra da comunidade quando o músico já tem a
+// linha da música na própria biblioteca, mas ela ainda não foi analisada. Não
+// cria uma segunda linha: dispara o mesmo job sobre o id existente.
+export function useStartCifraAnalysisForExistingItem(musicianId: string | null) {
+  return useMutation({
+    mutationFn: async ({ musicLibraryId, result }: { musicLibraryId: string; result: CifraSearchResult }) => {
+      if (!musicianId) throw new Error('musicianId ausente na sessão');
+      return requestAnalysisFromProvider(musicianId, {
+        musicLibraryId,
+        youtubeVideoId: result.youtube_video_id,
+      });
+    },
+  });
+}
+
 const TERMINAL_STATUSES = new Set(['completed', 'failed']);
 
 // Poll-until-terminal — não existe push/socket pra conclusão de análise
