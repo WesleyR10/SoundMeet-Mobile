@@ -37,4 +37,9 @@ export interface UserPoints {
   progress_to_next_level: number;
   is_top_fan:          boolean;
   is_active_supporter: boolean;
+  // Só vêm preenchidos em GET /gamification/leaderboard (backend 7.16b) —
+  // GET /gamification/users/:id/points (o próprio usuário) não populava e
+  // continua sem popular, então undefined lá é esperado, não um bug.
+  nickname?: string | null;
+  avatar?:   string | null;
 }

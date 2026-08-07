@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { Trophy } from 'lucide-react-native';
+import { Trophy, User } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { Avatar } from '@/shared/components/Avatar';
 import type { UserPoints } from '@/shared/services/gamification/gamification.types';
 
 type Props = {
@@ -18,12 +19,12 @@ const MEDAL_COLOR: Record<number, string> = {
   3: colors.accent.coral,
 };
 
-// GET /gamification/leaderboard não retorna nome/avatar (só user_id) — e um
-// fã não pode consultar o perfil de OUTRO fã (GET /audiences/:id é dono/
-// admin-only) pra resolver isso. Mostra posição + nível + pontos, sem nome
-// fabricado (ver soundmeet-backend/Docs/roadmap.md Bloco 7.16).
+// Backend 7.16b (jul/2026): GET /gamification/leaderboard agora inclui
+// nickname/avatar — nome real em vez de "Fã #<hash>". Nickname ainda pode
+// vir null (fã que nunca preencheu o próprio apelido), daí o fallback.
 export function LeaderboardRow({ entry, position, isSelf }: Props) {
   const medalColor = MEDAL_COLOR[position];
+  const displayName = isSelf ? 'Você' : (entry.nickname ?? `Fã #${entry.user_id.slice(0, 6)}`);
 
   return (
     <View style={[s.row, isSelf && s.rowSelf]}>
@@ -35,8 +36,10 @@ export function LeaderboardRow({ entry, position, isSelf }: Props) {
         )}
       </View>
 
+      <Avatar uri={entry.avatar} size={36} fallbackIcon={User} />
+
       <View style={s.info}>
-        <Text style={s.name}>{isSelf ? 'Você' : `Fã #${entry.user_id.slice(0, 6)}`}</Text>
+        <Text style={s.name}>{displayName}</Text>
         <Text style={s.level}>Nível {entry.current_level} · {entry.level_info.name}</Text>
       </View>
 
