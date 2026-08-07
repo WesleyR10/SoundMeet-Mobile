@@ -1,5 +1,8 @@
+import { useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, withSequence } from 'react-native-reanimated';
 import { SkipBack, SkipForward, Play, Pause, Minus, Plus } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
 
 type Props = {
@@ -18,10 +21,16 @@ type Props = {
   onIncreaseSpeed: () => void;
 };
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 // Barra inferior mínima do Play Mode (7.8e): ← anterior | pausar/tocar |
-// próxima →, mais controle de velocidade inline (sem bottom sheet — nenhuma
-// lib de bottom sheet aprovada no projeto ainda, ver CLAUDE.md §libs).
-// Botões ≥48x48px (regra de toque mínimo do CLAUDE.md).
+// próxima →, mais controle de velocidade inline via ChordDiagramSheet-style
+// bottom sheet só no acorde tocado (não aqui — velocidade é um stepper
+// inline mesmo, decisão de manter simples). Botões ≥48x48px (regra de toque
+// mínimo do CLAUDE.md). Micro-interações: bounce no texto de velocidade a
+// cada mudança + escala no botão de play/pause ao pressionar — feedback
+// tátil pro músico que provavelmente não está olhando pra barra enquanto
+// toca.
 export function PlayModeBottomBar({
   isPlaying,
   playDisabled,
@@ -34,14 +43,39 @@ export function PlayModeBottomBar({
   onDecreaseSpeed,
   onIncreaseSpeed,
 }: Props) {
+  const speedScale = useSharedValue(1);
+  useEffect(() => {
+    speedScale.value = withSequence(
+      withTiming(1.18, { duration: 90 }),
+      withSpring(1, { damping: 10, stiffness: 200 }),
+    );
+  }, [speedMultiplier, speedScale]);
+  const speedTextStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: speedScale.value }],
+  }));
+
+  const playScale = useSharedValue(1);
+  const playBtnAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: playScale.value }],
+  }));
+
+  const handleDecreaseSpeed = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onDecreaseSpeed();
+  };
+  const handleIncreaseSpeed = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onIncreaseSpeed();
+  };
+
   return (
     <View style={s.root}>
       <View style={s.speedRow}>
-        <Pressable onPress={onDecreaseSpeed} style={s.speedBtn} accessibilityRole="button" accessibilityLabel="Diminuir velocidade" hitSlop={8}>
+        <Pressable onPress={handleDecreaseSpeed} style={s.speedBtn} accessibilityRole="button" accessibilityLabel="Diminuir velocidade" hitSlop={8}>
           <Minus size={16} color={colors.text.secondary} />
         </Pressable>
-        <Text style={s.speedText}>{speedMultiplier.toFixed(2)}×</Text>
-        <Pressable onPress={onIncreaseSpeed} style={s.speedBtn} accessibilityRole="button" accessibilityLabel="Aumentar velocidade" hitSlop={8}>
+        <Animated.Text style={[s.speedText, speedTextStyle]}>{speedMultiplier.toFixed(2)}×</Animated.Text>
+        <Pressable onPress={handleIncreaseSpeed} style={s.speedBtn} accessibilityRole="button" accessibilityLabel="Aumentar velocidade" hitSlop={8}>
           <Plus size={16} color={colors.text.secondary} />
         </Pressable>
       </View>
@@ -58,10 +92,12 @@ export function PlayModeBottomBar({
           <SkipBack size={24} color={hasPrev ? colors.text.primary : colors.text.muted} />
         </Pressable>
 
-        <Pressable
+        <AnimatedPressable
           onPress={onTogglePlay}
+          onPressIn={() => { playScale.value = withTiming(0.9, { duration: 100 }); }}
+          onPressOut={() => { playScale.value = withSpring(1, { damping: 12, stiffness: 220 }); }}
           disabled={playDisabled}
-          style={[s.playBtn, playDisabled && s.playBtnDisabled]}
+          style={[s.playBtn, playDisabled && s.playBtnDisabled, playBtnAnimatedStyle]}
           accessibilityRole="button"
           accessibilityLabel={isPlaying ? 'Pausar scroll' : 'Retomar scroll'}
         >
@@ -70,7 +106,7 @@ export function PlayModeBottomBar({
           ) : (
             <Play size={28} color={colors.text.inverse} />
           )}
-        </Pressable>
+        </AnimatedPressable>
 
         <Pressable
           onPress={onNext}
