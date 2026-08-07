@@ -23,4 +23,8 @@ export const ENV = {
     CLIENT_ID:    process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID ?? 'soundmeet-mobile',
     REDIRECT_URI: 'soundmeet://auth/callback',
   },
+
+  // DSN vazio = Sentry.init roda em modo inerte (não envia nada) — nunca
+  // bloqueia o boot, mesmo sem projeto Sentry configurado ainda.
+  SENTRY_DSN: process.env.EXPO_PUBLIC_SENTRY_DSN ?? '',
 } as const;

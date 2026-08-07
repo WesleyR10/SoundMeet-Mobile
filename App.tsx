@@ -1,9 +1,8 @@
-import './global.css';
-
 import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
+import * as Sentry from '@sentry/react-native';
 import { Asset } from 'expo-asset';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -28,6 +27,10 @@ import { ThemeProvider } from '@/shared/services/ThemeContext';
 import { queryClient } from '@/shared/services/query/query-client';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { musicianVideoSource, fanVideoSource } from '@/shared/constants/role-video-sources';
+import { initSentry } from '@/shared/services/monitoring/sentry';
+
+// Escopo de módulo — precisa rodar antes de qualquer erro poder acontecer.
+initSentry();
 
 // Impede o splash screen de sumir antes de as fontes carregarem
 SplashScreen.preventAutoHideAsync();
@@ -44,7 +47,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default function App() {
+function App() {
   const [fontsLoaded, fontError] = useFonts({
     'SpaceGrotesk-Medium':   SpaceGrotesk_500Medium,
     'SpaceGrotesk-SemiBold': SpaceGrotesk_600SemiBold,
@@ -89,3 +92,8 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+// Sentry.wrap: error boundary automático (tela de erro em vez de crash mudo)
+// + tracing de app start/TTID. Sem DSN configurado, initSentry() já deixa o
+// SDK inerte — o wrap continua seguro (vira um passthrough).
+export default Sentry.wrap(App);

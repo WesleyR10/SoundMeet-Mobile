@@ -1,8 +1,11 @@
-const { getDefaultConfig } = require('expo/metro-config');
-const { withNativeWind } = require('nativewind/metro');
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 const path = require('path');
 
-const config = getDefaultConfig(__dirname);
+// getSentryExpoConfig substitui getDefaultConfig — mesmo config do Expo,
+// mais o resolver que anexa debug id nos bundles (necessário pra symbolicar
+// stack traces de produção no Sentry). Sem SENTRY_AUTH_TOKEN no ambiente de
+// build, essa etapa é ignorada — não bloqueia build local nem CI sem Sentry.
+const config = getSentryExpoConfig(__dirname);
 
 // Path aliases — espelha tsconfig.json paths
 config.resolver.alias = {
@@ -12,6 +15,8 @@ config.resolver.alias = {
   '@/shared':     path.resolve(__dirname, 'src/shared'),
 };
 
-module.exports = withNativeWind(config, {
-  input: './global.css',
-});
+// NativeWind removido (jul/2026): zero `className` em src/ e o
+// react-native-css-interop v0.2.x substituía o JSX runtime, quebrando hooks em
+// Expo SDK 56 + New Architecture. Estilo é 100% StyleSheet.create + tokens.ts.
+// Reavaliar se o NativeWind v5 (reescrita New Arch) sair compatível.
+module.exports = config;
