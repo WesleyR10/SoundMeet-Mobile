@@ -354,6 +354,142 @@
 
 ---
 
+## Bloco 12 — Propostas de show do músico (A3 / F1.2)
+
+**Por que existe:** quem aceita ou recusa uma proposta é o **músico**
+(`PATCH /scheduling/inquiries/:id/accept` é `@Roles("musician")`), e o cliente do músico é este
+app — mas até ago/2026 não havia uma linha de `inquiries` em `src/`. Efeito prático: a Ficha
+Técnica do Palco (A3) só era legível pelo fã navegando o perfil da casa, nunca por quem estava
+decidindo se toca lá. Este bloco leva a ficha ao momento da decisão.
+
+- [x] **12.1** — Domínio: `features/scheduling/domain/inquiry.types.ts` + `inquiry.rules.ts`
+  (`isActionable`, `statusLabel`, `statusTone`, `expiryLabel`, `isBandInquiry`) com 22 testes puros
+- [x] **12.2** — Adapter `inquiry.api.ts` (list / accept / reject) + hooks `useInquiries.ts`
+- [x] **12.3** — `InquiryListScreen` + `InquiryCard` (root stack, tile na Home e linha no Perfil)
+- [x] **12.4** — `InquiryDecisionSheet` com a **ficha técnica do palco** e aceitar / recusar com motivo
+- [x] **12.5** — `shared/components/StageTechSpecSection.tsx` — promovido de `features/audience`
+  porque agora serve duas personas; entrada escalonada via `GlowCard riseDelay`
+- [ ] **12.6** — `convert-to-booking` (proposta aceita → show). O backend permite ao músico
+  (`@Roles("establishment","musician","admin")`), mas exige data, horário e cachê: é formulário de
+  criação de booking, fatia própria — **fora do escopo do Bloco 12 por decisão**
+
+### Armadilhas registradas neste bloco
+
+1. 🔴 **`InquiryPresenter` carrega SÓ `establishment_id`** — sem nome, avatar, perfil ou ficha
+   técnica. Diferente de `GET /conversations`, que o controller enriquece. A casa é buscada por
+   `GET /establishments/:id` (que é `@Public()`) **no sheet de decisão**, não por linha da lista,
+   para não criar um N+1 visível na listagem.
+2. **`GET /scheduling/inquiries` é paginado e NÃO passa pelo `ApiEnvelope`** — `data` e `meta` vêm
+   no mesmo nível, então é `return data`, nunca `data.data`. Mesmo formato de
+   `features/audience/infrastructure/establishment.api.ts`; trocar devolve `undefined` em silêncio.
+3. **`accept` ignora o corpo** (o controller liga o DTO como `_dto` e monta o input pelo `:id` da
+   URL). `reject` lê só `reason`, e ele é opcional.
+4. **Prazo vencido não muda o `status` guardado.** O agregado roda `expire()` antes de cada
+   transição, então uma proposta `open` fora do prazo devolve 422 no accept. Por isso
+   `isActionable` checa status **e** `expires_at` — olhar só o status ofereceria um botão que o
+   servidor recusa.
+5. **Só o líder decide pela banda** (`assertBandLeader` → 403 para os demais), e o payload não traz
+   nenhum flag de quem pode agir. A UI **avisa** que é decisão do líder e deixa o servidor ser a
+   autoridade — inferir liderança no cliente ficaria errado assim que ela mudasse.
+6. **Sem contador de propostas abertas** no tile da Home nem no menu do Perfil: o número viria de
+   `features/scheduling` e a regra FSD proíbe `features/musician` importar de outra feature.
+
+---
+
+## Bloco 13 — Contrato digital de show (B4 / Bloco 10 do backend) ✅ *(19/ago/2026)*
+
+**Por que existe:** o backend do contrato ficou pronto e testado em ago/2026, o web ganhou a fatia
+B3 e o músico continuou **sem nenhuma superfície para assinar** — o contrato nascia e ninguém do
+lado do artista conseguia fechá-lo.
+
+🔴 **O contrato é a tela do show.** `GET /scheduling/bookings` não é chamado em lugar nenhum de
+`src/`, e o `convert-to-booking` (12.6) segue fora de escopo. Em vez de construir uma lista de
+bookings só para pendurar o contrato nela, a fatia usa o que o snapshot **já carrega**: data,
+dia da semana, horário, duração, endereço, cachê e a Ficha Técnica. A lista de contratos passa a
+responder "quais shows eu tenho fechados?".
+
+- [x] **13.1** — Domínio: `contract.types.ts` (espelho de `ContractPresenter`) + `contract.rules.ts`
+  (`resolveMySide`, `canSign`, `awaitsMySignature`, `pendingActorLabel`, `statusTone`,
+  `challengeExpiryLabel`, `describeContractDelivery`) com **21 testes puros**
+- [x] **13.2** — Adapter `contract.api.ts`: list / get / challenge / sign / send-document
+- [x] **13.3** — Hooks `useContracts.ts` (TanStack Query, molde de `useInquiries.ts`)
+- [x] **13.4** — `ContractListScreen` com filtro "Aguardando você (n)" + `ContractCard`
+- [x] **13.5** — `ContractDetailScreen` renderizando o snapshot **nativamente** (`ContractDocument`,
+  `ContractShowSummary`, `ContractPartiesSection`, `ContractClauseList`, `ContractSignatureTrail`)
+- [x] **13.6** — `ContractSignSheet` de dois passos (pedir código → digitar → assinar)
+- [x] **13.7** — Anexo I reusando `shared/components/StageTechSpecSection.tsx` — o componente que o
+  F1.2 promoveu para `shared/` exatamente para isto
+- [x] **13.8** — Rotas `ContractList`/`ContractDetail` no `RootStackParamList`; entradas no
+  `QuickAccessGrid` e no `ProfileMenuGroups`
+
+### Armadilhas registradas neste bloco
+
+1. 🔴 **`onScroll` não dispara em conteúdo que CABE na tela.** A trava "role até o fim para
+   assinar" ficava eternamente travada num contrato curto — a assinatura era impossível de
+   liberar. Corrigido medindo viewport (`onLayout`) e conteúdo (`onContentSizeChange`) e
+   reavaliando em **ambos**: os dois callbacks não têm ordem garantida entre si.
+2. **`GET /contracts` é paginado e NÃO passa pelo `ApiEnvelope`** — `ContractCollectionPresenter`
+   estende `CollectionPresenter`, que expõe `meta` no topo, e o `WrapperDataInterceptor` pula o
+   wrap. É `return data`, nunca `data.data`. Mesma armadilha do 12.2. As rotas de recurso único
+   (`get`, `sign`, `challenge`, `document/send`) **passam** pelo envelope.
+3. **A assinatura é de DOIS passos** — `challenge_code` é `@IsNotEmpty()` no backend. E o botão
+   **não** trava em ter desafio vivo na sessão: o código vale 10 min no servidor e sobrevive a um
+   reload, enquanto pedir outro invalida o que a pessoa acabou de receber.
+4. **Não inferir liderança de banda no cliente.** `AuthUser` não carrega `band_ids`, e pertencer
+   não é liderar. `resolveMySide` devolve `contracted` para contrato de banda e deixa o 403 do
+   servidor falar — mesma decisão do 12.5.
+5. **Nada de `variables` é reformatado.** `data_show`, `cache_formatado` e `duracao_formatada` são
+   o texto que foi para dentro do documento assinado; reformatar criaria uma segunda verdade sobre
+   um instrumento congelado.
+6. **Anexo I sempre do snapshot**, nunca da ficha atual do estabelecimento — e a chave é **ausente**
+   (não `null`) quando a casa não preencheu, então renderizar por presença é o que preserva
+   contratos emitidos antes de ela existir.
+7. **Sem badge nas entradas de navegação:** a contagem viria de `features/contract` e FSD proíbe
+   `features/musician` importar de outra feature. Mesmo precedente do tile de Propostas.
+8. **`expo-file-system` não está instalado** — "baixar o PDF" é `POST /contracts/:id/document/send`,
+   que manda ao e-mail congelado da própria parte. Melhor destino que o sistema de arquivos para um
+   documento com CPF, CNPJ e cachê, e persiste fora do telefone.
+
+### Gap conhecido, fora do escopo desta fatia
+
+🔴 **O músico nunca fica sabendo que o contrato dele não foi emitido por falta de CPF/CNPJ.**
+Quando `IssueContractUseCase` devolve `{ issued: false, missing: ["contratado.cpf"] }`, **não
+existe contrato** — então não há o que listar aqui, e o app não tem como mostrar a pendência. Hoje
+só o painel do estabelecimento vê essas chaves, e metade delas (`contratado.*`) **só o artista
+resolve**. Precisa de notificação push ou de um aviso no perfil, e é fatia própria.
+
+---
+
+## Bloco 14 — Carteira: gorjeta vira extrato (Mercado Pago) ✅ *(19/ago/2026)*
+
+**Por que a tela mudou:** o gateway da gorjeta passou a ser o **Mercado Pago**, e nele a cobrança é
+criada **na conta do próprio músico** (OAuth + `application_fee`). O dinheiro nunca passa pela
+SoundMeet — o que é a postura regulatória correta, e o que torna a `WalletScreen` antiga
+imprecisa: ela anunciava saldo de gorjeta com botão de saque, para um dinheiro que já estava na
+conta dele.
+
+- [x] **14.1** — `Wallet` ganhou `mp_linked` e `held_balance`; `getWithdrawEligibility` **ignora a
+  custódia** (teste dedicado — somar os dois ofereceria um saque que o gateway recusa)
+- [x] **14.2** — `MercadoPagoLinkCard`: sem vínculo o músico **não recebe gorjeta**, então o estado
+  desconectado é aviso (âmbar), não sugestão discreta
+- [x] **14.3** — `useConnectMercadoPago` abre a autorização em **Chrome Custom Tab**
+  (`openAuthSessionAsync`, mesmo padrão do checkout de assinatura) e invalida a carteira ao voltar
+- [x] **14.4** — `WalletBalanceCard` passou a dizer "**Disponível para saque**" (é o cachê liberado
+  da custódia, não tudo que ele recebeu) e mostra a custódia em linha separada
+- [x] **14.5** — Seção virou "**Extrato de gorjetas** — recebidas direto na sua conta Mercado Pago"
+
+### Armadilhas registradas neste bloco
+
+1. 🔴 **Custódia não é saldo.** `held_balance` fica FORA de `balance` no backend, e a tela tem de
+   manter a separação: o valor está retido na subconta até a apresentação ser registrada e o prazo
+   de contestação vencer.
+2. **Gorjeta não tem saque pelo app.** Quem saca gorjeta é o músico, no Mercado Pago. O botão de
+   saque desta tela é do **cachê**.
+3. **`expo-web-browser` já estava instalado** — conferido no `package.json` antes de usar, conforme
+   a regra de ouro.
+
+---
+
 ## Libs ainda não instaladas (verificar antes de implementar o bloco correspondente)
 
 | Bloco | Lib | Comando |
@@ -428,3 +564,52 @@ Implementado neste ciclo (detalhes nos commits):
 
 Adiado por decisão do usuário:
 - [ ] **Google Calendar sync** (agenda → conta Google): exige OAuth incremental com scopes de calendar, verificação do app no Google e armazenamento de refresh tokens por usuário — planejar como bloco próprio.
+
+---
+
+## Bloco 14 — Apresentação ao vivo 🎤 *(22/ago/2026)*
+
+Arquitetura do subsistema em `../soundmeet-backend/Docs/performance/live-performance.md`.
+Não veio do roadmap: veio da validação de uma pergunta — *"o fã vê 'Salvar no Spotify' da música
+que o músico está tocando, e isso acompanha quando ele passa para a próxima?"*. A resposta era
+**não**, e o motivo era mais fundo que a UI: o backend não sabia o que estava tocando.
+
+### Músico
+
+- [x] `LiveSetControl` na `LiveDashboardScreen` — três estados: sem show na janela (não renderiza
+      nada), show disponível (botão por evento, vindo de `GET /performances/openable-events`), set
+      aberto (música atual, contador, sugestões daquela casa, encerrar).
+- [x] `liveSet.store.ts` (zustand + `expo-secure-store`) — 🔴 **o interruptor**. Restaurado na
+      startup pelo `RootNavigator`: um show dura horas e o telefone morre no meio; perder o
+      `performanceId` deixaria o set aberto para sempre no servidor, sem relatório e bloqueando um
+      novo pelo índice parcial único.
+- [x] `useBroadcastCurrentSong` no Play Mode — transmite **só com set aberto** e **só para o dono do
+      repertório**. Ponto do inteiro: registro automático publicaria a rotina de estudo.
+- [x] Indicador "Ao vivo" no `PlayModeTopBar` — sem ele a tela é idêntica em estudo e em show.
+- [x] `PerformanceReportScreen` (abre sozinha ao encerrar) + `PerformanceHistoryScreen`.
+- [x] `MyResumeScreen` — currículo verificado, nada editável.
+- [x] `SetlistSuggestionsScreen` — sugestões por casa, cada uma com a evidência que a sustenta.
+- [x] Entradas: menu do Perfil (Currículo verificado, Meus shows) e card do show aberto.
+
+### Fã
+
+- [x] `NowPlayingCard` no `MusicianPublicProfileScreen` — "TOCANDO AGORA" + `SaveToSpotifyAction`
+      recebendo o par vindo do palco. Some fora de evento, sem set aberto e no intervalo.
+- [x] `VerifiedResumeSection` no mesmo perfil — some por inteiro para quem não tem show concluído.
+- [x] Polling de 20s (`refetchIntervalInBackground: false`).
+
+### Armadilhas registradas nesta fatia
+
+- **A slice `performance` não existe** — `shared/services/performance/` para o adapter (precedente
+  de `gamification`, consumido por duas features) e hooks dentro de cada feature. A regra de ouro
+  proíbe `features/X` importar de `features/Y`, e a primeira versão deste código violava isso.
+- **`expo-secure-store`, não `AsyncStorage`** — dependência nativa nova custa rebuild do EAS.
+- **`key={song.id}` no `SaveToSpotifyAction`** — sem isso "Salva na sua biblioteca" persiste na
+  troca de música e o fã lê uma confirmação falsa.
+- **Erro de registro de música não vira banner** — o músico está tocando.
+
+### Pendente
+
+- [ ] Confirmação em device físico (mesma ressalva dos demais blocos).
+- [ ] Push em vez de polling para o fã.
+- [ ] Wrapped anual do fã (B2).
