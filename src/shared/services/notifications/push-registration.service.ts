@@ -2,7 +2,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
-// Função assíncrona pura (mesmo estilo de qrShare.ts) — sem hook, sem estado.
+// Função assíncrona pura (mesmo estilo de imageShare.ts) — sem hook, sem estado.
 // Nunca lança: qualquer falha (permissão negada, simulador, credenciais EAS
 // ainda não configuradas) retorna null e o chamador decide o que fazer
 // (aqui, best-effort silencioso — ver usePushRegistration.ts).

@@ -1,6 +1,8 @@
 import axios, { type InternalAxiosRequestConfig, type AxiosError } from 'axios';
 import { ENV } from '@/shared/services/config/env';
-import { getAccessToken, useAuthStore } from '@/shared/services/auth/auth.store';
+import { getAccessToken } from '@/shared/services/auth/auth.store';
+import { clearLocalSession } from '@/shared/services/auth/clear-session';
+import { refreshTokens } from '@/shared/services/auth/keycloak.service';
 
 export const httpClient = axios.create({
   baseURL: ENV.API_BASE_URL,
@@ -25,7 +27,6 @@ httpClient.interceptors.request.use(
 );
 
 // ── Response: 401 → refresh → retry ───────────────────────────────────────────
-// Lazy import to avoid circular dependency at module parse time
 
 type QueueEntry = { resolve: (token: string) => void; reject: (err: unknown) => void };
 
@@ -65,8 +66,20 @@ httpClient.interceptors.response.use(
     isRefreshing      = true;
 
     try {
-      // Lazy import avoids circular dep (http/client ← keycloak.service ← http/client)
-      const { refreshTokens } = await import('@/shared/services/auth/keycloak.service');
+      // `import` estático, e não `await import()`.
+      //
+      // Havia aqui um import dinâmico justificado como "evita ciclo
+      // http/client <- keycloak.service <- http/client". Esse ciclo NÃO existe:
+      // keycloak.service fala com o Keycloak por expo-auth-session e nem ele
+      // nem nenhuma das suas dependências (env, auth.store, clear-session,
+      // token.storage, pendingGoogleSession.store) importa este arquivo.
+      //
+      // Não era só código morto: se o `import()` falhar em runtime, a rejeição
+      // cai no `catch` abaixo e TODO 401 vira logout forçado, em vez de
+      // renovação — o pior desfecho possível justamente no caminho que o
+      // SM-018 endureceu. E como o import dinâmico escapa do registry de
+      // módulos do Jest, esse caminho era intestável (era o que acontecia:
+      // "A dynamic import callback was invoked without --experimental-vm-modules").
       const newToken = await refreshTokens();
 
       drainQueue(null, newToken);
@@ -74,8 +87,11 @@ httpClient.interceptors.response.use(
       return httpClient(original);
     } catch (refreshError) {
       drainQueue(refreshError, null);
-      // Reactive logout: RootNavigator re-renders automatically to AuthStack
-      useAuthStore.getState().clear();
+      // Logout reativo: RootNavigator re-renderiza sozinho para o AuthStack.
+      // `clearLocalSession` e não `authStore.clear()` — limpar só a memória
+      // deixaria o refresh token inválido gravado no SecureStore depois de a
+      // UI já ter declarado a sessão encerrada (SM-018).
+      await clearLocalSession();
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

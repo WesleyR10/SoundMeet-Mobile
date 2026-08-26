@@ -12,10 +12,10 @@ import { ENV } from '@/shared/services/config/env';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { AuthUser } from '@/shared/services/auth/auth.store';
 import { usePendingGoogleSessionStore } from '@/shared/services/auth/pendingGoogleSession.store';
+import { clearLocalSession } from '@/shared/services/auth/clear-session';
 import {
   saveTokens,
   getTokens,
-  clearTokens,
   isTokenExpired,
   type StoredTokens,
 } from '@/shared/services/storage/token.storage';
@@ -196,8 +196,7 @@ export async function refreshWithRefreshToken(refreshToken: string): Promise<Tok
 export async function logout(): Promise<void> {
   const stored = await getTokens().catch(() => null);
 
-  await clearTokens();
-  useAuthStore.getState().clear();
+  await clearLocalSession();
 
   // Best-effort revocation — do not block or throw on failure
   if (stored?.refreshToken) {
@@ -233,7 +232,15 @@ export async function restoreSession(): Promise<void> {
     const stored = await getTokens();
 
     if (!stored) {
-      store.clear();
+      // `clearLocalSession()` e não `store.clear()`, mesmo parecendo que não há
+      // nada a limpar: `getTokens()` devolve null se QUALQUER um dos três
+      // campos obrigatórios faltar, então "sem sessão" inclui o caso do
+      // conjunto PARCIAL — um refresh token válido no SecureStore sem o
+      // `expiresAt` ao lado. Nesse caso limpar só a memória deixaria a
+      // credencial órfã no aparelho para sempre, já que nenhum caminho futuro
+      // voltaria a enxergá-la. Não é redundância; é o mesmo SM-018 num ramo
+      // menos óbvio.
+      await clearLocalSession();
       return;
     }
 
@@ -246,9 +253,8 @@ export async function restoreSession(): Promise<void> {
     store.setUser(user);
     store.setAccessToken(stored.accessToken);
   } catch {
-    // Corrupt token or refresh failed — force logout
-    await clearTokens().catch(() => undefined);
-    store.clear();
+    // Token corrompido ou refresh recusado — logout forçado.
+    await clearLocalSession();
   } finally {
     store.setLoading(false);
   }

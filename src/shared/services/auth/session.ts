@@ -1,6 +1,7 @@
 import { buildAuthUser } from './keycloak.service';
 import { useAuthStore, type AuthUser } from './auth.store';
-import { saveTokens, clearTokens, type StoredTokens } from '../storage/token.storage';
+import { clearLocalSession } from './clear-session';
+import { saveTokens, type StoredTokens } from '../storage/token.storage';
 
 export type TokenSessionResponse = {
   access_token:  string;
@@ -42,7 +43,7 @@ export async function applyTokenSession(
     // Evita deixar tokens órfãos no SecureStore sem estado correspondente no
     // auth.store — a conta já existe no backend nesse ponto, mas a sessão
     // local fica inconsistente.
-    await clearTokens().catch(() => undefined);
+    await clearLocalSession();
     throw err;
   }
 }

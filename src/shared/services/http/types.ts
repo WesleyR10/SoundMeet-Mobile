@@ -28,6 +28,15 @@ function isDomainFieldErrorArray(msg: unknown): msg is DomainFieldError[] {
   return Array.isArray(msg) && msg.every((item) => typeof item === 'object' && item !== null && !Array.isArray(item));
 }
 
+// `PlanLimitExceededError` do core vira 402 no GlobalExceptionFilter — é o
+// único status que significa "o plano não cobre isso", nunca falha técnica.
+// Telas que podem receber 402 devem oferecer upgrade em vez de "tentar
+// novamente", que nunca vai funcionar. Ex.: AnalyticsScreen para músico FREE
+// desde o gate 9.7a.
+export function isPlanLimitError(error: unknown): boolean {
+  return isApiError(error) && error.response?.status === 402;
+}
+
 export function extractApiMessage(error: unknown): string {
   if (!isApiError(error)) return 'Erro inesperado';
   const msg = error.response?.data?.message;
