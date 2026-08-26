@@ -12,9 +12,13 @@ export async function getSharedRepertoire(token: string): Promise<SharedRepertoi
 
 // GET /repertoires/shared/:token/songs/:music_library_id/chord-sheet —
 // idem, token é a prova de acesso (não musician_id).
+//
+// SEM envelope — mesma razão de `musician/infrastructure/chord-sheet.api.ts`:
+// o `meta` de domínio do artefato de cifra faz o WrapperDataInterceptor pular
+// o wrap. Ver o comentário lá para o detalhe.
 export async function getSharedChordSheet(token: string, musicLibraryId: string): Promise<ChordSheet> {
-  const { data } = await httpClient.get<ApiEnvelope<ChordSheet>>(
+  const { data } = await httpClient.get<ChordSheet>(
     `/repertoires/shared/${token}/songs/${musicLibraryId}/chord-sheet`,
   );
-  return data.data;
+  return data;
 }
