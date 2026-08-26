@@ -5,14 +5,22 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { restoreSession } from '@/shared/services/auth/keycloak.service';
+import { useLiveSetStore } from '@/features/musician/application/liveSet.store';
 import { useMusicianWizardGate } from '@/features/musician/application/useMusicianWizardGate';
 import { MusicianSetupWizardScreen } from '@/features/musician/ui/screens/MusicianSetupWizardScreen';
 import { SharedRepertoireScreen } from '@/features/shared-repertoire/ui/screens/SharedRepertoireScreen';
 import { SharedSongViewerScreen } from '@/features/shared-repertoire/ui/screens/SharedSongViewerScreen';
 import { ConversationListScreen } from '@/features/scheduling/ui/screens/ConversationListScreen';
+import { InquiryListScreen } from '@/features/scheduling/ui/screens/InquiryListScreen';
 import { ChatScreen } from '@/features/scheduling/ui/screens/ChatScreen';
 import { AgendaScreen } from '@/features/scheduling/ui/screens/AgendaScreen';
 import { AvailabilityEditorScreen } from '@/features/scheduling/ui/screens/AvailabilityEditorScreen';
+import { ContractListScreen } from '@/features/contract/ui/screens/ContractListScreen';
+import { ContractDetailScreen } from '@/features/contract/ui/screens/ContractDetailScreen';
+import { PerformanceReportScreen } from '@/features/musician/ui/screens/PerformanceReportScreen';
+import { PerformanceHistoryScreen } from '@/features/musician/ui/screens/PerformanceHistoryScreen';
+import { MyResumeScreen } from '@/features/musician/ui/screens/MyResumeScreen';
+import { SetlistSuggestionsScreen } from '@/features/musician/ui/screens/SetlistSuggestionsScreen';
 import { PlansPaywallScreen } from '@/features/musician/ui/screens/PlansPaywallScreen';
 import { useNotificationResponseListener, checkInitialNotificationResponse } from '@/shared/services/notifications/useNotificationResponseListener';
 import { useDeepLinkListener, checkInitialDeepLink } from '@/shared/services/deep-linking/useDeepLinkListener';
@@ -36,9 +44,16 @@ export function RootNavigator() {
   const pendingSharedToken = useDeepLinkStore((s) => s.pendingSharedRepertoireToken);
   const clearPendingSharedToken = useDeepLinkStore((s) => s.clearPendingSharedRepertoireToken);
 
+  const restoreLiveSet = useLiveSetStore((s) => s.restore);
+
   useEffect(() => {
     restoreSession();
-  }, []);
+    // Show aberto sobrevive a fechar o app: um set dura horas e o telefone
+    // morre no meio. Sem restaurar, o `performanceId` se perderia e o set
+    // ficaria aberto para sempre no servidor — sem relatório, e bloqueando a
+    // abertura de um novo pelo índice parcial único do banco.
+    void restoreLiveSet();
+  }, [restoreLiveSet]);
 
   // Único lugar do app onde navigationRef fica válido (Bloco 5.6) — precisa
   // ficar acima dos returns condicionais de loading pra montar cedo. Cobre só
@@ -171,6 +186,18 @@ export function RootNavigator() {
                 HomeHeader (ícone Mensagens). */}
             <Stack.Screen name="Agenda" component={AgendaScreen} />
             <Stack.Screen name="AvailabilityEditor" component={AvailabilityEditorScreen} />
+            {/* Propostas (A3/F1.2) — a ficha técnica do palco aparece no sheet
+                de decisão, que é o momento em que ela realmente serve. */}
+            <Stack.Screen name="InquiryList" component={InquiryListScreen} />
+            {/* Contratos (B4/Bloco 10) — no app do músico o contrato É a tela
+                do show: não há lista de bookings aqui, e o snapshot já carrega
+                data, local, cachê e a Ficha Técnica. */}
+            <Stack.Screen name="ContractList" component={ContractListScreen} />
+            <Stack.Screen name="ContractDetail" component={ContractDetailScreen} />
+            <Stack.Screen name="PerformanceReport" component={PerformanceReportScreen} />
+            <Stack.Screen name="PerformanceHistory" component={PerformanceHistoryScreen} />
+            <Stack.Screen name="MyResume" component={MyResumeScreen} />
+            <Stack.Screen name="SetlistSuggestions" component={SetlistSuggestionsScreen} />
             {/* Paywall de planos (jul/2026) — aberto pelo HomeAvatarMenu;
                 apresentação modal pra reforçar o caráter de oferta. */}
             <Stack.Screen name="Plans" component={PlansPaywallScreen} options={{ presentation: 'modal' }} />

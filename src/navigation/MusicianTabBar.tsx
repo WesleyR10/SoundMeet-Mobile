@@ -8,10 +8,17 @@ import { TabBarFabItem } from './components/TabBarFabItem';
 
 // Barra de navegação custom (Bloco 10) — substitui o tabBar padrão do
 // bottom-tabs. Inspirada na referência visual `Claude Design/project/Home do
-// Músico.dc.html`: "Ao Vivo" ganha destaque como botão flutuante (FAB) acima
-// da barra — é a tela de maior pressão/uso do músico (pedidos chegando ao
-// vivo durante o show), então merece a affordance mais óbvia, igual apps que
-// destacam a ação primária (câmera/criar) no meio da tab bar.
+// Músico.dc.html`.
+//
+// O destaque de FAB (círculo coral elevado acima da barra) segue a aba
+// SELECIONADA, seja qual for — antes era fixo em "Ao Vivo", que ficava
+// elevado o tempo todo mesmo estando em outra tela e não dava nenhuma pista
+// de onde o músico realmente estava.
+//
+// O contador de pedidos pendentes continua ancorado em "Ao Vivo"
+// independentemente do foco: quando ele não é a aba ativa, o badge aparece no
+// TabBarItem comum. Sem isso o alerta de pedido sumiria justamente durante o
+// show, que é quando importa.
 //
 // Diferença deliberada da referência: lá o glow pulsante do FAB é constante;
 // aqui só pulsa quando `pendingCount > 0` — pulso infinito o show inteiro
@@ -32,7 +39,8 @@ const LABELS: Record<string, string> = {
   Profile:       'Perfil',
 };
 
-const FAB_ROUTE = 'LiveDashboard';
+// Aba dona do contador de pedidos — o badge acompanha esta rota, não o FAB.
+const PENDING_BADGE_ROUTE = 'LiveDashboard';
 
 type Props = BottomTabBarProps & {
   // Contagem de pedidos pendentes — sem fonte de dados real ainda (Bloco 4,
@@ -46,7 +54,9 @@ export function MusicianTabBar({ state, navigation, insets, pendingCount = 0 }: 
     <View style={[s.root, { paddingBottom: insets.bottom || spacing.sm }]}>
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
-        const isFab = route.name === FAB_ROUTE;
+        // O FAB é a aba ativa, não uma rota fixa.
+        const isFab = isFocused;
+        const badgeCount = route.name === PENDING_BADGE_ROUTE ? pendingCount : 0;
 
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -62,7 +72,7 @@ export function MusicianTabBar({ state, navigation, insets, pendingCount = 0 }: 
             label={LABELS[route.name]}
             icon={ICONS[route.name]}
             isFocused={isFocused}
-            pendingCount={pendingCount}
+            pendingCount={badgeCount}
             onPress={onPress}
           />
         ) : (
@@ -71,6 +81,7 @@ export function MusicianTabBar({ state, navigation, insets, pendingCount = 0 }: 
             label={LABELS[route.name]}
             icon={ICONS[route.name]}
             isFocused={isFocused}
+            pendingCount={badgeCount}
             onPress={onPress}
           />
         );

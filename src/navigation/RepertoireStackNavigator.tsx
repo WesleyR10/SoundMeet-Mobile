@@ -6,6 +6,8 @@ import { EditRepertoireScreen } from '@/features/musician/ui/screens/EditReperto
 import { RepertoireInvitesScreen } from '@/features/musician/ui/screens/RepertoireInvitesScreen';
 import { CifraSearchScreen } from '@/features/musician/ui/screens/CifraSearchScreen';
 import { PlayModeScreen } from '@/features/musician/ui/screens/PlayModeScreen';
+import { PracticeModeScreen } from '@/features/musician/ui/screens/PracticeModeScreen';
+import { ChordSheetsHubScreen } from '@/features/musician/ui/screens/ChordSheetsHubScreen';
 import { PersonalChordSheetListScreen } from '@/features/musician/ui/screens/PersonalChordSheetListScreen';
 import { AddPersonalChordSheetScreen } from '@/features/musician/ui/screens/AddPersonalChordSheetScreen';
 import { PersonalChordSheetEditorScreen } from '@/features/musician/ui/screens/PersonalChordSheetEditorScreen';
@@ -29,6 +31,8 @@ export function RepertoireStackNavigator() {
       <Stack.Screen name="RepertoireInvites" component={RepertoireInvitesScreen} />
       <Stack.Screen name="CifraSearch" component={CifraSearchScreen} />
       <Stack.Screen name="PlayMode" component={PlayModeScreen} />
+      <Stack.Screen name="PracticeMode" component={PracticeModeScreen} />
+      <Stack.Screen name="ChordSheetsHub" component={ChordSheetsHubScreen} />
       <Stack.Screen name="PersonalChordSheetList" component={PersonalChordSheetListScreen} />
       <Stack.Screen name="AddPersonalChordSheet" component={AddPersonalChordSheetScreen} />
       <Stack.Screen name="PersonalChordSheetEditor" component={PersonalChordSheetEditorScreen} />

@@ -39,6 +39,15 @@ export function TabBarFabItem({ label, icon: Icon, isFocused, pendingCount, onPr
   const glow     = useSharedValue(0);
   const badgePop = useSharedValue(pendingCount > 0 ? 1 : 0);
   const ring     = useSharedValue(isFocused ? 1 : 0);
+  // Entrada em mola. O FAB agora acompanha a aba ativa, então este componente
+  // monta do zero a cada troca de aba (a aba anterior vira TabBarItem e a nova
+  // vira FAB). Sem a entrada, o círculo aparecia "estalado" na posição nova.
+  const enter    = useSharedValue(0);
+
+  useEffect(() => {
+    enter.value = withSpring(1, { damping: 12, stiffness: 260 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (pendingCount > 0) {
@@ -60,7 +69,10 @@ export function TabBarFabItem({ label, icon: Icon, isFocused, pendingCount, onPr
   const fabStyle = useAnimatedStyle(() => ({
     shadowOpacity: 0.35 + glow.value * 0.25,
     shadowRadius:  16 + glow.value * 10,
-    transform:     [{ scale: 1 + glow.value * 0.05 }],
+    // A escala combina a entrada (0.6→1) com o respiro do glow, para as duas
+    // animações não brigarem pela mesma propriedade.
+    transform:     [{ scale: (0.6 + enter.value * 0.4) * (1 + glow.value * 0.05) }],
+    opacity:       enter.value,
   }));
   const ringStyle = useAnimatedStyle(() => ({
     opacity:     ring.value,

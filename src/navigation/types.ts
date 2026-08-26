@@ -36,6 +36,11 @@ export type RepertoireStackParamList = {
   RepertoireInvites:  undefined;
   CifraSearch:        { repertoireId: string };
   PlayMode:           { repertoireId: string; musicLibraryId: string };
+  // Modo Ensaio (S3) — tela separada do Play Mode de propósito: aquela é a de
+  // palco (fonte grande, zero distração, transmite "tocando agora"); esta tem
+  // mesa de stems e controle de velocidade, que no palco só atrapalhariam.
+  PracticeMode:       { repertoireId: string; musicLibraryId: string };
+  ChordSheetsHub:            undefined;
   PersonalChordSheetList:    undefined;
   AddPersonalChordSheet:     undefined;
   PersonalChordSheetEditor:  { personalChordSheetId: string };
@@ -112,6 +117,32 @@ export type RootStackParamList = {
   // alcançável a partir da Home (tile "Agenda") sem stack própria.
   Agenda:              undefined;
   AvailabilityEditor:  undefined;
+  // Propostas de show recebidas (A3/F1.2) — quem aceita ou recusa é o MÚSICO
+  // (`@Roles("musician")` em PATCH /scheduling/inquiries/:id/accept), então a
+  // decisão só pode acontecer aqui. Root e não tab: o tab bar do músico está
+  // fixo em 5 rotas com ícones declarados à mão em MusicianTabBar.
+  InquiryList:         undefined;
+  // Contratos de show (B4 / Bloco 10) — mesmo racional de InquiryList: o tab
+  // bar do músico está fixo em 5 rotas com ícones à mão. Alcançável pelo tile
+  // da Home e pela linha do Perfil.
+  //
+  // 🔴 No app do músico, **o contrato é a tela do show**: não existe lista de
+  // bookings aqui (`GET /scheduling/bookings` não é chamado em nenhum lugar de
+  // `src/`), e o snapshot já carrega data, horário, local, cachê e a Ficha
+  // Técnica. Construir uma lista de bookings só para isto seria duplicar o que
+  // o contrato já tem.
+  ContractList:        undefined;
+  ContractDetail:      { contractId: string };
+  // Apresentação ao vivo (F0/F4/F6) — mesmo racional de ContractList: o tab bar
+  // do músico está fixo em 5 rotas. O relatório é alcançado ao encerrar o show
+  // (push automático da LiveDashboard) e pelo histórico; o currículo, pelo
+  // Perfil.
+  PerformanceReport:   { performanceId: string };
+  PerformanceHistory:  undefined;
+  MyResume:            undefined;
+  // F5 — alcançável a partir do card de show da tela Ao Vivo: é ali que o
+  // músico está na casa, e o `establishment_id` já é conhecido sem ele escolher.
+  SetlistSuggestions:  { establishmentId: string; establishmentName?: string };
   // Paywall de planos do músico — alcançável a partir do HomeAvatarMenu
   // (linha "Plano X") e, futuramente, dos gates de plano (afinador, QR).
   Plans:               undefined;
