@@ -1,5 +1,11 @@
 export type RegisterRole = 'musician' | 'audience';
 
+// O backend também autentica estabelecimento por POST /auth/login, mas essa
+// persona é web-only por decisão de produto — o app não tem navegação para ela.
+// O tipo existe para o login tratar o caso explicitamente em vez de cair numa
+// rota inexistente. Não usar em RegisterResponse/AddRoleResponse.
+export type LoginRole = RegisterRole | 'establishment';
+
 export interface RegisterPayload {
   name:     string;
   email:    string;
@@ -30,7 +36,7 @@ export interface LoginResponse {
   refresh_token: string;
   expires_in:    number;
   token_type:    string;
-  role:          RegisterRole;
+  role:          LoginRole;
   profile_id:    string;
 }
 
