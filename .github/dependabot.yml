@@ -1,0 +1,64 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    target-branch: develop
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(project)"
+
+    # 🔴 O bloco que importa neste repositório.
+    #
+    # Num app Expo, as versões de `expo-*`, `react-native` e `react` NÃO são
+    # escolha do projeto: cada SDK fixa um conjunto compatível, e quem resolve é
+    # `npx expo install --fix`. Um PR do Dependabot subindo `expo-camera` ou
+    # `react-native` sozinho quebra o alinhamento do SDK — e quebra de formas
+    # que só aparecem no aparelho, depois do build, longe do CI.
+    #
+    # Ignorar aqui NÃO desliga atualização de segurança: o Dependabot continua
+    # abrindo PR para vulnerabilidade conhecida mesmo em dependência ignorada
+    # para version-update. O que se perde é só o bump de rotina — que é
+    # exatamente o que deve vir junto com a subida de SDK.
+    ignore:
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "jest-expo"
+      - dependency-name: "babel-preset-expo"
+
+    groups:
+      producao-compativel:
+        applies-to: version-updates
+        dependency-type: production
+        update-types: [minor, patch]
+      desenvolvimento-compativel:
+        applies-to: version-updates
+        dependency-type: development
+        update-types: [minor, patch]
+      seguranca:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+      timezone: America/Sao_Paulo
+    target-branch: develop
+    labels: [dependencies, ci]
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]
