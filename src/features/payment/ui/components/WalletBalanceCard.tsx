@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Wallet as WalletIcon } from 'lucide-react-native';
+import { Clock, Wallet as WalletIcon } from 'lucide-react-native';
 import { colors, spacing, radius, typography, gradients, shadows } from '@/shared/design-system/tokens';
 import { AnimatedBalance } from '@/shared/components/AnimatedBalance';
 import type { Wallet } from '../../domain/tip.types';
@@ -27,10 +27,34 @@ export function WalletBalanceCard({ wallet }: Props) {
           <View style={s.iconBox}>
             <WalletIcon size={18} color={colors.accent.coral} />
           </View>
-          <Text style={s.label}>Saldo disponível</Text>
+          {/*
+            "Disponível para saque", e não "Saldo": desde que a gorjeta passou a
+            cair direto na conta Mercado Pago do músico, o que sobra aqui é o
+            cachê já LIBERADO da custódia. Chamar de "saldo" faria a tela
+            prometer que tudo que ele recebeu está aqui dentro.
+          */}
+          <Text style={s.label}>Disponível para saque</Text>
         </View>
 
         <AnimatedBalance value={wallet.balance} style={s.balance} />
+
+        {/*
+          🔴 Custódia NÃO entra no saldo. É cachê recebido e ainda retido até a
+          apresentação ser registrada e o prazo de contestação vencer — somar os
+          dois ofereceria um saque que o gateway recusa.
+        */}
+        {wallet.held_balance > 0 && (
+          <View style={s.heldRow}>
+            <Clock size={13} color={colors.text.muted} />
+            <Text style={s.heldText}>
+              {wallet.held_balance.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              })}{' '}
+              em custódia, liberado após o show
+            </Text>
+          </View>
+        )}
 
         <View style={s.statsRow}>
           <MiniStat label="Recebido" value={wallet.total_earned} />
@@ -83,6 +107,16 @@ const s = StyleSheet.create({
   balance: {
     ...typography.displayMd,
     color: colors.text.primary,
+  },
+  heldRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.xs,
+  },
+  heldText: {
+    ...typography.caption,
+    color: colors.text.muted,
+    flex:  1,
   },
   statsRow: {
     flexDirection: 'row',

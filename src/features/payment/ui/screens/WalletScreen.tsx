@@ -9,10 +9,13 @@ import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground
 import { ConfettiBurst } from '@/shared/components/ConfettiBurst';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { MusicianTabScreenProps } from '@/navigation/types';
-import { useWallet } from '../../application/useWallet';
+import { useConnectMercadoPago, useWallet } from '../../application/useWallet';
 import { useWalletSocket } from '../../application/useWalletSocket';
 import { getWithdrawEligibility } from '../../domain/tip.types';
+import { EscrowHistoryList } from '../components/EscrowHistoryList';
+import { MercadoPagoLinkCard } from '../components/MercadoPagoLinkCard';
 import { WalletBalanceCard } from '../components/WalletBalanceCard';
+import { WalletSectionHeader } from '../components/WalletSectionHeader';
 import { WithdrawProgressBar } from '../components/WithdrawProgressBar';
 import { TipHistoryList } from '../components/TipHistoryList';
 
@@ -45,11 +48,15 @@ export function WalletScreen(_props: Props) {
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data: wallet, isPending, isError, refetch } = useWallet(musicianId);
   const celebration = useWalletSocket(musicianId);
+  const connectMercadoPago = useConnectMercadoPago(musicianId);
 
   const balanceStyle = useReveal(60);
+  const linkStyle = useReveal(110);
   const progressStyle = useReveal(140);
-  const historyTitleStyle = useReveal(200);
-  const historyStyle = useReveal(260);
+  const escrowTitleStyle = useReveal(190);
+  const escrowListStyle = useReveal(240);
+  const historyTitleStyle = useReveal(300);
+  const historyStyle = useReveal(360);
 
   if (isPending) {
     return (
@@ -82,16 +89,50 @@ export function WalletScreen(_props: Props) {
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={s.content}>
           <Animated.View style={balanceStyle}>
-            <Text style={s.screenTitle}>Gorjetas</Text>
+            {/* "Carteira", não "Gorjetas": o saldo daqui é o cachê liberado da
+                custódia — a gorjeta cai direto na conta Mercado Pago. */}
+            <Text style={s.screenTitle}>Carteira</Text>
             <WalletBalanceCard wallet={wallet} />
+          </Animated.View>
+
+          <Animated.View style={linkStyle}>
+            <MercadoPagoLinkCard
+              linked={wallet.mp_linked}
+              isConnecting={connectMercadoPago.isPending}
+              onConnect={() => connectMercadoPago.mutate()}
+            />
           </Animated.View>
 
           <Animated.View style={progressStyle}>
             <WithdrawProgressBar eligibility={eligibility} />
           </Animated.View>
 
+          <Animated.View style={escrowTitleStyle}>
+            {/*
+              Vem ANTES do extrato de gorjetas de propósito: é dinheiro a
+              receber (ação futura), enquanto gorjeta é dinheiro já recebido
+              (histórico). O que ainda vai acontecer importa mais.
+            */}
+            <WalletSectionHeader
+              title="Cachês em custódia"
+              subtitle="Garantidos antes do show, liberados depois dele"
+            />
+          </Animated.View>
+
+          <Animated.View style={escrowListStyle}>
+            <EscrowHistoryList musicianId={musicianId} />
+          </Animated.View>
+
           <Animated.View style={historyTitleStyle}>
-            <Text style={s.sectionTitle}>Histórico</Text>
+            {/*
+              EXTRATO, não saldo: cada gorjeta desta lista já foi paga direto na
+              conta Mercado Pago do músico. Chamar de "histórico da carteira"
+              sugeriria que o dinheiro passou por aqui — e ele nunca passou.
+            */}
+            <WalletSectionHeader
+              title="Extrato de gorjetas"
+              subtitle="Recebidas direto na sua conta Mercado Pago"
+            />
           </Animated.View>
 
           <Animated.View style={historyStyle}>
@@ -155,10 +196,5 @@ const s = StyleSheet.create({
     ...typography.title,
     color: colors.text.primary,
     marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color: colors.text.primary,
   },
 });

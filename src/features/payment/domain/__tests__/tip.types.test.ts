@@ -8,6 +8,8 @@ function makeWallet(overrides: Partial<Wallet> = {}): Wallet {
     total_earned: 0,
     total_withdrawn: 0,
     pix_key: null,
+    held_balance: 0,
+    mp_linked: false,
     min_withdrawal_amount_brl: 110,
     withdrawal_days: 5,
     ...overrides,
@@ -58,5 +60,28 @@ describe('getWithdrawEligibility', () => {
     const result = getWithdrawEligibility(wallet);
 
     expect(result.missingAmount).toBeCloseTo(15.1, 2);
+  });
+});
+
+/**
+ * A custódia do cachê não entra no que é sacável.
+ *
+ * `held_balance` é dinheiro que existe mas está retido na subconta do músico até
+ * a apresentação ser registrada e o prazo de contestação vencer. Somá-lo à
+ * elegibilidade ofereceria um saque que o gateway recusa — e a recusa chegaria
+ * depois de o app já ter dito "você pode sacar".
+ */
+describe('getWithdrawEligibility — custódia não é saldo', () => {
+  it('ignora held_balance ao calcular o que falta para sacar', () => {
+    const wallet = makeWallet({
+      balance: 40,
+      held_balance: 1500,
+      min_withdrawal_amount_brl: 110,
+    });
+
+    const eligibility = getWithdrawEligibility(wallet);
+
+    expect(eligibility.isEligible).toBe(false);
+    expect(eligibility.missingAmount).toBe(70);
   });
 });

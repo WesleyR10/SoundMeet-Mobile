@@ -39,6 +39,25 @@ export interface Wallet {
   total_earned: number;
   total_withdrawn: number;
   pix_key: string | null;
+  /**
+   * Cachê sob custódia — recebido, ainda **não** liberado (F1.3a).
+   *
+   * 🔴 Fica FORA de `balance`: retido não é sacável. Somar os dois na tela
+   * ofereceria um saque que o gateway recusa.
+   */
+  held_balance: number;
+  /**
+   * A conta Mercado Pago está vinculada?
+   *
+   * 🔴 **A gorjeta cai direto na conta do músico**, com a comissão saindo por
+   * `application_fee` — a plataforma nunca detém esse dinheiro. Por isso
+   * gorjeta **não tem saque pela SoundMeet**: sem vínculo ele não recebe, e com
+   * vínculo ele saca no próprio Mercado Pago.
+   *
+   * `balance` é o que sobrou do modelo antigo mais o **cachê liberado** da
+   * custódia — esse sim sacável por aqui.
+   */
+  mp_linked: boolean;
   min_withdrawal_amount_brl: number;
   withdrawal_days: number;
 }
