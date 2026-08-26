@@ -12,6 +12,7 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { FanStackScreenProps } from '@/navigation/types';
 import { useAttendEvent } from '../../application/useAttendEvent';
 import { useMakeMusicRequest, useRequestSuggestions } from '../../application/useSongRequest';
+import { SaveToSpotifyAction } from '../components/SaveToSpotifyAction';
 import { SongSuggestionChips } from '../components/SongSuggestionChips';
 
 type Props = FanStackScreenProps<'SongRequest'>;
@@ -63,6 +64,20 @@ export function SongRequestScreen({ route, navigation }: Props) {
           <Text style={s.successSubtitle}>
             +{requestMutation.data.points_earned} pontos ganhos. O músico vai ver seu pedido em breve.
           </Text>
+          {/*
+            O momento certo para oferecer o Spotify: o fã acabou de dizer que
+            quer ouvir ESTA música. Só aparece para quem já conectou a conta —
+            virar CTA de integração aqui transformaria a comemoração num funil,
+            no meio do show.
+          */}
+          <View style={s.successSpotify}>
+            <SaveToSpotifyAction
+              audienceId={audienceId}
+              title={songTitle.trim()}
+              artist={artistName.trim()}
+            />
+          </View>
+
           <PrimaryButton label="Voltar ao perfil" onPress={() => navigation.goBack()} style={s.successBtn} />
         </View>
       </SafeAreaView>
@@ -131,6 +146,10 @@ const s = StyleSheet.create({
     ...typography.body,
     color:     colors.text.secondary,
     textAlign: 'center',
+  },
+  successSpotify: {
+    width:     '100%',
+    marginTop: spacing.md,
   },
   successBtn: {
     marginTop: spacing.lg,

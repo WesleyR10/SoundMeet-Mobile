@@ -6,10 +6,13 @@ import { Star, BadgeCheck, User, Music, Clock } from 'lucide-react-native';
 import { colors, spacing, radius, typography, gradients, shadows } from '@/shared/design-system/tokens';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import type { FanStackScreenProps } from '@/navigation/types';
+import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useMusicianPublic } from '../../application/useMusicianPublic';
+import { NowPlayingCard } from '../components/NowPlayingCard';
 import { PublicStatCard } from '../components/PublicStatCard';
 import { TagChipRow } from '../components/TagChipRow';
 import { SocialLinksRow } from '../components/SocialLinksRow';
+import { VerifiedResumeSection } from '../components/VerifiedResumeSection';
 
 type Props = FanStackScreenProps<'MusicianPublicProfile'>;
 
@@ -18,6 +21,7 @@ const AVATAR_SIZE = 108;
 export function MusicianPublicProfileScreen({ route, navigation }: Props) {
   const { musicianId, eventId, establishmentId } = route.params;
   const { data: musician, isPending } = useMusicianPublic(musicianId);
+  const audienceId = useAuthStore((s) => s.user?.audienceId ?? null);
 
   if (isPending || !musician) {
     return (
@@ -63,6 +67,17 @@ export function MusicianPublicProfileScreen({ route, navigation }: Props) {
           {!!musician.bio && <Text style={s.bio}>{musician.bio}</Text>}
         </View>
 
+        {/*
+          Logo abaixo do nome, antes de qualquer estatística: durante um show é
+          a informação mais útil da tela. Some sozinho fora de evento, sem set
+          aberto, ou no intervalo entre duas músicas.
+        */}
+        <NowPlayingCard
+          musicianId={musicianId}
+          eventId={eventId}
+          audienceId={audienceId}
+        />
+
         <View style={s.statsRow}>
           <PublicStatCard icon={Clock} value={`${musician.experience_years} anos`} label="Experiência" accentColor={colors.brand.primary} />
           <PublicStatCard icon={Music} value={String(musician.genres.length)} label="Gêneros" accentColor={colors.accent.violet} />
@@ -72,6 +87,14 @@ export function MusicianPublicProfileScreen({ route, navigation }: Props) {
         <TagChipRow label="Gêneros" tags={musician.genres} accentColor={colors.accent.violet} />
 
         <SocialLinksRow socialLinks={social ?? null} />
+
+        {/*
+          Currículo verificado (F4). Depois da bio de propósito: a bio é o que o
+          artista diz de si, isto é o que a plataforma pode provar. Some por
+          inteiro para quem ainda não tem show concluído — um bloco de zeros
+          seria pior que ausência.
+        */}
+        <VerifiedResumeSection musicianId={musicianId} />
 
         <View style={s.ctaSection}>
           {eventId ? (

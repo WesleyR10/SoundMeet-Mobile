@@ -18,6 +18,31 @@ export interface EstablishmentMenuPdf {
   uploaded_at: string;
 }
 
+/**
+ * Ficha técnica do palco (A3) — espelha `StageTechSpecJSON` de
+ * `../soundmeet-backend/src/core/shared/domain/value-objects/stage-tech-spec.vo.ts`.
+ *
+ * ⚠️ Campos internos em camelCase: o snake_case vale para o nome de topo
+ * (`stage_tech_spec`), não para dentro — mesma convenção de `operating_hours`.
+ *
+ * ⚠️ `null` é "o dono não respondeu", `false` é "não tem". São coisas
+ * diferentes para quem vai tocar, e a UI não pode colapsar as duas.
+ */
+export interface StageTechSpec {
+  hasPa:            boolean | null;
+  mixerChannels:    number | null;
+  monitors:         number | null;
+  hasMicrophones:   number | null;
+  backline:         string[];
+  dimensions:       { widthM: number | null; depthM: number | null; heightM: number | null } | null;
+  power:            { outlets: number | null; voltage: string | null } | null;
+  hasParking:       boolean | null;
+  hasSoundEngineer: boolean | null;
+  /** "HH:MM-HH:MM" */
+  soundcheckWindow: string | null;
+  notes:            string | null;
+}
+
 export interface EstablishmentProfile {
   id:               string;
   establishment_id: string;
@@ -26,6 +51,7 @@ export interface EstablishmentProfile {
   amenities:        string[];
   preferred_genres: string[];
   operating_hours:  Record<string, unknown> | null;
+  stage_tech_spec:  StageTechSpec | null;
   price_range:      EstablishmentPriceRange | null;
   social_links:     Record<string, unknown> | null;
   menu_pdfs:        EstablishmentMenuPdf[];

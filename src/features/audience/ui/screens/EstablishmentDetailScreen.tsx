@@ -9,6 +9,7 @@ import { formatEstablishmentPriceRange } from '../../domain/establishment.consta
 import { EstablishmentHero } from '../components/EstablishmentHero';
 import { TagChipRow } from '../components/TagChipRow';
 import { EventListItem } from '../components/EventListItem';
+import { StageTechSpecSection } from '@/shared/components/StageTechSpecSection';
 import { EmptyState } from '../components/EmptyState';
 
 type Props = FanStackScreenProps<'EstablishmentDetail'>;
@@ -48,6 +49,8 @@ export function EstablishmentDetailScreen({ route, navigation }: Props) {
 
         <TagChipRow label="Gêneros" tags={profile?.preferred_genres ?? []} accentColor={colors.accent.violet} />
         <TagChipRow label="Comodidades" tags={profile?.amenities ?? []} accentColor={colors.brand.primary} />
+
+        <StageTechSpecSection spec={profile?.stage_tech_spec ?? null} />
 
         {!!profile?.menu_pdfs.length && (
           <View style={s.section}>

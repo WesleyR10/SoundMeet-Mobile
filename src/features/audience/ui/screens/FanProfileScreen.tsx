@@ -10,8 +10,14 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { logout } from '@/shared/services/auth/keycloak.service';
 import type { FanProfileScreenProps } from '@/navigation/types';
 import { useAudience, useCompleteAudienceProfile } from '../../application/useAudience';
+import {
+  useConnectSpotify,
+  useDisconnectSpotify,
+  useSpotifyStatus,
+} from '../../application/useSpotify';
 import { GENRE_OPTIONS, INSTRUMENT_OPTIONS } from '../../domain/audience.constants';
 import { FanProfileHero } from '../components/FanProfileHero';
+import { SpotifyLinkCard } from '../components/SpotifyLinkCard';
 import { RoleSwitchSheet } from '@/navigation/components/RoleSwitchSheet';
 
 type Props = FanProfileScreenProps<'FanProfile'>;
@@ -27,6 +33,10 @@ export function FanProfileScreen({ navigation }: Props) {
   const audienceId = useAuthStore((s) => s.user?.audienceId ?? null);
   const { data: audience, isPending } = useAudience(audienceId);
   const completeMutation = useCompleteAudienceProfile(audienceId);
+
+  const { data: spotify } = useSpotifyStatus(audienceId);
+  const connectSpotify = useConnectSpotify(audienceId);
+  const disconnectSpotify = useDisconnectSpotify(audienceId);
 
   const [genres, setGenres]           = useState<string[]>([]);
   const [instruments, setInstruments] = useState<string[]>([]);
@@ -97,6 +107,18 @@ export function FanProfileScreen({ navigation }: Props) {
         </View>
 
         <PrimaryButton label="Salvar preferências" onPress={handleSave} loading={completeMutation.isPending} />
+
+        {/* Depois das preferências: conectar o Spotify é opcional, enquanto
+            gênero e instrumento alimentam a descoberta. */}
+        <View style={s.section}>
+          <SpotifyLinkCard
+            linked={spotify?.linked ?? false}
+            isConnecting={connectSpotify.isPending}
+            isDisconnecting={disconnectSpotify.isPending}
+            onConnect={() => connectSpotify.mutate()}
+            onDisconnect={() => disconnectSpotify.mutate()}
+          />
+        </View>
 
         {/* Multi-role (10.5): troca de conta + CTA "Quero ser Músico também" */}
         <Pressable

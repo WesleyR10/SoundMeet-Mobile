@@ -16,8 +16,8 @@ export interface SendTipPayload {
   is_anonymous?: boolean;
 }
 
-// Gateway ainda é PixGatewayMock (roadmap.md Bloco 1.6) — qr_code/
-// copy_paste_code não são uma cobrança PIX real ainda.
+// qr_code / copy_paste_code vêm do Mercado Pago (Orders API) quando o
+// músico tem conta vinculada; sem vínculo a API recusa com erro acionável.
 export interface SendTipResult {
   id:     string;
   status: string;

@@ -16,9 +16,8 @@ import { TipAmountSelector } from '../components/TipAmountSelector';
 type Props = FanStackScreenProps<'TipMusician'>;
 
 // Gorjeta PIX (Bloco 11.10) — POST /tips direto (payment-module), não o
-// wrapper /audiences/:id/tips. Gateway ainda é PixGatewayMock (ver
-// soundmeet-backend/Docs/roadmap.md Bloco 1.6) — qr_code/copy_paste_code
-// exibidos aqui NÃO são uma cobrança PIX real ainda.
+// wrapper /audiences/:id/tips. Gateway: Mercado Pago (`MercadoPagoPixGateway`).
+// Sem conta do músico vinculada a API recusa; com vínculo devolve QR real.
 export function TipMusicianScreen({ route, navigation }: Props) {
   const { musicianId, eventId } = route.params;
 
