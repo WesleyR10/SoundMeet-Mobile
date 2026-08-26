@@ -41,11 +41,10 @@ yarn-error.*
 google-play-key.json
 
 # Firebase (Bloco 4.9 — push notifications)
-# google-services.json: config do app Android, referenciada em app.json (android.googleServicesFile)
-# *firebase-adminsdk*.json: service account key (Project Settings > Service accounts) — só serve
-# pra upload único via `eas credentials` (FCM V1); não é lida pelo app, não devia nem ficar aqui,
-# mas o gitignore protege mesmo assim caso fique.
-google-services.json
+# google-services.json: NÃO é segredo (config pública do app Android, embutida em todo APK) —
+# rastreado no git de propósito, pois EAS Build só sobe arquivos versionados (build falhava sem isso).
+# *firebase-adminsdk*.json: service account key (Project Settings > Service accounts) — essa sim é
+# sensível; só serve pra upload único via `eas credentials` (FCM V1), não é lida pelo app.
 *firebase-adminsdk*.json
 
 # typescript

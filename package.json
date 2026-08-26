@@ -65,6 +65,9 @@
   },
   "scripts": {
     "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "check:eas-env": "node ./scripts/check-eas-env.mjs",
+    "audit:gate": "node ./scripts/audit-gate.mjs",
     "test:watch": "jest --watch",
     "start": "expo start",
     "android": "expo start --android",
