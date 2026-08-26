@@ -16,6 +16,9 @@ export interface RepertoireSong {
   duration_override_seconds:  number | null;
   duration_seconds:           number | null;
   effective_duration_seconds: number | null;
+  // Se o Play Mode tem letra/acordes para exibir. Vem calculado pelo backend
+  // (RepertoireSongPresenter) — o app não deriva isso sozinho.
+  has_chord_sheet:            boolean;
 }
 
 export interface RepertoireInvitee {

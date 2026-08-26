@@ -101,7 +101,12 @@ export function InviteMemberSheet({ visible, onClose, bandId, musicianId, existi
                 autoCapitalize="none"
                 accessibilityLabel="Buscar músico pra convidar"
               />
-              {isSearching && <ActivityIndicator size="small" color={colors.brand.primary} />}
+              {/* `isPending` de query desabilitada é sempre true no TanStack v5
+                  ("sem dados", não "buscando"), então sem o gate de 2 letras o
+                  spinner ficava girando eternamente ao lado do campo vazio. */}
+              {query.trim().length >= 2 && isSearching && (
+                <ActivityIndicator size="small" color={colors.brand.primary} />
+              )}
             </View>
 
             {query.trim().length >= 2 && (

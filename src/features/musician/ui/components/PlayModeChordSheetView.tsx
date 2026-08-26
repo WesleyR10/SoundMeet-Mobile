@@ -4,12 +4,16 @@ import { FileX } from 'lucide-react-native';
 import { colors, spacing, typography } from '@/shared/design-system/tokens';
 import { ChordTokenLine, type LineState } from '@/shared/components/ChordTokenLine';
 import type { PlayModeFlatLine } from '../../domain/play-mode.types';
-import type { usePlayModeAutoScroll } from '../../application/usePlayModeAutoScroll';
+import type { ChordSheetScrollBinding } from '../../application/usePracticeScrollSync';
 
 type Props = {
   isPending:    boolean;
   flatLines:    PlayModeFlatLine[];
-  scroll:       ReturnType<typeof usePlayModeAutoScroll>;
+  // Só os cinco callbacks que esta view realmente usa, em vez do retorno
+  // inteiro de `usePlayModeAutoScroll`. O Modo Ensaio dirige a rolagem pelo
+  // áudio (`usePracticeScrollSync`) e satisfaz o mesmo contrato sem carregar o
+  // playhead virtual, que ali não faz sentido.
+  scroll:       ChordSheetScrollBinding;
   lineState:    (index: number) => LineState;
   onPressChord: (symbol: string) => void;
 };

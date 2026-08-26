@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { stripDigits } from '@/shared/utils/cpf';
 import { useQueryClient } from '@tanstack/react-query';
 import type { UseFormGetValues, UseFormTrigger } from 'react-hook-form';
 import { useUpdateMusician, getUpdateMusicianErrorMessage } from '../../application/useUpdateMusician';
@@ -43,11 +44,17 @@ export function useEditProfileSectionSubmits({ musicianId, getValues, trigger, i
 
   const onSaveIdentity = async (): Promise<boolean> => {
     setIdentityError(null);
-    const valid = await trigger(['stageName', 'bio']);
+    const valid = await trigger(['stageName', 'bio', 'cnpj']);
     if (!valid) return false;
-    const { stageName, bio } = getValues();
+    const { stageName, bio, cnpj } = getValues();
     try {
-      await updateMusician.mutateAsync({ stage_name: stageName, bio: bio ?? '' });
+      // Campo vazio vira `null` e não `''`: o backend trata `null` como "apagou
+      // o MEI", enquanto string vazia estouraria a validação do VO.
+      await updateMusician.mutateAsync({
+        stage_name: stageName,
+        bio:        bio ?? '',
+        cnpj:       stripDigits(cnpj ?? '') || null,
+      });
       return true;
     } catch (err) {
       setIdentityError(getUpdateMusicianErrorMessage(err));

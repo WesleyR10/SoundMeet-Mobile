@@ -19,6 +19,7 @@ import { ProfileIdentityBlock } from '../components/ProfileIdentityBlock';
 import { ProfileInfoSection } from '../components/ProfileInfoSection';
 import { ProfileSocialLinks } from '../components/ProfileSocialLinks';
 import { ProfileMenuGroups } from '../components/ProfileMenuGroups';
+import { ProfileAccountSection } from '../components/ProfileAccountSection';
 import type { ProfileScreenProps, MusicianTabParamList, RootStackParamList } from '@/navigation/types';
 
 type Props = ProfileScreenProps<'ViewProfile'>;
@@ -73,9 +74,10 @@ export function ViewProfileScreen({ navigation }: Props) {
   const tabNavigation = navigation.getParent<BottomTabNavigationProp<MusicianTabParamList>>();
   const rootNavigation = tabNavigation?.getParent<NativeStackNavigationProp<RootStackParamList>>();
 
-  const menuStyle   = useReveal(260);
-  const infoStyle   = useReveal(340);
-  const socialStyle = useReveal(420);
+  const menuStyle    = useReveal(260);
+  const infoStyle    = useReveal(340);
+  const socialStyle  = useReveal(420);
+  const accountStyle = useReveal(500);
 
   if (isPending) {
     return (
@@ -119,9 +121,10 @@ export function ViewProfileScreen({ navigation }: Props) {
               bandsBadgeCount={pendingBandInvites}
               onPressAgenda={() => rootNavigation?.navigate('Agenda')}
               onPressConversations={() => rootNavigation?.navigate('ConversationList')}
-              onPressEditProfile={() => navigation.navigate('EditProfile')}
-              onPressSwitchAccount={() => setAccountsVisible(true)}
-              onPressLogout={confirmLogout}
+              onPressInquiries={() => rootNavigation?.navigate('InquiryList')}
+              onPressContracts={() => rootNavigation?.navigate('ContractList')}
+              onPressResume={() => rootNavigation?.navigate('MyResume')}
+              onPressShowHistory={() => rootNavigation?.navigate('PerformanceHistory')}
             />
           </Animated.View>
 
@@ -131,6 +134,16 @@ export function ViewProfileScreen({ navigation }: Props) {
 
           <Animated.View style={socialStyle}>
             <ProfileSocialLinks socialLinks={musician.profile?.social_links ?? null} />
+          </Animated.View>
+
+          {/* "Conta" fecha a tela: editar/trocar/sair são ações terminais e não
+              devem ficar acima de conteúdo de perfil. */}
+          <Animated.View style={accountStyle}>
+            <ProfileAccountSection
+              onPressEditProfile={() => navigation.navigate('EditProfile')}
+              onPressSwitchAccount={() => setAccountsVisible(true)}
+              onPressLogout={confirmLogout}
+            />
           </Animated.View>
         </View>
       </ScrollView>

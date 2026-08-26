@@ -1,7 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { GripVertical, Trash2, StickyNote, PlayCircle } from 'lucide-react-native';
+import { AudioLines, GripVertical, Trash2, StickyNote, PlayCircle, FileX } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
 import type { RepertoireSong } from '../../domain/repertoire.types';
@@ -10,6 +10,12 @@ type Props = {
   song:      RepertoireSong;
   index:     number;
   onPress:   () => void;
+  /**
+   * Modo Ensaio. Opcional: só aparece onde a música tem cifra, porque sem ela
+   * o ensaio perde metade do valor (stems sem cifra é um player, não um
+   * ensaio).
+   */
+  onPractice?: () => void;
   onRemove:  () => void;
   drag:      () => void;
   isActive:  boolean;
@@ -33,7 +39,7 @@ function triggerHaptic() {
 // pra não conflitar com o swipe horizontal de remover — onLongPress no handle
 // aciona `drag()` do DraggableFlatList; Gesture.Pan cobre só o corpo do card.
 // Mesmo idioma de swipe de RequestCard.tsx, mas 1 direção só (remover).
-export function SongCard({ song, index, onPress, onRemove, drag, isActive }: Props) {
+export function SongCard({ song, index, onPress, onPractice, onRemove, drag, isActive }: Props) {
   const translateX = useSharedValue(0);
   const hapticFired = useSharedValue(false);
 
@@ -85,17 +91,44 @@ export function SongCard({ song, index, onPress, onRemove, drag, isActive }: Pro
               <Text style={s.artist} numberOfLines={1}>{song.artist}</Text>
               {!!duration && <Text style={s.duration}> · {duration}</Text>}
             </View>
-            {!!song.custom_notes && (
-              <View style={s.customBadge}>
-                <StickyNote size={11} color={colors.accent.amber} />
-                <Text style={s.customBadgeText}>Customizada</Text>
-              </View>
-            )}
+            <View style={s.badgeRow}>
+              {!!song.custom_notes && (
+                <View style={s.customBadge}>
+                  <StickyNote size={11} color={colors.accent.amber} />
+                  <Text style={s.customBadgeText}>Customizada</Text>
+                </View>
+              )}
+              {/* A música continua abrível de propósito (a análise pode ter
+                  concluído desde o último fetch) — o badge só evita a surpresa
+                  de cair numa tela vazia sem aviso. */}
+              {!song.has_chord_sheet && (
+                <View style={s.noSheetBadge}>
+                  <FileX size={11} color={colors.text.muted} />
+                  <Text style={s.noSheetBadgeText}>Sem cifra</Text>
+                </View>
+              )}
+            </View>
           </Pressable>
 
-          <Pressable onPress={onPress} hitSlop={8} accessibilityRole="button" accessibilityLabel="Abrir no Play Mode">
-            <PlayCircle size={26} color={colors.brand.primary} />
+          <Pressable
+            onPress={onPress}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={song.has_chord_sheet ? 'Abrir no Play Mode' : 'Abrir no Play Mode (sem cifra disponível)'}
+          >
+            <PlayCircle size={26} color={song.has_chord_sheet ? colors.brand.primary : colors.text.muted} />
           </Pressable>
+
+          {!!onPractice && song.has_chord_sheet && (
+            <Pressable
+              onPress={onPractice}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={`Ensaiar ${song.title} com as faixas separadas`}
+            >
+              <AudioLines size={24} color={colors.accent.violet} />
+            </Pressable>
+          )}
 
           <Pressable
             onLongPress={drag}
@@ -169,12 +202,17 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     color: colors.text.muted,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:            spacing.xs,
+    marginTop:      4,
+  },
   customBadge: {
     flexDirection:      'row',
     alignItems:         'center',
     gap:                 4,
     alignSelf:          'flex-start',
-    marginTop:           4,
     borderRadius:       radius.sm,
     paddingHorizontal:  spacing.xs,
     paddingVertical:    2,
@@ -183,6 +221,20 @@ const s = StyleSheet.create({
   customBadgeText: {
     ...typography.caption,
     color: colors.accent.amber,
+  },
+  noSheetBadge: {
+    flexDirection:      'row',
+    alignItems:         'center',
+    gap:                 4,
+    alignSelf:          'flex-start',
+    borderRadius:       radius.sm,
+    paddingHorizontal:  spacing.xs,
+    paddingVertical:    2,
+    backgroundColor:   'rgba(255,255,255,0.06)',
+  },
+  noSheetBadgeText: {
+    ...typography.caption,
+    color: colors.text.muted,
   },
   handle: {
     width:           44,

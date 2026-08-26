@@ -6,6 +6,9 @@
 export interface WizardMusicianPayload {
   stage_name?: string;
   bio?:        string;
+  // CNPJ do MEI. `null` remove — o músico volta a contratar como pessoa
+  // física. Fora do cadastro de propósito: é dado de configuração.
+  cnpj?:       string | null;
   instruments?: string[];
   genres?:      string[];
   // Opt-in de radar (jul/2026) — tri-state, nunca setado automaticamente pelo
@@ -92,6 +95,9 @@ export interface MusicianProfile {
   bio:              string | null;
   avatar:           string | null;
   phone:            string | null;
+  // Só vem preenchido para o dono e para admin — a visão pública do backend
+  // (PublicMusicianPresenter) omite o campo.
+  cnpj?:            string | null;
   qr_code:          string | null;
   qr_customization: QRCustomization | null;
   // Só vem populado pelo GET /musicians/:id (GetMusicianUseCase injeta

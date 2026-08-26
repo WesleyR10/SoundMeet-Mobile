@@ -29,7 +29,7 @@ export function CifraSearchScreen({ navigation, route }: Props) {
   const [selected, setSelected] = useState<{ result: CifraSearchResult; musicLibraryId: string; jobId: string } | null>(null);
   const [flowError, setFlowError] = useState<string | null>(null);
 
-  const { data: results, isPending: isSearching } = useCifraSearch(musicianId, query);
+  const { data: results, isPending: isSearching, isError: searchFailed } = useCifraSearch(musicianId, query);
   const startAnalysis = useStartCifraAnalysis(musicianId);
   const { data: job } = useCifraAnalysisJob(selected?.jobId ?? null);
   const addSongMutation = useAddSong(musicianId, repertoireId);
@@ -95,13 +95,25 @@ export function CifraSearchScreen({ navigation, route }: Props) {
 
           {!!flowError && <ErrorBanner message={flowError} style={s.banner} />}
 
-          {isSearching ? (
+          {/* A dica vem ANTES do loading de propósito: a query fica
+              `enabled: false` enquanto a busca tem menos de 2 letras, e no
+              TanStack Query v5 uma query desabilitada nunca sai de `isPending`
+              (que significa "sem dados", não "buscando"). Com o loading em
+              cima, a tela abria num spinner eterno e esta dica era inalcançável. */}
+          {query.trim().length < 2 ? (
+            <View style={s.centerRoot}>
+              <Text style={s.hintText}>Digite pelo menos 2 letras pra buscar.</Text>
+            </View>
+          ) : isSearching ? (
             <View style={s.centerRoot}>
               <ActivityIndicator color={colors.brand.primary} />
             </View>
-          ) : query.trim().length < 2 ? (
+          ) : searchFailed ? (
+            // Sem este ramo, uma busca que falha cai no "Nenhum resultado
+            // encontrado" abaixo e o músico procura outra música achando que
+            // essa não existe.
             <View style={s.centerRoot}>
-              <Text style={s.hintText}>Digite pelo menos 2 letras pra buscar.</Text>
+              <Text style={s.hintText}>Não conseguimos buscar agora. Confira a conexão e tente de novo.</Text>
             </View>
           ) : (results ?? []).length === 0 ? (
             <View style={s.centerRoot}>

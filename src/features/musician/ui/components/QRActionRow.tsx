@@ -11,13 +11,24 @@ type Props = {
   isSaving:   boolean;
   justShared: boolean;
   justSaved:  boolean;
+  /**
+   * Só os rótulos de acessibilidade mudam entre um card e outro — o par
+   * primária+secundária é o mesmo. Default mantém o QR Code, que é quem já
+   * usava esta linha antes do card de recap pós-show.
+   */
+  shareAccessibilityLabel?: string;
+  saveAccessibilityLabel?:  string;
 };
 
 // Duas ações lado a lado: "Compartilhar" (preenchido, ação mais frequente) e
 // "Salvar" (contornado, secundária) — mesmo par primária+secundária do resto
 // do app, mas com ícone, o que PrimaryButton não suporta hoje; não vale
 // estender um componente compartilhado só por causa destes dois botões.
-export function QRActionRow({ onShare, onSave, isSharing, isSaving, justShared, justSaved }: Props) {
+export function QRActionRow({
+  onShare, onSave, isSharing, isSaving, justShared, justSaved,
+  shareAccessibilityLabel = 'Compartilhar QR Code',
+  saveAccessibilityLabel  = 'Salvar QR Code na galeria',
+}: Props) {
   return (
     <>
       <ActionButton
@@ -32,7 +43,7 @@ export function QRActionRow({ onShare, onSave, isSharing, isSaving, justShared, 
         pressedStyle={s.filledPressed}
         labelStyle={s.filledLabel}
         iconColor={colors.text.inverse}
-        accessibilityLabel="Compartilhar QR Code"
+        accessibilityLabel={shareAccessibilityLabel}
       />
 
       <ActionButton
@@ -47,7 +58,7 @@ export function QRActionRow({ onShare, onSave, isSharing, isSaving, justShared, 
         pressedStyle={s.outlinedPressed}
         labelStyle={s.outlinedLabel}
         iconColor={colors.brand.primary}
-        accessibilityLabel="Salvar QR Code na galeria"
+        accessibilityLabel={saveAccessibilityLabel}
       />
     </>
   );

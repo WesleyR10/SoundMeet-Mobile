@@ -79,6 +79,9 @@ export function RepertoireDetailScreen({ navigation, route }: Props) {
             onPress={() =>
               navigation.navigate('PlayMode', { repertoireId, musicLibraryId: item.music_library_id })
             }
+            onPractice={() =>
+              navigation.navigate('PracticeMode', { repertoireId, musicLibraryId: item.music_library_id })
+            }
           />
         )}
       />

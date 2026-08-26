@@ -53,7 +53,11 @@ export function EditRepertoireInviteSection({ ownMusicianId, onInvite, inviteLoa
           autoCapitalize="none"
           accessibilityLabel="Buscar músico pra convidar"
         />
-        {isSearching && <ActivityIndicator size="small" color={colors.brand.primary} />}
+        {/* Gate de 2 letras junto: `isPending` de query desabilitada é sempre
+            true no TanStack v5, e sem isso o spinner nunca parava. */}
+        {query.trim().length >= 2 && isSearching && (
+          <ActivityIndicator size="small" color={colors.brand.primary} />
+        )}
         {inviteLoading && <ActivityIndicator size="small" color={colors.accent.violet} />}
       </View>
 

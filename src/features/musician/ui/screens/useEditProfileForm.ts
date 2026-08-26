@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUploadAvatar, getUploadAvatarErrorMessage } from '../../application/useUploadAvatar';
 import { musicianProfileKey } from '../../application/useMusician';
+import { formatCnpj } from '@/shared/utils/cnpj';
 import { inferImageFileName, inferImageMimeType } from '@/shared/utils/image';
 import { resolveIds, INSTRUMENT_OPTIONS, GENRE_OPTIONS } from '../../domain/musician.constants';
 import { editProfileSchema, type EditProfileFormValues } from '../../domain/musician.validation';
@@ -35,6 +36,7 @@ function toDefaultValues(musician: MusicianProfile): EditProfileFormValues {
     instagram:       socialLinks?.instagram ?? '',
     youtube:         socialLinks?.youtube ?? '',
     spotify:         socialLinks?.spotify ?? '',
+    cnpj:            musician.cnpj ? formatCnpj(musician.cnpj) : '',
   };
 }
 

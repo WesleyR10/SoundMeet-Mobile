@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isValidCnpj } from '@/shared/utils/cnpj';
 import { isValidCpf } from '@/shared/utils/cpf';
 import { isValidPhoneBr } from '@/shared/utils/phone';
 import { isValidEmail } from '@/shared/utils/email';
@@ -101,6 +102,9 @@ export const editProfileSchema = z.object({
   instagram: z.string().trim().optional().or(z.literal('')),
   youtube:   z.string().trim().optional().or(z.literal('')),
   spotify:   z.string().trim().optional().or(z.literal('')),
+  // Vazio é válido: a maioria dos músicos não tem MEI. Preenchido, precisa ser
+  // um CNPJ de verdade — vai impresso num contrato.
+  cnpj: z.string().trim().refine((v) => v === '' || isValidCnpj(v), 'CNPJ inválido'),
 }).superRefine((data, ctx) => {
   const validateRange = (enabled: boolean, minRaw: string, maxRaw: string, minPath: string, maxPath: string) => {
     if (!enabled) return;

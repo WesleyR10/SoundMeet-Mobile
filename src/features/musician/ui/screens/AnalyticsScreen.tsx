@@ -10,11 +10,14 @@ import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground
 import { GlowCard } from '@/shared/components/GlowCard';
 import { AnimatedBalance } from '@/shared/components/AnimatedBalance';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
+import { isPlanLimitError } from '@/shared/services/http/types';
 import { useAnalytics } from '../../application/useAnalytics';
 import { AnalyticsHeroStats } from '../components/AnalyticsHeroStats';
 import { RequestsOutcomeChart } from '../components/RequestsOutcomeChart';
 import { TopSongsList } from '../components/TopSongsList';
-import type { ProfileScreenProps } from '@/navigation/types';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { MusicianTabParamList, ProfileScreenProps, RootStackParamList } from '@/navigation/types';
 
 type Props = ProfileScreenProps<'Analytics'>;
 
@@ -49,7 +52,9 @@ const ANALYTICS_GLOWS = [
 // por isso o texto evita "gorjetas do evento" e usa "total em gorjetas".
 export function AnalyticsScreen({ navigation }: Props) {
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
-  const { data: analytics, isPending, isError, refetch } = useAnalytics(musicianId);
+  const { data: analytics, isPending, isError, error, refetch } = useAnalytics(musicianId);
+  const tabs = navigation.getParent<BottomTabNavigationProp<MusicianTabParamList>>();
+  const root = tabs?.getParent<NativeStackNavigationProp<RootStackParamList>>();
 
   const statsStyle = useReveal(60);
   const tipsStyle = useReveal(140);
@@ -62,6 +67,28 @@ export function AnalyticsScreen({ navigation }: Props) {
       return (
         <View style={s.loaderRoot}>
           <ActivityIndicator color={colors.brand.primary} size="large" />
+        </View>
+      );
+    }
+
+    // 402 não é erro de rede: é o gate 9.7a (`realtime_analytics`,
+    // Essencial/Pro). Oferecer "tentar novamente" aqui seria mandar o músico
+    // repetir uma ação que nunca vai funcionar no plano atual.
+    if (isPlanLimitError(error)) {
+      return (
+        <View style={s.loaderRoot}>
+          <Text style={s.gateTitle}>Analytics é do plano Essencial</Text>
+          <Text style={s.gateBody}>
+            Veja pedidos aceitos e recusados, total em gorjetas e as músicas que mais te pedem.
+          </Text>
+          <Pressable
+            onPress={() => root?.navigate('Plans')}
+            style={s.retryBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Ver planos"
+          >
+            <Text style={s.retryText}>Ver planos</Text>
+          </Pressable>
         </View>
       );
     }
@@ -163,6 +190,16 @@ const s = StyleSheet.create({
     ...typography.body,
     fontFamily: 'Inter-SemiBold',
     color: colors.text.inverse,
+  },
+  gateTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+    textAlign: 'center',
+  },
+  gateBody: {
+    ...typography.body,
+    color: colors.text.secondary,
+    textAlign: 'center',
   },
   scroll: {
     padding: spacing.xl,

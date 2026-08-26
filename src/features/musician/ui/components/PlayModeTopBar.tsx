@@ -16,6 +16,12 @@ type Props = {
   onPressBack:      () => void;
   onPressSettings:  () => void;
   onPressPersonalChordSheet?: () => void;
+  /**
+   * Há set aberto: esta música está sendo mostrada ao público como "tocando
+   * agora". Sem este sinal o músico não teria como distinguir estudo de show —
+   * a tela é idêntica nos dois casos.
+   */
+  isBroadcasting?: boolean;
 };
 
 // Barra superior do Play Mode — avatar do músico (anel gradiente teal,
@@ -25,7 +31,7 @@ type Props = {
 // gradiente animado (não salto por re-render) — acompanha o playhead
 // virtual do usePlayModeAutoScroll com uma suavização própria de 260ms.
 export function PlayModeTopBar({
-  title, artist, avatarUrl, progress, pendingCount, onPressBadge, onPressBack, onPressSettings, onPressPersonalChordSheet,
+  title, artist, avatarUrl, progress, pendingCount, onPressBadge, onPressBack, onPressSettings, onPressPersonalChordSheet, isBroadcasting,
 }: Props) {
   const progressValue = useSharedValue(progress);
   useEffect(() => {
@@ -51,8 +57,13 @@ export function PlayModeTopBar({
         />
 
         <View style={s.titleWrap}>
-          <Text style={s.title} numberOfLines={1}>{title}</Text>
-          <Text style={s.artist} numberOfLines={1}>{artist}</Text>
+          <View style={s.titleRow}>
+            {isBroadcasting && <View style={s.liveDot} />}
+            <Text style={s.title} numberOfLines={1}>{title}</Text>
+          </View>
+          <Text style={s.artist} numberOfLines={1}>
+            {isBroadcasting ? `Ao vivo · ${artist}` : artist}
+          </Text>
         </View>
 
         <Pressable onPress={onPressSettings} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Ajustes da cifra (instrumento, tom, capotraste)" hitSlop={8}>
@@ -144,6 +155,17 @@ const s = StyleSheet.create({
     ...typography.caption,
     color:      colors.text.inverse,
     fontFamily: 'Inter-Bold',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.xs,
+  },
+  liveDot: {
+    width:           7,
+    height:          7,
+    borderRadius:    4,
+    backgroundColor: colors.status.live,
   },
   progressTrack: {
     height:          2,

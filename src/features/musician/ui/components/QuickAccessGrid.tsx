@@ -1,5 +1,5 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { QrCode, Music, FileText, CalendarDays, ChartColumn, Gauge, type LucideIcon } from 'lucide-react-native';
+import { QrCode, Music, FileText, CalendarDays, ChartColumn, Gauge, Inbox, FileSignature, type LucideIcon } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
 
 type Tile = {
@@ -17,15 +17,20 @@ type Props = {
   onPressRepertoire: () => void;
   onPressAnalytics:  () => void;
   onPressTuner:      () => void;
+  onPressCifras:     () => void;
   onPressAgenda:     () => void;
+  onPressInquiries:  () => void;
+  onPressContracts:  () => void;
 };
 
-// Grid do mockup `Home do Músico.dc.html` — QR Code, Repertório, Analytics,
-// Afinador (Bloco 8) e Agenda (Bloco 9, conversas com estabelecimentos) têm
-// destino/dado real hoje; só "Cifras" fica visual e desabilitada (já
-// resolvida pela tab própria do Bloco 7 — a tile antiga virou redundante).
+// Grid do mockup `Home do Músico.dc.html` — todas as tiles têm destino real.
+// "Cifras" ficou desabilitada ("Em breve") por um tempo por ser considerada
+// redundante com a tab Repertório; agora aponta pro ChordSheetsHub, que reúne
+// cifras pessoais, comunidade e criação — coisas que a tab de repertório
+// (organizada por show) não expõe.
 export function QuickAccessGrid({
-  repertoireCount, onPressQrCode, onPressRepertoire, onPressAnalytics, onPressTuner, onPressAgenda,
+  repertoireCount, onPressQrCode, onPressRepertoire, onPressAnalytics, onPressTuner, onPressCifras, onPressAgenda,
+  onPressInquiries, onPressContracts,
 }: Props) {
   const tiles: Tile[] = [
     {
@@ -63,9 +68,10 @@ export function QuickAccessGrid({
     {
       key:         'cifras',
       label:       'Cifras',
-      sub:         'Em breve',
+      sub:         'Minhas e da comunidade',
       icon:        FileText,
       accentColor: colors.brand.primary,
+      onPress:     onPressCifras,
     },
     {
       key:         'agenda',
@@ -74,6 +80,45 @@ export function QuickAccessGrid({
       icon:        CalendarDays,
       accentColor: colors.accent.violet,
       onPress:     onPressAgenda,
+    },
+    {
+      // Propostas (A3/F1.2) — quem aceita ou recusa é o músico, então esta é a
+      // única superfície onde a decisão pode acontecer.
+      //
+      // Sem contador de propostas abertas de propósito: o número viria de
+      // `features/scheduling/application/useInquiries`, e FSD proíbe
+      // `features/musician` importar de outra feature. Um badge aqui custaria
+      // ou uma violação da regra ou uma promoção do hook para `shared/` que
+      // nenhuma outra tela pediu.
+      key:         'inquiries',
+      label:       'Propostas',
+      sub:         'Convites de show',
+      icon:        Inbox,
+      accentColor: colors.accent.amber,
+      onPress:     onPressInquiries,
+    },
+    {
+      // Contratos (B4/Bloco 10). No app do músico o contrato É a tela do show:
+      // não existe lista de bookings aqui, e o snapshot carrega data, local,
+      // cachê e a Ficha Técnica.
+      //
+      // Violeta, a mesma cor de Propostas e Agenda: contrato é a continuação
+      // da negociação, não uma família nova (ver a tabela de contexto do
+      // design-system.md).
+      //
+      // Sem contador de "aguardando você", pelo MESMO motivo do tile de
+      // Propostas logo acima: o número viria de
+      // `features/contract/application/useContracts`, e a regra de ouro do FSD
+      // proíbe `features/musician` importar de outra feature. Um badge aqui
+      // custaria ou a violação da regra ou a promoção do hook para `shared/`
+      // que nenhuma outra tela pediu — e o estado pendente já aparece em cada
+      // linha da própria lista.
+      key:         'contracts',
+      label:       'Contratos',
+      sub:         'Shows fechados',
+      icon:        FileSignature,
+      accentColor: colors.accent.violet,
+      onPress:     onPressContracts,
     },
   ];
 

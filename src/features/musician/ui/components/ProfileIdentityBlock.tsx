@@ -55,9 +55,13 @@ export function ProfileIdentityBlock({ musician }: Props) {
         <ProfileStatCard icon={Wallet} value={priceLabel ?? '—'} label="faixa de preço" accentColor={colors.accent.violet} />
       </Animated.View>
 
+      {/* Lado a lado (antes empilhados): encurta o topo do perfil e aproxima
+          as duas listas que o músico lê junto. Cada coluna quebra as pílulas
+          internamente (flexWrap do ProfileTagPills), e se uma das listas estiver
+          vazia o componente devolve null — a outra ocupa a linha inteira. */}
       <Animated.View style={[s.tagsGroup, tagsStyle]}>
-        <ProfileTagPills title="Instrumentos" items={musician.instruments} color={colors.brand.primary} />
-        <ProfileTagPills title="Gêneros musicais" items={musician.genres} color={colors.accent.coral} />
+        <ProfileTagPills title="Instrumentos" items={musician.instruments} color={colors.brand.primary} style={s.tagColumn} />
+        <ProfileTagPills title="Gêneros musicais" items={musician.genres} color={colors.accent.coral} style={s.tagColumn} />
       </Animated.View>
     </View>
   );
@@ -72,6 +76,15 @@ const s = StyleSheet.create({
     gap:            spacing.md,
   },
   tagsGroup: {
-    gap: spacing.xxl,
+    flexDirection:  'row',
+    alignItems:     'flex-start',
+    gap:             spacing.lg,
+  },
+  tagColumn: {
+    flex:      1,
+    // Sem isso uma pílula larga (ex.: "Música Popular Brasileira") força a
+    // coluna a crescer e desequilibra a linha.
+    flexBasis:  0,
+    minWidth:   0,
   },
 });

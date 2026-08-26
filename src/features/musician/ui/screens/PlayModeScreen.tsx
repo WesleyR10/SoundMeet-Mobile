@@ -18,6 +18,7 @@ import { useChordSheet } from '../../application/useChordSheet';
 import { useRequests } from '../../application/useRequests';
 import { useMusician } from '../../application/useMusician';
 import { usePlayModeAutoScroll } from '../../application/usePlayModeAutoScroll';
+import { useBroadcastCurrentSong } from '../../application/useBroadcastCurrentSong';
 import { usePersonalChordSheetExists } from '../../application/usePersonalChordSheets';
 import { useForkChordSheet, getPersonalChordSheetMutationErrorMessage } from '../../application/usePersonalChordSheetMutations';
 import { buildFlatLines } from '../../application/chord-sheet-timing';
@@ -64,6 +65,15 @@ export function PlayModeScreen({ navigation, route }: Props) {
   const fork = useForkChordSheet(musicianId);
   const tabs = navigation.getParent<BottomTabNavigationProp<MusicianTabParamList>>();
   const rootNavigation = tabs?.getParent<NativeStackNavigationProp<RootStackParamList>>();
+
+  // 🔴 Transmite a música ao público — e SÓ quando há set aberto (ver
+  // useBroadcastCurrentSong). Sem show no ar, o Play Mode segue exatamente como
+  // sempre foi: privado. E só o DONO do repertório transmite: um convidado
+  // nominal estudando a cifra alheia não está no palco de ninguém.
+  const broadcast = useBroadcastCurrentSong({
+    musicLibraryId,
+    enabled: ownsRepertoire,
+  });
 
   const preferFlats = shouldPreferFlatsForKey(chordSheet?.meta.key);
   const grid = useMemo(
@@ -132,6 +142,7 @@ export function PlayModeScreen({ navigation, route }: Props) {
         avatarUrl={ownerProfile?.avatar ?? null}
         progress={scroll.progressPercent / 100}
         pendingCount={pendingRequests?.pending_count ?? 0}
+        isBroadcasting={broadcast.isBroadcasting}
         onPressBadge={() => navigation.getParent()?.navigate('LiveDashboard')}
         onPressBack={() => navigation.goBack()}
         onPressSettings={() => setControlsVisible(true)}

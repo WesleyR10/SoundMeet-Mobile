@@ -104,7 +104,10 @@ export function HomeScreen({ navigation }: Props) {
           onPressRepertoire={() => navigation.navigate('Repertoire', { screen: 'RepertoireList' })}
           onPressAnalytics={() => navigation.navigate('Profile', { screen: 'Analytics' })}
           onPressTuner={() => navigation.navigate('Profile', { screen: 'Tuner' })}
+          onPressCifras={() => navigation.navigate('Repertoire', { screen: 'ChordSheetsHub' })}
           onPressAgenda={() => rootNavigation?.navigate('Agenda')}
+          onPressInquiries={() => rootNavigation?.navigate('InquiryList')}
+          onPressContracts={() => rootNavigation?.navigate('ContractList')}
         />
 
         <DiscoveryCard />

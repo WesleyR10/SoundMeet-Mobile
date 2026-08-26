@@ -1,3 +1,4 @@
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -6,7 +7,9 @@ import { Radio } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
+import type { MusicianTabScreenProps, RootStackParamList } from '@/navigation/types';
 import { useRequests, useAcceptRequest, useRejectRequest } from '../../application/useRequests';
+import { LiveSetControl } from '../components/LiveSetControl';
 import { RequestCard } from '../components/RequestCard';
 import type { MusicRequest } from '../../domain/request.types';
 
@@ -14,8 +17,15 @@ import type { MusicRequest } from '../../domain/request.types';
 // ViewProfileScreen (nenhuma tela do músico consome ThemeContext hoje).
 // expo-keep-awake ativo enquanto montada: musico não pode deixar a tela
 // apagar durante o show.
-export function LiveDashboardScreen() {
+type Props = MusicianTabScreenProps<'LiveDashboard'>;
+
+export function LiveDashboardScreen({ navigation }: Props) {
   useKeepAwake();
+
+  // PerformanceReport vive no Root, não numa tab irmã — mesmo salto tab→root
+  // de HomeScreen (`getParent()` sobe pro native-stack do RootNavigator).
+  const rootNavigation =
+    navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
 
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data, isPending, isError, refetch, isRefetching } = useRequests(musicianId, 'pending');
@@ -105,6 +115,20 @@ export function LiveDashboardScreen() {
           </View>
         )}
       </View>
+
+      {/*
+        O interruptor do show fica ANTES da fila de pedidos: sem set aberto o
+        Play Mode continua privado e nada do que o músico toca chega ao público,
+        então esta é a primeira decisão da tela — não um detalhe no rodapé.
+      */}
+      <LiveSetControl
+        onEnded={(performanceId) =>
+          rootNavigation?.navigate('PerformanceReport', { performanceId })
+        }
+        onPressSuggestions={(establishmentId) =>
+          rootNavigation?.navigate('SetlistSuggestions', { establishmentId })
+        }
+      />
 
       {!!mutationErrorMessage && <ErrorBanner message={mutationErrorMessage} style={s.mutationError} />}
 
