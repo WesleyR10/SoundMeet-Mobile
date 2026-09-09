@@ -13,7 +13,10 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Necessário para escanear QR codes de músicos",
         "NSMicrophoneUsageDescription": "Necessário para o afinador cromático"
-      }
+      },
+      "associatedDomains": [
+        "applinks:soundmeet.com.br"
+      ]
     },
     "android": {
       "package": "com.soundmeet.app",
@@ -26,6 +29,28 @@
         "CAMERA",
         "RECORD_AUDIO",
         "VIBRATE"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "soundmeet.com.br",
+              "pathPrefix": "/musico"
+            },
+            {
+              "scheme": "https",
+              "host": "soundmeet.com.br",
+              "pathPrefix": "/local"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
       ]
     },
     "web": {
