@@ -41,13 +41,34 @@ jobs:
       - name: Configuração de build (EAS)
         run: npm run check:eas-env
 
-  # NOTA — não há passo de lint. O repositório não tem configuração de ESLint
-  # (nenhum .eslintrc / eslint.config.*), e introduzir uma junto com o CI
-  # significaria estrear o gate com centenas de achados de estilo, que é o
-  # cenário que faz um time desligar o CI. Fica como tarefa própria: adicionar
-  # `eslint-config-expo`, rodar --fix, e só então acrescentar o passo aqui —
-  # exatamente a sequência usada no backend, onde 39 erros acumulados foram
-  # limpos ANTES de o gate existir.
+  # NOTA — ainda não há passo de lint, mas a nota anterior ("o repositório não
+  # tem configuração de ESLint") ficou DESATUALIZADA: `eslint.config.js` existe
+  # desde set/2026 (eslint-config-expo/flat).
+  #
+  # Estado em 05/set/2026, medido: **31 erros** em `src/`, vindos de 58.
+  # O que já saiu:
+  #   - `react-hooks/immutability` (21) — DESLIGADA, e não é dívida: os 21 eram
+  #     21/21 `sharedValue.value = ...` do Reanimated, que a regra do React
+  #     Compiler não modela. Motivo completo em `eslint.config.js`.
+  #   - `react-hooks/rules-of-hooks` (1) — era defeito REAL (`useAnimatedProps`
+  #     dentro de uma função comum em `RadarPulseIndicator`), corrigido.
+  #   - `react/no-unescaped-entities` (6) — aspas retas viraram curvas.
+  #
+  # O que falta para ligar o passo aqui (decisão do dono, não urgência):
+  #   - `react-hooks/set-state-in-effect` (18) — ~12 são o MESMO padrão, "copiar
+  #     ou resetar estado quando o bottom sheet abre" (FilterSheet,
+  #     ContractSignSheet, AnnotationSheet, ChordPickerSheet, InquiryDecisionSheet,
+  #     ChordDiagramSheet…). Uma receita só resolve os 12. Os ~6 restantes são
+  #     sincronização com sistema externo legítima (timer do QR de destaque,
+  #     microfone do afinador, stems do Modo Ensaio) e provavelmente merecem
+  #     disable pontual COM justificativa, não refatoração.
+  #   - `react-hooks/refs` (11) — mistos: `useChatSocket` é o padrão "latest
+  #     callback ref" (falso-positivo), `useEditProfileForm` é smell real.
+  #   - `react-hooks/purity` + `preserve-manual-memoization` (2) — ambos em
+  #     `usePracticeScrollSync`.
+  #
+  # A sequência continua sendo a do backend: zerar ANTES de o gate existir. Ligar
+  # com 31 erros abertos é o cenário que faz um time desligar o CI.
   #
   # NOTA — não há passo de build. Build de app React Native é `eas build`, que
   # roda na infraestrutura da Expo, consome cota e precisa de credenciais de
