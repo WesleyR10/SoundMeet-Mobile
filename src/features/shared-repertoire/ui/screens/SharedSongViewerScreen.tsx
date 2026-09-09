@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, FileX, SlidersHorizontal } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonText } from '@/shared/components/Skeleton';
 import { ChordTokenLine } from '@/shared/components/ChordTokenLine';
 import { ChordDiagramSheet } from '@/shared/components/ChordDiagramSheet';
 import { ChordSheetControlsSheet } from '@/shared/components/ChordSheetControlsSheet';
@@ -22,86 +25,9 @@ type Props = RootScreenProps<'SharedSongViewer'>;
 // os mesmos ajustes de instrumento/tom/capotraste do Play Mode — útil até
 // mais aqui (quem abre um link compartilhado pode estar estudando/
 // praticando, não só tocando ao vivo).
-export function SharedSongViewerScreen({ navigation, route }: Props) {
-  const { token, musicLibraryId } = route.params;
-  const { data: chordSheet, grid: rawGrid, isPending } = useSharedChordSheet(token, musicLibraryId);
-  const [selectedChord, setSelectedChord] = useState<string | null>(null);
-  const [controlsVisible, setControlsVisible] = useState(false);
-  const controls = useChordSheetControls();
-
-  const preferFlats = shouldPreferFlatsForKey(chordSheet?.meta.key);
-  const grid = useMemo(
-    () => (rawGrid ? transposeTokenGrid(rawGrid, controls.displayShiftSemitones, preferFlats) : null),
-    [rawGrid, controls.displayShiftSemitones, preferFlats],
-  );
-
-  return (
-    <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
-
-      <View style={s.header}>
-        <Pressable onPress={() => navigation.goBack()} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8}>
-          <ArrowLeft size={22} color={colors.text.primary} />
-        </Pressable>
-        <View style={s.titleWrap}>
-          <Text style={s.title} numberOfLines={1}>{chordSheet?.title ?? ''}</Text>
-          <Text style={s.artist} numberOfLines={1}>{chordSheet?.artist ?? ''}</Text>
-        </View>
-        <Pressable onPress={() => setControlsVisible(true)} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Ajustes da cifra (instrumento, tom, capotraste)" hitSlop={8}>
-          <SlidersHorizontal size={20} color={colors.text.secondary} />
-        </Pressable>
-      </View>
-
-      {isPending ? (
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
-        </View>
-      ) : !grid || grid.every((section) => section.lines.length === 0) ? (
-        <View style={s.centerRoot}>
-          <FileX size={40} color={colors.text.muted} />
-          <Text style={s.emptyTitle}>Sem cifra disponível</Text>
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
-          {grid.flatMap((section, sectionIndex) =>
-            section.lines.map((line, lineIndex) => (
-              <ChordTokenLine
-                key={`${sectionIndex}-${lineIndex}`}
-                label={lineIndex === 0 ? section.label : undefined}
-                tokens={line.tokens}
-                index={lineIndex}
-                state="static"
-                onPressChord={setSelectedChord}
-              />
-            )),
-          )}
-        </ScrollView>
-      )}
-
-      <ChordDiagramSheet
-        visible={!!selectedChord}
-        chordSymbol={selectedChord}
-        instrument={controls.instrument}
-        capoFret={controls.instrument === 'guitar' ? controls.capoFret : null}
-        preferFlats={preferFlats}
-        onClose={() => setSelectedChord(null)}
-      />
-
-      <ChordSheetControlsSheet
-        visible={controlsVisible}
-        onClose={() => setControlsVisible(false)}
-        instrument={controls.instrument}
-        onChangeInstrument={controls.setInstrument}
-        transposeSemitones={controls.transposeSemitones}
-        onChangeTranspose={controls.setTransposeSemitones}
-        capoFret={controls.capoFret}
-        onChangeCapo={controls.setCapoFret}
-      />
-    </SafeAreaView>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
   root: {
     flex:            1,
     backgroundColor: colors.bg.primary,
@@ -160,4 +86,87 @@ const s = StyleSheet.create({
     color:     colors.text.primary,
     textAlign: 'center',
   },
-});
+}));
+
+export function SharedSongViewerScreen({ navigation, route }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const { token, musicLibraryId } = route.params;
+  const { data: chordSheet, grid: rawGrid, isPending } = useSharedChordSheet(token, musicLibraryId);
+  const [selectedChord, setSelectedChord] = useState<string | null>(null);
+  const [controlsVisible, setControlsVisible] = useState(false);
+  const controls = useChordSheetControls();
+
+  const preferFlats = shouldPreferFlatsForKey(chordSheet?.meta.key);
+  const grid = useMemo(
+    () => (rawGrid ? transposeTokenGrid(rawGrid, controls.displayShiftSemitones, preferFlats) : null),
+    [rawGrid, controls.displayShiftSemitones, preferFlats],
+  );
+
+  return (
+    <SafeAreaView style={s.root} edges={['top', 'bottom']}>
+      <StatusBar style="light" />
+
+      <View style={s.header}>
+        <Pressable onPress={() => navigation.goBack()} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8}>
+          <ArrowLeft size={22} color={colors.text.primary} />
+        </Pressable>
+        <View style={s.titleWrap}>
+          <Text style={s.title} numberOfLines={1}>{chordSheet?.title ?? ''}</Text>
+          <Text style={s.artist} numberOfLines={1}>{chordSheet?.artist ?? ''}</Text>
+        </View>
+        <Pressable onPress={() => setControlsVisible(true)} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Ajustes da cifra (instrumento, tom, capotraste)" hitSlop={8}>
+          <SlidersHorizontal size={20} color={colors.text.secondary} />
+        </Pressable>
+      </View>
+
+      {isPending ? (
+        <View style={s.skeleton}>
+          {/* Cifra: parágrafos, nunca cards. */}
+          <SkeletonText lines={8} />
+          <SkeletonText lines={6} />
+        </View>
+      ) : !grid || grid.every((section) => section.lines.length === 0) ? (
+        <View style={s.centerRoot}>
+          <FileX size={40} color={colors.text.muted} />
+          <Text style={s.emptyTitle}>Sem cifra disponível</Text>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={s.scrollContent} showsVerticalScrollIndicator={false}>
+          {grid.flatMap((section, sectionIndex) =>
+            section.lines.map((line, lineIndex) => (
+              <ChordTokenLine
+                key={`${sectionIndex}-${lineIndex}`}
+                label={lineIndex === 0 ? section.label : undefined}
+                tokens={line.tokens}
+                index={lineIndex}
+                state="static"
+                onPressChord={setSelectedChord}
+              />
+            )),
+          )}
+        </ScrollView>
+      )}
+
+      <ChordDiagramSheet
+        visible={!!selectedChord}
+        chordSymbol={selectedChord}
+        instrument={controls.instrument}
+        capoFret={controls.instrument === 'guitar' ? controls.capoFret : null}
+        preferFlats={preferFlats}
+        onClose={() => setSelectedChord(null)}
+      />
+
+      <ChordSheetControlsSheet
+        visible={controlsVisible}
+        onClose={() => setControlsVisible(false)}
+        instrument={controls.instrument}
+        onChangeInstrument={controls.setInstrument}
+        transposeSemitones={controls.transposeSemitones}
+        onChangeTranspose={controls.setTransposeSemitones}
+        capoFret={controls.capoFret}
+        onChangeCapo={controls.setCapoFret}
+      />
+    </SafeAreaView>
+  );
+}
