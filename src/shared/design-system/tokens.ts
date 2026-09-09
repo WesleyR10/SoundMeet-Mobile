@@ -96,21 +96,73 @@ export const shadows = {
   violet: { shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.20, shadowRadius: 24, elevation: 8 },
 } as const;
 
+/**
+ * Paleta do tema claro.
+ *
+ * ## 🔴 Medida contra WCAG em 05/set/2026 — e a versão anterior REPROVAVA
+ *
+ * Estes valores existiam desde 27/jun/2026 e nunca tinham sido medidos. Ao
+ * medir (o mesmo verificador que roda em `soundmeet-web`, em
+ * `src/shared/config/__tests__/theme-contrast.spec.ts`), três falhas:
+ *
+ *  - `brand.primary` dava **3.87** para texto branco em cima — ou seja, o
+ *    rótulo do **botão primário** reprovava AA (4.5). E dava **3.91** como cor
+ *    de texto sobre o fundo, reprovando também para link;
+ *  - `border.default` (1.23) e `border.strong` (1.54) ficavam muito abaixo dos
+ *    **3.0** que o critério 1.4.11 exige de componente de interface: na
+ *    prática, campo de formulário cuja borda o usuário não enxerga;
+ *  - `text.muted` reprovava sobre `bg.elevated` (4.34).
+ *
+ * As cores foram escurecidas preservando o matiz (HLS) até o menor valor que
+ * passa nos TRÊS fundos. Como todos eles estão perto do branco, escurecer o
+ * suficiente para o texto passar faz o branco EM CIMA passar junto — não há
+ * trade-off, só um piso.
+ *
+ * ## Completa de propósito
+ *
+ * A versão anterior tinha **8 chaves** e o `ThemeContext` inventava o resto em
+ * runtime (`dark: '#007A63'`, `muted: '#64748B'`…), com valores que não
+ * existiam em doc nenhum e que ninguém media. Agora a paleta nasce inteira
+ * aqui, espelhando `soundmeet-web/src/app/globals.css` —
+ * ⚠️ **mexeu num, mexa no outro, e meça de novo.**
+ */
 export const lightColors = {
   bg: {
     primary:  '#F0FEFA',
     surface:  '#FFFFFF',
     elevated: '#E0FAF5',
+    overlay:  'rgba(0,0,0,0.50)',
   },
   brand: {
-    primary: '#008F74',
+    primary: '#007D66', // 3.91 -> 4.91 como texto; 3.87 -> 4.87 no botão
     light:   '#00B896',
+    dark:    '#00614A',
+    muted:   'rgba(0,125,102,0.12)',
+    glow:    'rgba(0,125,102,0.15)',
+  },
+  accent: {
+    coral:       '#DB1F25', // 3.78 -> 4.78
+    coralDeep:   '#D4206A',
+    amber:       '#B45309',
+    violet:      '#6D28D9', // branco em cima dava 3.42
+    violetLight: '#7E22CE',
+  },
+  status: {
+    success: '#048059', // 3.64 -> 4.78
+    warning: '#B45309',
+    error:   '#DA2323',
+    live:    '#007D66',
   },
   text: {
     primary:   '#081A17',
     secondary: '#2D5047',
+    muted:     '#61736D', // 4.34 sobre elevated -> 4.58
+    inverse:   '#F8FAFC',
+    brand:     '#007D66',
   },
   border: {
-    default: '#C0EDE5',
+    default: '#86D5C5', // separador: 1.23 -> 1.64 (decorativo, fora do 1.4.11)
+    strong:  '#309D8B', // 🔴 borda de campo: 1.54 -> 3.03, o piso do 1.4.11
+    brand:   'rgba(0,125,102,0.30)',
   },
 } as const;
