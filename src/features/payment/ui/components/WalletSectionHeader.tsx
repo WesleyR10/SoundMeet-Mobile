@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { View, Text } from 'react-native';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   title:    string;
@@ -14,16 +15,7 @@ type Props = {
  * está?" — pergunta que a tela inteira existe para responder desde que a
  * gorjeta passou a liquidar fora da plataforma.
  */
-export function WalletSectionHeader({ title, subtitle }: Props) {
-  return (
-    <View>
-      <Text style={s.title}>{title}</Text>
-      <Text style={s.subtitle}>{subtitle}</Text>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   title: {
     ...typography.body,
     fontFamily: 'Inter-SemiBold',
@@ -34,4 +26,14 @@ const s = StyleSheet.create({
     color:     colors.text.muted,
     marginTop: 2,
   },
-});
+}));
+
+export function WalletSectionHeader({ title, subtitle }: Props) {
+  const s = useStyles();
+  return (
+    <View>
+      <Text style={s.title}>{title}</Text>
+      <Text style={s.subtitle}>{subtitle}</Text>
+    </View>
+  );
+}

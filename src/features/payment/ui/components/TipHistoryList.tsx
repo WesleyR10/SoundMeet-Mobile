@@ -1,6 +1,8 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { Music2 } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { useTips } from '../../application/useTips';
 import { TipHistoryItem } from './TipHistoryItem';
 
@@ -8,7 +10,26 @@ type Props = {
   musicianId: string | null;
 };
 
+const useStyles = makeStyles((colors) => ({
+  list: {
+    gap: spacing.sm,
+  },
+  centerBox: {
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:                 spacing.sm,
+    paddingVertical:     spacing.xxl,
+  },
+  emptyText: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+}));
+
 export function TipHistoryList({ musicianId }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { data, isPending, isError } = useTips(musicianId);
 
   if (isPending) {
@@ -44,20 +65,3 @@ export function TipHistoryList({ musicianId }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  list: {
-    gap: spacing.sm,
-  },
-  centerBox: {
-    alignItems:        'center',
-    justifyContent:    'center',
-    gap:                 spacing.sm,
-    paddingVertical:     spacing.xxl,
-  },
-  emptyText: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-});

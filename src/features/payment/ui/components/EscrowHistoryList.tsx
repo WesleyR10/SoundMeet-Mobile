@@ -1,6 +1,8 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { ShieldCheck } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { useEscrows } from '../../application/useEscrows';
 import { EscrowHistoryItem } from './EscrowHistoryItem';
 
@@ -16,7 +18,26 @@ type Props = {
  * saber que ela existe ANTES de fechar um show — é o argumento que faz aceitar
  * um contrato pela plataforma em vez de combinar por fora.
  */
+const useStyles = makeStyles((colors) => ({
+  list: {
+    gap: spacing.sm,
+  },
+  centerBox: {
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:             spacing.sm,
+    paddingVertical: spacing.xxl,
+  },
+  emptyText: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+}));
+
 export function EscrowHistoryList({ musicianId }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { data, isPending, isError } = useEscrows(musicianId);
 
   if (isPending) {
@@ -55,20 +76,3 @@ export function EscrowHistoryList({ musicianId }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  list: {
-    gap: spacing.sm,
-  },
-  centerBox: {
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:             spacing.sm,
-    paddingVertical: spacing.xxl,
-  },
-  emptyText: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-});

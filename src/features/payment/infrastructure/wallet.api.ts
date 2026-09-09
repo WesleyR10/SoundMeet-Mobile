@@ -1,7 +1,7 @@
 import { httpClient } from '@/shared/services/http/client';
 import type { ApiEnvelope } from '@/shared/services/http/types';
 import type { EscrowsPage, EscrowStatus } from '../domain/escrow.types';
-import type { Tip, TipsPage, TipStatus, Wallet } from '../domain/tip.types';
+import type { Tip, TipsPage, TipStatus, Wallet, WithdrawResult } from '../domain/tip.types';
 
 // Bate no mesmo GET /musicians/:id/wallet que features/musician/infrastructure/
 // musician-wallet.api.ts — decisão de arquitetura (Bloco 5): não migrar aquele
@@ -71,3 +71,32 @@ export async function disconnectMercadoPago(musicianId: string): Promise<void> {
 }
 
 export type { Tip, TipsPage };
+
+/**
+ * POST /musicians/:id/wallet/withdraw — saque PIX do saldo liberado.
+ *
+ * 🔴 **O destino NÃO viaja no corpo.** É sempre a chave já cadastrada na
+ * carteira; o backend recusa o campo de propósito, porque aceitar o destino
+ * aqui transformava um token comprometido num único POST que drena o saldo
+ * para a conta do atacante (`Docs/audits/security-review-2026-08-28.md` A1).
+ * Trocar de chave é `PATCH .../wallet/pix-key`, operação à parte.
+ *
+ * 🔴 **A `Idempotency-Key` é a única barreira contra o duplo clique.** O lock
+ * da carteira serializa concorrentes e o saldo barra o segundo quando não há
+ * fundo para os dois — mas com saldo sobrando os dois saques são legítimos
+ * vistos um de cada vez, e sairiam os dois. Só o cliente sabe distinguir "pedi
+ * de novo porque a rede caiu" de "quero sacar de novo"; a decisão mora em
+ * `shouldReuseIdempotencyKey` (`domain/withdraw.rules.ts`).
+ */
+export async function withdrawToPix(
+  musicianId: string,
+  amount: number,
+  idempotencyKey: string,
+): Promise<WithdrawResult> {
+  const { data } = await httpClient.post<ApiEnvelope<WithdrawResult>>(
+    `/musicians/${musicianId}/wallet/withdraw`,
+    { amount },
+    { headers: { 'Idempotency-Key': idempotencyKey } },
+  );
+  return data.data;
+}

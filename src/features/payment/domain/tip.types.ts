@@ -78,3 +78,20 @@ export function getWithdrawEligibility(wallet: Wallet): WithdrawEligibility {
     withdrawalDays: wallet.withdrawal_days,
   };
 }
+
+/**
+ * Espelha `WithdrawToPixPresenter` — POST /musicians/:id/wallet/withdraw.
+ *
+ * `status` vem do `TransactionStatus` do backend, mas chega como string livre
+ * de propósito: um saque nasce `pending` quando há gateway configurado e
+ * `completed` quando não há (ambiente de desenvolvimento), e o webhook é quem
+ * resolve depois. A tela lê o `wallet_balance` já debitado, que é a resposta à
+ * pergunta que o músico realmente faz — "quanto sobrou?".
+ */
+export interface WithdrawResult {
+  transaction_id: string;
+  wallet_balance: number;
+  status: string;
+  min_withdrawal_amount_brl: number;
+  withdrawal_days: number;
+}
