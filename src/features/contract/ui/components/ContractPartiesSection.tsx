@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { Contract } from '../../domain/contract.types';
 
 type Props = {
@@ -15,7 +16,36 @@ type Props = {
  * assinado. Remontar a partir dos objetos de parte criaria uma segunda verdade
  * sobre um documento congelado.
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.md,
+  },
+  card: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:    radius.lg,
+    padding:         spacing.md,
+    gap:             2,
+  },
+  role: {
+    ...typography.caption,
+    fontFamily:    'Inter-SemiBold',
+    color:         colors.text.muted,
+    letterSpacing: 0.6,
+    marginBottom:  spacing.xs,
+  },
+  name: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  detail: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+}));
+
 export function ContractPartiesSection({ variables }: Props) {
+  const s = useStyles();
   const rows: { label: string; party: 'contratante' | 'contratado' }[] = [
     { label: 'Contratante', party: 'contratante' },
     { label: 'Contratado',  party: 'contratado' },
@@ -54,31 +84,3 @@ export function ContractPartiesSection({ variables }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.md,
-  },
-  card: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:    radius.lg,
-    padding:         spacing.md,
-    gap:             2,
-  },
-  role: {
-    ...typography.caption,
-    fontFamily:    'Inter-SemiBold',
-    color:         colors.text.muted,
-    letterSpacing: 0.6,
-    marginBottom:  spacing.xs,
-  },
-  name: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  detail: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-});

@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { CalendarDays, Users } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import { pendingActorLabel, resolveMySide } from '../../domain/contract.rules';
@@ -26,49 +28,7 @@ type Props = {
  * `cache_formatado`). Reformatar aqui criaria uma segunda verdade sobre um
  * documento congelado.
  */
-export function ContractCard({ contract, musicianId, onPress, riseDelay = 0 }: Props) {
-  const mySide = resolveMySide(contract, musicianId);
-  const pending = pendingActorLabel(contract, mySide);
-  const { variables } = contract;
-
-  return (
-    <Pressable3DCard
-      onPress={onPress}
-      accessibilityLabel={`Ver contrato do show em ${variables.local_nome}`}
-    >
-      <GlowCard accentColor={colors.accent.violet} riseDelay={riseDelay} style={s.card}>
-        <View style={s.headerRow}>
-          <Text style={s.local} numberOfLines={1}>{variables.local_nome}</Text>
-          <ContractStatusBadge contract={contract} />
-        </View>
-
-        <View style={s.dateRow}>
-          <CalendarDays size={13} color={colors.text.muted} />
-          <Text style={s.date} numberOfLines={1}>
-            {variables.data_show} · {variables.hora_inicio}
-          </Text>
-        </View>
-
-        <View style={s.footerRow}>
-          <Text style={s.cache}>{variables.cache_formatado}</Text>
-
-          {variables.contratado_e_banda && (
-            <View style={s.bandTag}>
-              <Users size={12} color={colors.text.muted} />
-              {/* Só o líder assina (403 para os demais) — avisar aqui evita que
-                  o membro comum descubra isso só ao apertar o botão. */}
-              <Text style={s.bandText}>Pela banda</Text>
-            </View>
-          )}
-
-          {!!pending && <Text style={s.pending}>{pending}</Text>}
-        </View>
-      </GlowCard>
-    </Pressable3DCard>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     gap:     spacing.sm,
     padding: spacing.md,
@@ -119,4 +79,48 @@ const s = StyleSheet.create({
     marginLeft: 'auto',
     textAlign:  'right',
   },
-});
+}));
+
+export function ContractCard({ contract, musicianId, onPress, riseDelay = 0 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const mySide = resolveMySide(contract, musicianId);
+  const pending = pendingActorLabel(contract, mySide);
+  const { variables } = contract;
+
+  return (
+    <Pressable3DCard
+      onPress={onPress}
+      accessibilityLabel={`Ver contrato do show em ${variables.local_nome}`}
+    >
+      <GlowCard accentColor={colors.accent.violet} riseDelay={riseDelay} style={s.card}>
+        <View style={s.headerRow}>
+          <Text style={s.local} numberOfLines={1}>{variables.local_nome}</Text>
+          <ContractStatusBadge contract={contract} />
+        </View>
+
+        <View style={s.dateRow}>
+          <CalendarDays size={13} color={colors.text.muted} />
+          <Text style={s.date} numberOfLines={1}>
+            {variables.data_show} · {variables.hora_inicio}
+          </Text>
+        </View>
+
+        <View style={s.footerRow}>
+          <Text style={s.cache}>{variables.cache_formatado}</Text>
+
+          {variables.contratado_e_banda && (
+            <View style={s.bandTag}>
+              <Users size={12} color={colors.text.muted} />
+              {/* Só o líder assina (403 para os demais) — avisar aqui evita que
+                  o membro comum descubra isso só ao apertar o botão. */}
+              <Text style={s.bandText}>Pela banda</Text>
+            </View>
+          )}
+
+          {!!pending && <Text style={s.pending}>{pending}</Text>}
+        </View>
+      </GlowCard>
+    </Pressable3DCard>
+  );
+}

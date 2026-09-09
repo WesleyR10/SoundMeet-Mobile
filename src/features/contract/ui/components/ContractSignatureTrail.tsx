@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { CheckCircle2, Clock } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { signatureOf } from '../../domain/contract.rules';
 import type { Contract, ContractPartyRole } from '../../domain/contract.types';
 
@@ -36,47 +38,7 @@ function formatSignedAt(iso: string): string {
  * O `content_hash` é impresso porque é o que torna a verificação pública útil:
  * quem tem o PDF confere o SHA-256 do rodapé contra este número.
  */
-export function ContractSignatureTrail({ contract }: Props) {
-  const roles: ContractPartyRole[] = ['contractor', 'contracted'];
-
-  return (
-    <View style={s.root}>
-      {roles.map((role) => {
-        const sig = signatureOf(contract, role);
-
-        return (
-          <View key={role} style={s.row}>
-            {sig
-              ? <CheckCircle2 size={18} color={colors.status.success} />
-              : <Clock size={18} color={colors.accent.amber} />}
-
-            <View style={s.rowBody}>
-              <Text style={s.roleLabel}>{ROLE_LABEL[role]}</Text>
-              {sig ? (
-                <>
-                  <Text style={s.detail}>{sig.signer_name}</Text>
-                  <Text style={s.detail}>{formatSignedAt(sig.signed_at)}</Text>
-                  {!!sig.ip && <Text style={s.meta}>IP {sig.ip}</Text>}
-                </>
-              ) : (
-                <Text style={s.detail}>Ainda não assinou</Text>
-              )}
-            </View>
-          </View>
-        );
-      })}
-
-      <View style={s.hashBox}>
-        <Text style={s.hashLabel}>Código de verificação</Text>
-        <Text style={s.hashValue}>{contract.verification_code}</Text>
-        <Text style={s.hashLabel}>Hash do conteúdo (SHA-256)</Text>
-        <Text style={s.hashMono} selectable>{contract.content_hash}</Text>
-      </View>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap: spacing.md,
   },
@@ -123,4 +85,46 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
-});
+}));
+
+export function ContractSignatureTrail({ contract }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const roles: ContractPartyRole[] = ['contractor', 'contracted'];
+
+  return (
+    <View style={s.root}>
+      {roles.map((role) => {
+        const sig = signatureOf(contract, role);
+
+        return (
+          <View key={role} style={s.row}>
+            {sig
+              ? <CheckCircle2 size={18} color={colors.status.success} />
+              : <Clock size={18} color={colors.accent.amber} />}
+
+            <View style={s.rowBody}>
+              <Text style={s.roleLabel}>{ROLE_LABEL[role]}</Text>
+              {sig ? (
+                <>
+                  <Text style={s.detail}>{sig.signer_name}</Text>
+                  <Text style={s.detail}>{formatSignedAt(sig.signed_at)}</Text>
+                  {!!sig.ip && <Text style={s.meta}>IP {sig.ip}</Text>}
+                </>
+              ) : (
+                <Text style={s.detail}>Ainda não assinou</Text>
+              )}
+            </View>
+          </View>
+        );
+      })}
+
+      <View style={s.hashBox}>
+        <Text style={s.hashLabel}>Código de verificação</Text>
+        <Text style={s.hashValue}>{contract.verification_code}</Text>
+        <Text style={s.hashLabel}>Hash do conteúdo (SHA-256)</Text>
+        <Text style={s.hashMono} selectable>{contract.content_hash}</Text>
+      </View>
+    </View>
+  );
+}

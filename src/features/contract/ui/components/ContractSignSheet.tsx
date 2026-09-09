@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Pressable, TextInput } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -7,7 +7,9 @@ import {
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { Check, Mail, ShieldCheck } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import {
@@ -51,6 +53,106 @@ const CODE_LENGTH = 6;
  * do art. 10, §2º da MP 2.200-2/2001 — consentimento inequívoco não se infere
  * de navegação.
  */
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.surface,
+  },
+  handle: {
+    backgroundColor: colors.text.muted,
+  },
+  content: {
+    padding:       spacing.xl,
+    paddingBottom: spacing.xxxl,
+    gap:           spacing.md,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  acceptRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.md,
+    minHeight:     48,
+  },
+  checkbox: {
+    width:          26,
+    height:         26,
+    borderRadius:   radius.sm,
+    borderWidth:    2,
+    borderColor:    colors.text.muted,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  checkboxOn: {
+    backgroundColor: colors.brand.primary,
+    borderColor:     colors.brand.primary,
+  },
+  acceptText: {
+    ...typography.bodySm,
+    color: colors.text.primary,
+    flex:  1,
+  },
+  readHint: {
+    ...typography.caption,
+    color: colors.accent.amber,
+  },
+  divider: {
+    height:          1,
+    backgroundColor: colors.bg.elevated,
+    marginVertical:  spacing.xs,
+  },
+  codeHeaderRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  codeHeader: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  codeHelp: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  expiry: {
+    ...typography.caption,
+    color: colors.accent.amber,
+  },
+  linkBtn: {
+    minHeight:      48,
+    justifyContent: 'center',
+  },
+  linkText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  codeInput: {
+    ...typography.displayMd,
+    color:           colors.text.primary,
+    backgroundColor: colors.bg.elevated,
+    borderRadius:    radius.lg,
+    paddingVertical: spacing.md,
+    textAlign:       'center',
+    letterSpacing:   10,
+  },
+  legalNote: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+}));
+
 export function ContractSignSheet({
   contract,
   musicianId,
@@ -60,6 +162,8 @@ export function ContractSignSheet({
   onClose,
   onSigned,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [accepted, setAccepted] = useState(false);
   const [code, setCode] = useState('');
@@ -231,103 +335,3 @@ export function ContractSignSheet({
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.surface,
-  },
-  handle: {
-    backgroundColor: colors.text.muted,
-  },
-  content: {
-    padding:       spacing.xl,
-    paddingBottom: spacing.xxxl,
-    gap:           spacing.md,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  acceptRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.md,
-    minHeight:     48,
-  },
-  checkbox: {
-    width:          26,
-    height:         26,
-    borderRadius:   radius.sm,
-    borderWidth:    2,
-    borderColor:    colors.text.muted,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  checkboxOn: {
-    backgroundColor: colors.brand.primary,
-    borderColor:     colors.brand.primary,
-  },
-  acceptText: {
-    ...typography.bodySm,
-    color: colors.text.primary,
-    flex:  1,
-  },
-  readHint: {
-    ...typography.caption,
-    color: colors.accent.amber,
-  },
-  divider: {
-    height:          1,
-    backgroundColor: colors.bg.elevated,
-    marginVertical:  spacing.xs,
-  },
-  codeHeaderRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  codeHeader: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  codeHelp: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  expiry: {
-    ...typography.caption,
-    color: colors.accent.amber,
-  },
-  linkBtn: {
-    minHeight:      48,
-    justifyContent: 'center',
-  },
-  linkText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  codeInput: {
-    ...typography.displayMd,
-    color:           colors.text.primary,
-    backgroundColor: colors.bg.elevated,
-    borderRadius:    radius.lg,
-    paddingVertical: spacing.md,
-    textAlign:       'center',
-    letterSpacing:   10,
-  },
-  legalNote: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-});

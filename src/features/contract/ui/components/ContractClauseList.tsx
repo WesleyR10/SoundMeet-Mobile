@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { View, Text } from 'react-native';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { RenderedClause } from '../../domain/contract.types';
 
 type Props = {
@@ -18,7 +19,27 @@ type Props = {
  * desfaria isso e produziria parágrafos esfarrapados — que foi exatamente o
  * defeito que o refluxo veio corrigir.
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.lg,
+  },
+  clause: {
+    gap: spacing.sm,
+  },
+  title: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  paragraph: {
+    ...typography.bodySm,
+    color:      colors.text.secondary,
+    lineHeight: 21,
+  },
+}));
+
 export function ContractClauseList({ clauses }: Props) {
+  const s = useStyles();
   return (
     <View style={s.root}>
       {clauses.map((clause) => (
@@ -41,22 +62,3 @@ export function ContractClauseList({ clauses }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.lg,
-  },
-  clause: {
-    gap: spacing.sm,
-  },
-  title: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  paragraph: {
-    ...typography.bodySm,
-    color:      colors.text.secondary,
-    lineHeight: 21,
-  },
-});

@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   title:   string;
@@ -15,25 +17,7 @@ type Props = {
  * `InquiryListScreen`, com o `View` vazio à direita mantendo o título no centro
  * sem medir nada.
  */
-export function ContractScreenHeader({ title, onBack }: Props) {
-  return (
-    <View style={s.header}>
-      <Pressable
-        onPress={onBack}
-        style={s.iconBtn}
-        accessibilityRole="button"
-        accessibilityLabel="Voltar"
-        hitSlop={8}
-      >
-        <ArrowLeft size={22} color={colors.text.primary} />
-      </Pressable>
-      <Text style={s.title}>{title}</Text>
-      <View style={s.iconBtn} />
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   header: {
     flexDirection:     'row',
     alignItems:        'center',
@@ -52,4 +36,24 @@ const s = StyleSheet.create({
     alignItems:     'center',
     justifyContent: 'center',
   },
-});
+}));
+
+export function ContractScreenHeader({ title, onBack }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={s.header}>
+      <Pressable
+        onPress={onBack}
+        style={s.iconBtn}
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
+        hitSlop={8}
+      >
+        <ArrowLeft size={22} color={colors.text.primary} />
+      </Pressable>
+      <Text style={s.title}>{title}</Text>
+      <View style={s.iconBtn} />
+    </View>
+  );
+}

@@ -4,14 +4,14 @@ import {
   Text,
   ScrollView,
   Pressable,
-  ActivityIndicator,
-  StyleSheet,
   type NativeSyntheticEvent,
   type NativeScrollEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { Skeleton, SkeletonText } from '@/shared/components/Skeleton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
@@ -24,6 +24,7 @@ import {
   pendingActorLabel,
   resolveMySide,
 } from '../../domain/contract.rules';
+import { ContractCheckInCard } from '../components/ContractCheckInCard';
 import { ContractDocument } from '../components/ContractDocument';
 import { ContractReviewAction } from '../components/ContractReviewAction';
 import { ContractScreenHeader } from '../components/ContractScreenHeader';
@@ -47,7 +48,30 @@ const SCROLL_END_SLOP = 48;
  * a pessoa ter tido a chance de ler enfraquece exatamente o que o documento
  * existe para provar.
  */
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root:        { flex: 1, backgroundColor: colors.bg.primary },
+  center:      { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
+  content:     { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl, gap: spacing.lg },
+  footer: {
+    paddingHorizontal: spacing.xl,
+    paddingVertical:   spacing.md,
+    backgroundColor:   colors.bg.primary,
+    borderTopWidth:    1,
+    borderTopColor:    colors.bg.elevated,
+  },
+  retryBtn: {
+    backgroundColor:   colors.brand.primary,
+    borderRadius:      radius.xl,
+    paddingVertical:   spacing.md,
+    paddingHorizontal: spacing.xxl,
+  },
+  retryText:   { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.text.inverse },
+}));
+
 export function ContractDetailScreen({ route, navigation }: Props) {
+  const s = useStyles();
   const { contractId } = route.params;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
 
@@ -100,7 +124,12 @@ export function ContractDetailScreen({ route, navigation }: Props) {
   if (isPending) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <View style={s.center}><ActivityIndicator color={colors.brand.primary} size="large" /></View>
+        <View style={s.skeleton}>
+          {/* Resumo do show, depois o corpo do documento. */}
+          <Skeleton height={140} borderRadius={radius.lg} />
+          <SkeletonText lines={6} />
+          <SkeletonText lines={5} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -150,6 +179,17 @@ export function ContractDetailScreen({ route, navigation }: Props) {
           deliveryNote={deliveryNote}
           payout={payout ?? null}
         />
+
+        {/*
+          🔴 O registro da apresentação mora aqui porque **o contrato é a tela
+          do show neste app** — o músico não tem tela de booking. E é o que
+          destranca o cachê: `ReleaseBookingEscrowUseCase` recusa liberar sem
+          check-in, e a rota não tinha cliente nenhum até esta fatia.
+
+          Depois do documento, nunca antes: o contrato é o que a tela existe
+          para mostrar, e o registro é uma ação sobre ele.
+        */}
+        <ContractCheckInCard bookingId={contract.booking_id} />
       </ScrollView>
 
       {/*
@@ -180,23 +220,3 @@ export function ContractDetailScreen({ route, navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root:        { flex: 1, backgroundColor: colors.bg.primary },
-  center:      { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
-  content:     { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl, gap: spacing.lg },
-  footer: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical:   spacing.md,
-    backgroundColor:   colors.bg.primary,
-    borderTopWidth:    1,
-    borderTopColor:    colors.bg.elevated,
-  },
-  retryBtn: {
-    backgroundColor:   colors.brand.primary,
-    borderRadius:      radius.xl,
-    paddingVertical:   spacing.md,
-    paddingHorizontal: spacing.xxl,
-  },
-  retryText:   { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.text.inverse },
-});

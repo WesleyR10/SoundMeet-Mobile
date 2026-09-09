@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { View, Text, Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { CheckCircle2, Star } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { useContractBooking } from '../../application/useEstablishmentReview';
 import { canReviewEstablishment } from '../../domain/review.validation';
 import { ReviewEstablishmentSheet } from './ReviewEstablishmentSheet';
@@ -25,7 +27,38 @@ type Props = {
  * A promoção `confirmed → completed` é do job horário do backend, então a ação
  * aparece sozinha em até uma hora depois do fim da apresentação.
  */
+const useStyles = makeStyles((colors) => ({
+  cta: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            spacing.sm,
+    height:         56,
+    borderRadius:   radius.xl,
+    borderWidth:    1,
+    borderColor:    colors.accent.amber,
+  },
+  ctaLabel: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.accent.amber,
+  },
+  doneRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            spacing.sm,
+    height:         56,
+  },
+  doneText: {
+    ...typography.bodySm,
+    color: colors.status.success,
+  },
+}));
+
 export function ContractReviewAction({ contract, footerStyle }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [reviewing, setReviewing] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -82,32 +115,3 @@ export function ContractReviewAction({ contract, footerStyle }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  cta: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            spacing.sm,
-    height:         56,
-    borderRadius:   radius.xl,
-    borderWidth:    1,
-    borderColor:    colors.accent.amber,
-  },
-  ctaLabel: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.accent.amber,
-  },
-  doneRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            spacing.sm,
-    height:         56,
-  },
-  doneText: {
-    ...typography.bodySm,
-    color: colors.status.success,
-  },
-});

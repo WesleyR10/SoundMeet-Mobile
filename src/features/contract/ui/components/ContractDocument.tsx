@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Mail } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { StageTechSpecSection } from '@/shared/components/StageTechSpecSection';
 import { ContractClauseList } from './ContractClauseList';
 import { ContractPartiesSection } from './ContractPartiesSection';
@@ -29,6 +31,60 @@ type Props = {
  * Anexo I e trilha de assinaturas, na mesma sequência do PDF. Paridade de
  * rótulos entre PDF e tela é travada por teste nos outros dois projetos.
  */
+const useStyles = makeStyles((colors) => ({
+  statusRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  pending: {
+    ...typography.caption,
+    color: colors.accent.amber,
+  },
+  annulBox: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:    radius.lg,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.status.error,
+    padding:         spacing.md,
+    gap:             2,
+  },
+  annulTitle: {
+    ...typography.caption,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.status.error,
+  },
+  annulReason: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  sectionTitle: {
+    ...typography.title,
+    color:     colors.text.primary,
+    marginTop: spacing.md,
+  },
+  annexNote: {
+    ...typography.caption,
+    color:     colors.text.muted,
+    marginTop: -spacing.sm,
+  },
+  mailBtn: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+    minHeight:     48,
+  },
+  mailText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  deliveryNote: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+}));
+
 export function ContractDocument({
   contract,
   pendingLabel,
@@ -37,6 +93,8 @@ export function ContractDocument({
   deliveryNote,
   payout,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <>
       <View style={s.statusRow}>
@@ -117,57 +175,3 @@ export function ContractDocument({
     </>
   );
 }
-
-const s = StyleSheet.create({
-  statusRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  pending: {
-    ...typography.caption,
-    color: colors.accent.amber,
-  },
-  annulBox: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:    radius.lg,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.status.error,
-    padding:         spacing.md,
-    gap:             2,
-  },
-  annulTitle: {
-    ...typography.caption,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.status.error,
-  },
-  annulReason: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  sectionTitle: {
-    ...typography.title,
-    color:     colors.text.primary,
-    marginTop: spacing.md,
-  },
-  annexNote: {
-    ...typography.caption,
-    color:     colors.text.muted,
-    marginTop: -spacing.sm,
-  },
-  mailBtn: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-    minHeight:     48,
-  },
-  mailText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  deliveryNote: {
-    ...typography.caption,
-    color: colors.text.secondary,
-  },
-});

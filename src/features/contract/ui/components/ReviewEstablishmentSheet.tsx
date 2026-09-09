@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -7,7 +7,9 @@ import {
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { Star } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { StarRatingInput } from '@/shared/components/StarRatingInput';
@@ -44,6 +46,48 @@ const COMMENT_MAX = 1000;
  * O botão não é escondido de quem já avaliou: o backend faz upsert por
  * `(alvo, autor, contexto)`, então reenviar corrige a nota em vez de duplicá-la.
  */
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:    radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  content: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+    gap:               spacing.md,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           spacing.sm,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  commentInput: {
+    width:             '100%',
+    minHeight:         88,
+    borderRadius:      radius.md,
+    borderWidth:       1,
+    borderColor:       colors.border.default,
+    padding:           spacing.md,
+    ...typography.body,
+    color:             colors.text.primary,
+    textAlignVertical: 'top',
+  },
+  fullWidth: {
+    width: '100%',
+  },
+}));
+
 export function ReviewEstablishmentSheet({
   establishmentId,
   bookingId,
@@ -52,6 +96,8 @@ export function ReviewEstablishmentSheet({
   onClose,
   onSubmitted,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -158,45 +204,3 @@ export function ReviewEstablishmentSheet({
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:    radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-    gap:               spacing.md,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           spacing.sm,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  commentInput: {
-    width:             '100%',
-    minHeight:         88,
-    borderRadius:      radius.md,
-    borderWidth:       1,
-    borderColor:       colors.border.default,
-    padding:           spacing.md,
-    ...typography.body,
-    color:             colors.text.primary,
-    textAlignVertical: 'top',
-  },
-  fullWidth: {
-    width: '100%',
-  },
-});
