@@ -1,7 +1,8 @@
-import { View, Image, StyleSheet } from 'react-native';
+import { View, Image } from 'react-native';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { LucideIcon } from 'lucide-react-native';
-import { colors } from '@/shared/design-system/tokens';
 
 type Props = {
   uri?:          string | null;
@@ -21,7 +22,35 @@ type Props = {
 // em revisão). Não retrofita MusicianRecommendationCard (fora do escopo
 // desta tarefa, diff mínimo) — mas é o candidato natural pra usar isso
 // também da próxima vez que precisar mexer nele.
+const useStyles = makeStyles((colors) => ({
+  plain: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignItems:      'center',
+    justifyContent:  'center',
+    overflow:        'hidden',
+  },
+  ring: {
+    padding:        2,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  ringInner: {
+    width:            '100%',
+    height:           '100%',
+    backgroundColor: colors.bg.surface,
+    alignItems:      'center',
+    justifyContent:  'center',
+    overflow:        'hidden',
+  },
+  img: {
+    width:  '100%',
+    height: '100%',
+  },
+}));
+
 export function Avatar({ uri, size, fallbackIcon: Icon, iconSize, ringColors }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const iconEl = <Icon size={iconSize ?? Math.round(size * 0.46)} color={colors.text.muted} />;
   const imgEl = uri ? <Image source={{ uri }} style={s.img} /> : iconEl;
 
@@ -47,28 +76,3 @@ export function Avatar({ uri, size, fallbackIcon: Icon, iconSize, ringColors }: 
   );
 }
 
-const s = StyleSheet.create({
-  plain: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems:      'center',
-    justifyContent:  'center',
-    overflow:        'hidden',
-  },
-  ring: {
-    padding:        2,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  ringInner: {
-    width:            '100%',
-    height:           '100%',
-    backgroundColor: colors.bg.surface,
-    alignItems:      'center',
-    justifyContent:  'center',
-    overflow:        'hidden',
-  },
-  img: {
-    width:  '100%',
-    height: '100%',
-  },
-});

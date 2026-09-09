@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Speaker, Drum, Ruler, Clock } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 
 /**
@@ -56,12 +58,60 @@ interface Props {
  * ("nenhum retorno") são as informações mais úteis da tela para quem vai tocar,
  * e um `spec.hasPa &&` as apagaria justamente quando têm o que dizer.
  */
+const useStyles = makeStyles((colors) => ({
+  section: { gap: spacing.md },
+  sectionTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  group: { gap: spacing.sm },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  groupTitle: {
+    ...typography.caption,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.secondary,
+  },
+  chips: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:            spacing.sm,
+  },
+  chip: {
+    borderRadius:    radius.full,
+    borderWidth:      1,
+    borderColor:     colors.border.default,
+    paddingHorizontal: spacing.md,
+    paddingVertical:   6,
+  },
+  chipText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  body: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  notes: {
+    ...typography.bodySm,
+    color:            colors.text.muted,
+    borderLeftWidth:   2,
+    borderLeftColor:  colors.border.default,
+    paddingLeft:       spacing.md,
+  },
+}));
+
 export function StageTechSpecSection({
   spec,
   title = 'Estrutura do palco',
   animated = true,
   riseDelay = 0,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   if (!spec) return null;
 
   const groups = [
@@ -186,49 +236,3 @@ function fmt(value: number): string {
 function isPresent(value: string | null): value is string {
   return value !== null;
 }
-
-const s = StyleSheet.create({
-  section: { gap: spacing.md },
-  sectionTitle: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  group: { gap: spacing.sm },
-  groupHeader: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  groupTitle: {
-    ...typography.caption,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.secondary,
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:            spacing.sm,
-  },
-  chip: {
-    borderRadius:    radius.full,
-    borderWidth:      1,
-    borderColor:     colors.border.default,
-    paddingHorizontal: spacing.md,
-    paddingVertical:   6,
-  },
-  chipText: {
-    ...typography.caption,
-    color: colors.text.secondary,
-  },
-  body: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  notes: {
-    ...typography.bodySm,
-    color:            colors.text.muted,
-    borderLeftWidth:   2,
-    borderLeftColor:  colors.border.default,
-    paddingLeft:       spacing.md,
-  },
-});

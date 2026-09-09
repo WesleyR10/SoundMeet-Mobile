@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ChordDiagram } from './ChordDiagram';
 import { PianoChordDiagram } from './PianoChordDiagram';
 import type { ChordInstrument } from './InstrumentToggle';
@@ -33,7 +35,67 @@ type Props = {
 // vem de fora via prop, escolhido uma vez no ChordSheetControlsSheet e
 // valendo pra todos os acordes da música (pedido do usuário: não repetir a
 // escolha a cada toque).
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:     radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  content: {
+    alignItems:         'center',
+    paddingHorizontal:  spacing.xl,
+    paddingBottom:       spacing.xxl,
+    gap:                  spacing.sm,
+  },
+  symbol: {
+    ...typography.chordLive,
+    fontSize: 26,
+    color:    colors.brand.primary,
+  },
+  capoBadge: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.4,
+    color:          colors.accent.amber,
+  },
+  capoCaption: {
+    ...typography.bodySm,
+    color:      colors.text.secondary,
+    textAlign: 'center',
+    marginTop:  spacing.xs,
+  },
+  emptyText: {
+    ...typography.body,
+    color:      colors.text.secondary,
+    paddingVertical: spacing.xxl,
+  },
+  pager: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.md,
+    marginTop:      spacing.xs,
+  },
+  pagerBtn: {
+    width:          40,
+    height:         40,
+    borderRadius:   radius.full,
+    alignItems:     'center',
+    justifyContent: 'center',
+    backgroundColor: colors.brand.muted,
+  },
+  pagerLabel: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+    minWidth: 40,
+    textAlign: 'center',
+  },
+}));
+
 export function ChordDiagramSheet({ visible, chordSymbol, instrument, capoFret, preferFlats, onClose }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [positionIndex, setPositionIndex] = useState(0);
 
@@ -125,61 +187,3 @@ export function ChordDiagramSheet({ visible, chordSymbol, instrument, capoFret, 
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:     radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  content: {
-    alignItems:         'center',
-    paddingHorizontal:  spacing.xl,
-    paddingBottom:       spacing.xxl,
-    gap:                  spacing.sm,
-  },
-  symbol: {
-    ...typography.chordLive,
-    fontSize: 26,
-    color:    colors.brand.primary,
-  },
-  capoBadge: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.4,
-    color:          colors.accent.amber,
-  },
-  capoCaption: {
-    ...typography.bodySm,
-    color:      colors.text.secondary,
-    textAlign: 'center',
-    marginTop:  spacing.xs,
-  },
-  emptyText: {
-    ...typography.body,
-    color:      colors.text.secondary,
-    paddingVertical: spacing.xxl,
-  },
-  pager: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.md,
-    marginTop:      spacing.xs,
-  },
-  pagerBtn: {
-    width:          40,
-    height:         40,
-    borderRadius:   radius.full,
-    alignItems:     'center',
-    justifyContent: 'center',
-    backgroundColor: colors.brand.muted,
-  },
-  pagerLabel: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-    minWidth: 40,
-    textAlign: 'center',
-  },
-});

@@ -1,7 +1,9 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Star } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   value:    number;
@@ -23,7 +25,30 @@ const STARS = [1, 2, 3, 4, 5] as const;
  * O alvo de toque é 48×48 (regra do CLAUDE.md) mesmo com a estrela desenhada em
  * 32 — quem avalia costuma estar de pé, no fim do show, com uma mão só.
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    alignItems: 'center',
+    gap:        spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  hit: {
+    width:          48,
+    height:         48,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  label: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.accent.amber,
+  },
+}));
+
 export function StarRatingInput({ value, onChange, disabled = false, showLabel = true }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   function select(rating: number) {
     if (disabled) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -73,23 +98,3 @@ const RATING_LABEL: Record<number, string> = {
   5: 'Excelente',
 };
 
-const s = StyleSheet.create({
-  root: {
-    alignItems: 'center',
-    gap:        spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  hit: {
-    width:          48,
-    height:         48,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  label: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.accent.amber,
-  },
-});

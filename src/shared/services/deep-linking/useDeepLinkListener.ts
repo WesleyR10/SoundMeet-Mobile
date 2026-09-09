@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { Linking } from 'react-native';
 import { navigationRef } from '@/navigation/navigationRef';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
+import { parseQrTarget } from '@/shared/utils/qr-link';
 import { useDeepLinkStore } from './deep-link.store';
 
-// Mesmo esquema simples de MUSICIAN_QR_REGEX (QRScannerScreen.tsx) — só
 // soundmeet://repertoire/shared/<token>, sem querystring.
 const SHARED_REPERTOIRE_REGEX = /^soundmeet:\/\/repertoire\/shared\/([^/?#]+)$/;
 
@@ -23,6 +23,27 @@ function extractSharedRepertoireToken(url: string | null): string | null {
 // navegar de fora de um componente, cold-start via onReady do
 // NavigationContainer, warm/background via listener.
 function handleUrl(url: string | null): void {
+  if (!url) return;
+
+  /*
+   * App Link do QR code (`https://soundmeet.com.br/musico/<uuid>`).
+   *
+   * A partir dos App Links/Universal Links, o MESMO código impresso na mesa
+   * chega aqui como URL do sistema quando o app está instalado — e abre a
+   * página web quando não está. Antes disso o QR gravava `soundmeet://`, que
+   * simplesmente não fazia nada na câmera nativa de quem não tinha o app.
+   *
+   * `parseQrTarget` valida o host: o SO só entrega URLs do domínio verificado,
+   * mas o mesmo parser serve à câmera, onde qualquer texto pode chegar.
+   */
+  const qrTarget = parseQrTarget(url);
+  if (qrTarget?.kind === 'musician') {
+    // Sempre pelo relay: o perfil público mora no stack do fã, que só existe
+    // montado depois que a sessão resolve. RootNavigator consome.
+    useDeepLinkStore.getState().setPendingMusicianId(qrTarget.id);
+    return;
+  }
+
   const token = extractSharedRepertoireToken(url);
   if (!token) return;
 

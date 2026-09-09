@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { InstrumentToggle, type ChordInstrument } from './InstrumentToggle';
 import { TransposeStepper } from './TransposeStepper';
 import { CapoPicker } from './CapoPicker';
@@ -23,12 +24,52 @@ type Props = {
 // visualizador compartilhado; escolha de instrumento aqui vale pra TODOS os
 // acordes da música (diferente do ChordDiagramSheet, que não tem mais
 // seletor próprio — só exibe no instrumento já escolhido aqui).
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:     radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  content: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:      spacing.xxl,
+    gap:                 spacing.lg,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  section: {
+    gap: spacing.sm,
+  },
+  sectionLabel: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.6,
+    textTransform: 'uppercase',
+    color:          colors.text.secondary,
+  },
+  capoHeader: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  clearLabel: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+}));
+
 export function ChordSheetControlsSheet({
   visible, onClose,
   instrument, onChangeInstrument,
   transposeSemitones, onChangeTranspose,
   capoFret, onChangeCapo,
 }: Props) {
+  const s = useStyles();
   const sheetRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
@@ -82,42 +123,3 @@ export function ChordSheetControlsSheet({
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:     radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:      spacing.xxl,
-    gap:                 spacing.lg,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionLabel: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.6,
-    textTransform: 'uppercase',
-    color:          colors.text.secondary,
-  },
-  capoHeader: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-  },
-  clearLabel: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-});

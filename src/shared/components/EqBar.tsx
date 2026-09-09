@@ -7,6 +7,7 @@ import Animated, {
   withTiming,
   withDelay,
 } from 'react-native-reanimated';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 
 type Props = {
   color:    string;
@@ -16,12 +17,20 @@ type Props = {
 };
 
 export function EqBar({ color, height, duration, delay }: Props) {
+  const reducedMotion = useReducedMotion();
   const scaleY = useSharedValue(0.3);
 
   useEffect(() => {
+    // Barra parada em 0.3 lê como equalizador QUEBRADO, não como decoração —
+    // por isso o estado estático é a altura média, não o valor inicial.
+    // Mesma decisão do Skeleton: reduce motion desliga o pulso, não o encurta.
+    if (reducedMotion) {
+      scaleY.value = 0.65;
+      return;
+    }
     scaleY.value = withDelay(delay, withRepeat(withTiming(1, { duration }), -1, true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reducedMotion]);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scaleY: scaleY.value }],

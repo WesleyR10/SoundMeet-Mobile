@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
 import type { StyleProp, TextStyle } from 'react-native';
 import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
-import { typography, colors } from '@/shared/design-system/tokens';
+import { typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -40,7 +41,16 @@ function formatBRL(value: number): string {
 // texto). TextInput animado (editable=false) porque Reanimated 4 não consegue
 // animar o conteúdo de <Text> diretamente; animatedProps.text evita re-render
 // React a cada frame (roda inteiro na UI thread).
+const useStyles = makeStyles((colors) => ({
+  text: {
+    ...typography.displayMd,
+    color:   colors.text.primary,
+    padding: 0,
+  },
+}));
+
 export function AnimatedBalance({ value, duration = 900, style }: Props) {
+  const s = useStyles();
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -64,11 +74,3 @@ export function AnimatedBalance({ value, duration = 900, style }: Props) {
     />
   );
 }
-
-const s = StyleSheet.create({
-  text: {
-    ...typography.displayMd,
-    color:   colors.text.primary,
-    padding: 0,
-  },
-});

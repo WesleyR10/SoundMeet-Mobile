@@ -3,7 +3,8 @@ import type { ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withDelay, withTiming, Easing } from 'react-native-reanimated';
-import { colors, spacing, radius } from '@/shared/design-system/tokens';
+import { spacing, radius } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   children:     ReactNode;
@@ -18,7 +19,11 @@ type Props = {
 // Primitivo único reaproveitado pelos ~4 tipos de card da Home do músico
 // (Próximo Show, Acesso Rápido, Descoberta, Atividade Recente) — evita 4
 // estilizações quase-duplicadas de borda/fundo/raio na mesma tela.
-export function GlowCard({ children, accentColor = colors.brand.primary, style, riseDelay = 0, animated = true }: Props) {
+export function GlowCard({ children, accentColor, style, riseDelay = 0, animated = true }: Props) {
+  const { colors } = useTheme();
+  // Default resolvido no CORPO: na assinatura ele é avaliado fora do
+  // escopo do hook, e como constante de módulo congelava a paleta dark.
+  const accent = accentColor ?? colors.brand.primary;
   const translateY = useSharedValue(animated ? 18 : 0);
   const opacity     = useSharedValue(animated ? 0 : 1);
 
@@ -35,7 +40,7 @@ export function GlowCard({ children, accentColor = colors.brand.primary, style, 
   }));
 
   return (
-    <Animated.View style={[s.card, { borderColor: `${accentColor}40` }, entrance, style]}>
+    <Animated.View style={[s.card, { borderColor: `${accent}40` }, entrance, style]}>
       {children}
     </Animated.View>
   );

@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, Text, TextInput, TextInputProps, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, interpolateColor } from 'react-native-reanimated';
 import { Eye, EyeOff } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { TravelingBorderGlow } from '@/shared/components/TravelingBorderGlow';
 
 type Props = {
@@ -24,6 +26,55 @@ type Props = {
   onBlur?:          () => void;
 };
 
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.xs,
+  },
+  label: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.8,
+    color:          'rgba(255,255,255,0.55)',
+    textTransform:  'uppercase',
+  },
+  container: {
+    flexDirection:      'row',
+    alignItems:         'center',
+    minHeight:           52,
+    borderWidth:         1,
+    borderRadius:        radius.md,
+    backgroundColor:    'rgba(255,255,255,0.04)',
+    paddingHorizontal:   spacing.md,
+    gap:                 spacing.sm,
+    shadowColor:         colors.brand.primary,
+    shadowOffset:        { width: 0, height: 0 },
+    shadowRadius:        10,
+    elevation:           0,
+  },
+  containerError: {
+    backgroundColor: `${colors.status.error}0F`,
+  },
+  containerMultiline: {
+    alignItems: 'flex-start',
+  },
+  input: {
+    flex:       1,
+    ...typography.body,
+    fontFamily: 'Inter-Medium',
+    color:      colors.text.primary,
+    paddingVertical: spacing.sm,
+  },
+  inputMultiline: {
+    minHeight:          104,
+    textAlignVertical: 'top',
+  },
+  errorText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-Medium',
+    color:      colors.status.error,
+  },
+}));
+
 export function FormField({
   label,
   value,
@@ -39,6 +90,8 @@ export function FormField({
   multiline = false,
   onBlur,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
   const [focused, setFocused] = useState(false);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -131,51 +184,3 @@ export function FormField({
   );
 }
 
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.xs,
-  },
-  label: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.8,
-    color:          'rgba(255,255,255,0.55)',
-    textTransform:  'uppercase',
-  },
-  container: {
-    flexDirection:      'row',
-    alignItems:         'center',
-    minHeight:           52,
-    borderWidth:         1,
-    borderRadius:        radius.md,
-    backgroundColor:    'rgba(255,255,255,0.04)',
-    paddingHorizontal:   spacing.md,
-    gap:                 spacing.sm,
-    shadowColor:         colors.brand.primary,
-    shadowOffset:        { width: 0, height: 0 },
-    shadowRadius:        10,
-    elevation:           0,
-  },
-  containerError: {
-    backgroundColor: `${colors.status.error}0F`,
-  },
-  containerMultiline: {
-    alignItems: 'flex-start',
-  },
-  input: {
-    flex:       1,
-    ...typography.body,
-    fontFamily: 'Inter-Medium',
-    color:      colors.text.primary,
-    paddingVertical: spacing.sm,
-  },
-  inputMultiline: {
-    minHeight:          104,
-    textAlignVertical: 'top',
-  },
-  errorText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-Medium',
-    color:      colors.status.error,
-  },
-});

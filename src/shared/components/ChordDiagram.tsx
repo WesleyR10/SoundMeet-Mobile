@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Line, Circle, Rect, Text as SvgText } from 'react-native-svg';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { ChordDiagramPosition } from '@/shared/utils/chord-diagram-lookup';
 
 const STRING_COUNT = 6;
@@ -22,6 +23,7 @@ function stringX(index: number) {
 // identidade teal/dark do app. Puramente apresentacional: recebe a posição
 // já resolvida por chord-diagram-lookup.ts, não busca dado nenhum.
 export function ChordDiagram({ position }: { position: ChordDiagramPosition }) {
+  const { colors } = useTheme();
   const { frets, fingers, barres, baseFret } = position;
 
   const fretRows = useMemo(

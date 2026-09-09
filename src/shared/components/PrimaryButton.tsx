@@ -1,5 +1,8 @@
-import { ActivityIndicator, Pressable, StyleProp, StyleSheet, Text, ViewStyle } from 'react-native';
-import { colors, spacing, radius, shadows, typography } from '@/shared/design-system/tokens';
+import { ActivityIndicator, Pressable, StyleProp, Text, ViewStyle } from 'react-native';
+import { spacing, radius, shadows, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 type Variant = 'brand' | 'coral';
 
@@ -12,50 +15,28 @@ type Props = {
   style?:    StyleProp<ViewStyle>;
 };
 
-const VARIANT_BG = {
+/*
+ * Os mapas de cor viraram FUNÇÕES do tema. Como constante de módulo eles
+ * congelavam a paleta dark no carregamento — o botão primário continuaria
+ * teal-neon sobre um fundo claro. As sombras não: `shadows.*` é geometria e
+ * opacidade, não muda com o tema.
+ */
+const variantBg = (colors: ThemeColors) => ({
   brand: colors.brand.primary,
   coral: colors.accent.coral,
-} as const;
+});
 
-const VARIANT_BG_PRESSED = {
+const variantBgPressed = (colors: ThemeColors) => ({
   brand: colors.brand.dark,
   coral: colors.accent.coralDeep,
-} as const;
+});
 
 const VARIANT_SHADOW = {
   brand: shadows.brand,
   coral: shadows.coral,
 } as const;
 
-export function PrimaryButton({ label, onPress, loading = false, disabled = false, variant = 'brand', style }: Props) {
-  const isDisabled = disabled || loading;
-
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={isDisabled}
-      style={({ pressed }) => [
-        s.btn,
-        VARIANT_SHADOW[variant],
-        { backgroundColor: VARIANT_BG[variant] },
-        pressed && !isDisabled && { backgroundColor: VARIANT_BG_PRESSED[variant], transform: [{ scale: 0.98 }] },
-        isDisabled && s.disabled,
-        style,
-      ]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: isDisabled, busy: loading }}
-    >
-      {loading ? (
-        <ActivityIndicator color={colors.text.inverse} />
-      ) : (
-        <Text style={s.label}>{label}</Text>
-      )}
-    </Pressable>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   btn: {
     height:         60,
     borderRadius:   radius.xl,
@@ -75,4 +56,36 @@ const s = StyleSheet.create({
     letterSpacing:  1,
     color:          colors.text.inverse,
   },
-});
+}));
+
+export function PrimaryButton({ label, onPress, loading = false, disabled = false, variant = 'brand', style }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const isDisabled = disabled || loading;
+  const bg = variantBg(colors);
+  const bgPressed = variantBgPressed(colors);
+
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={isDisabled}
+      style={({ pressed }) => [
+        s.btn,
+        VARIANT_SHADOW[variant],
+        { backgroundColor: bg[variant] },
+        pressed && !isDisabled && { backgroundColor: bgPressed[variant], transform: [{ scale: 0.98 }] },
+        isDisabled && s.disabled,
+        style,
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+    >
+      {loading ? (
+        <ActivityIndicator color={colors.text.inverse} />
+      ) : (
+        <Text style={s.label}>{label}</Text>
+      )}
+    </Pressable>
+  );
+}

@@ -7,13 +7,17 @@ import { z } from 'zod';
  * existe um servidor no meio e o `import "server-only"` protege segredos. Aqui
  * o app roda inteiro no dispositivo, tudo é `EXPO_PUBLIC_*` e não há segredo a
  * esconder — o que precisa ser garantido é outra coisa: que o **canal** por
- * onde a senha e o JWT saem do aparelho seja seguro.
+ * onde os tokens saem do aparelho seja seguro.
  *
- * Por que isso é um gate de boot e não uma convenção de `.env` (SM-017):
- * `POST /auth/login` é Direct Access Grant, ou seja, manda **senha em claro**
- * para `API_BASE_URL`; e o handshake do Socket.io manda o **access token** para
- * `WS_BASE_URL` (dois namespaces). Um build de loja apontando para `http://`
- * publica as duas coisas em texto puro, e nada no código anterior impedia isso.
+ * Por que isso é um gate de boot e não uma convenção de `.env` (SM-017): toda
+ * chamada autenticada manda o **access token** para `API_BASE_URL`, e o
+ * handshake do Socket.io manda o mesmo token para `WS_BASE_URL` (dois
+ * namespaces). Um build de loja apontando para `http://` publica as duas coisas
+ * em texto puro, e nada no código anterior impedia isso.
+ *
+ * ⚠️ Desde AUTH-1 a **senha não passa mais por aqui**: o login é Authorization
+ * Code + PKCE contra o Keycloak (`keycloak.service.ts`), e o `KEYCLOAK.URL`
+ * passa pela mesma validação de esquema — ver `PRODUCTION_HOST_ALLOWLIST`.
  */
 
 export type AppEnv = 'development' | 'preview' | 'production';
@@ -26,13 +30,17 @@ export type AppEnv = 'development' | 'preview' | 'production';
  * é que mudar de domínio exige mudar esta linha — de propósito, porque essa
  * mudança merece code review.
  *
- * Casa o domínio exato e subdomínios (`api.`, `auth.`). Ainda não há decisão
- * final entre `.app` e `.com.br` (o backend usa `soundmeet.app` como default de
- * `APP_URL` e `api.soundmeet.com.br` em `MAIL_BASE_URL`), então os dois estão
- * aqui. Se o domínio final for outro, o build de produção **falha no boot**
- * apontando para esta constante — que é o modo certo de descobrir.
+ * Casa o domínio exato e subdomínios (`api.`, `auth.`). Se o domínio final for
+ * outro, o build de produção **falha no boot** apontando para esta constante —
+ * que é o modo certo de descobrir.
+ *
+ * 🔴 `soundmeet.app` esteve aqui até 07/set/2026, enquanto a escolha entre
+ * `.app` e `.com.br` seguia aberta. A escolha é `.com.br` — é o domínio
+ * REGISTRADO (Hostinger, 29/ago/2026); o `.app` é de TERCEIRO e nunca foi
+ * nosso, então mantê-lo autorizaria o app de produção a falar com um host que
+ * outra pessoa controla.
  */
-export const PRODUCTION_HOST_ALLOWLIST = ['soundmeet.app', 'soundmeet.com.br'] as const;
+export const PRODUCTION_HOST_ALLOWLIST = ['soundmeet.com.br'] as const;
 
 // ── Resolução do ambiente ─────────────────────────────────────────────────────
 
@@ -79,7 +87,7 @@ export function parseEndpoint(value: string): { scheme: string; host: string } |
 
   const authority = match[2];
   // Descarta `user:senha@` antes de olhar o host — senão `evil.com` em
-  // `https://soundmeet.app@evil.com` passaria pela allowlist.
+  // `https://soundmeet.com.br@evil.com` passaria pela allowlist.
   const hostPort = authority.slice(authority.lastIndexOf('@') + 1);
 
   const host = hostPort.startsWith('[')
@@ -92,7 +100,7 @@ export function parseEndpoint(value: string): { scheme: string; host: string } |
 
 /**
  * `endsWith('.' + domain)`, nunca `endsWith(domain)` puro: o segundo aceitaria
- * `evilsoundmeet.app` como se fosse nosso.
+ * `evilsoundmeet.com.br` como se fosse nosso.
  */
 export function isHostAllowed(host: string, allowlist: readonly string[]): boolean {
   return allowlist.some((domain) => host === domain || host.endsWith(`.${domain}`));

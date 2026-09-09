@@ -1,5 +1,6 @@
-import { ScrollView, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { ScrollView, Text, Pressable } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   value:    number | null; // null = sem capotraste
@@ -11,31 +12,7 @@ type Props = {
 // lista de capotraste do CifraClub (imagem de referência), num formato mais
 // compacto/rolável, pra caber dentro do ChordSheetControlsSheet sem precisar
 // de um segundo bottom sheet empilhado.
-export function CapoPicker({ value, onChange, frets = 12 }: Props) {
-  const options: (number | null)[] = [null, ...Array.from({ length: frets }, (_, i) => i + 1)];
-
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.row}>
-      {options.map((fret) => {
-        const active = fret === value;
-        return (
-          <Pressable
-            key={fret ?? 'off'}
-            onPress={() => onChange(fret)}
-            style={[s.chip, active && s.chipActive]}
-            accessibilityRole="button"
-            accessibilityLabel={fret === null ? 'Sem capotraste' : `Capotraste na ${fret}ª casa`}
-            accessibilityState={{ selected: active }}
-          >
-            <Text style={[s.chipLabel, active && s.chipLabelActive]}>{fret === null ? 'Sem' : fret}</Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     gap:            spacing.sm,
@@ -63,4 +40,29 @@ const s = StyleSheet.create({
   chipLabelActive: {
     color: colors.brand.primary,
   },
-});
+}));
+
+export function CapoPicker({ value, onChange, frets = 12 }: Props) {
+  const s = useStyles();
+  const options: (number | null)[] = [null, ...Array.from({ length: frets }, (_, i) => i + 1)];
+
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.row}>
+      {options.map((fret) => {
+        const active = fret === value;
+        return (
+          <Pressable
+            key={fret ?? 'off'}
+            onPress={() => onChange(fret)}
+            style={[s.chip, active && s.chipActive]}
+            accessibilityRole="button"
+            accessibilityLabel={fret === null ? 'Sem capotraste' : `Capotraste na ${fret}ª casa`}
+            accessibilityState={{ selected: active }}
+          >
+            <Text style={[s.chipLabel, active && s.chipLabelActive]}>{fret === null ? 'Sem' : fret}</Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}

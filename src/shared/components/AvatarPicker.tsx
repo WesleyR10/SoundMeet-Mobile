@@ -1,7 +1,8 @@
-import { View, Image, Pressable, StyleSheet, Alert } from 'react-native';
+import { View, Image, Pressable, Alert } from 'react-native';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, User } from 'lucide-react-native';
-import { colors } from '@/shared/design-system/tokens';
 
 // Extraído de StepThreePhoto.tsx (Bloco 1.13) para ser reaproveitado também
 // pelo EditProfileScreen (Bloco 2) — mesma permissão + launch do picker, sem
@@ -32,7 +33,36 @@ type Props = {
   size?:    number;
 };
 
+const useStyles = makeStyles((colors) => ({
+  wrap: {
+    alignSelf: 'center',
+  },
+  avatar: {},
+  placeholder: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems:      'center',
+    justifyContent:  'center',
+    borderWidth:      1,
+    borderColor:     colors.border.default,
+  },
+  badge: {
+    position:        'absolute',
+    right:            0,
+    bottom:           0,
+    width:            36,
+    height:           36,
+    borderRadius:     18,
+    backgroundColor: colors.brand.primary,
+    alignItems:      'center',
+    justifyContent:  'center',
+    borderWidth:      3,
+    borderColor:     colors.bg.primary,
+  },
+}));
+
 export function AvatarPicker({ uri, onChange, size = 128 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const handlePick = async () => {
     const picked = await pickAvatarImage();
     if (picked) onChange(picked);
@@ -61,29 +91,3 @@ export function AvatarPicker({ uri, onChange, size = 128 }: Props) {
   );
 }
 
-const s = StyleSheet.create({
-  wrap: {
-    alignSelf: 'center',
-  },
-  avatar: {},
-  placeholder: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    alignItems:      'center',
-    justifyContent:  'center',
-    borderWidth:      1,
-    borderColor:     colors.border.default,
-  },
-  badge: {
-    position:        'absolute',
-    right:            0,
-    bottom:           0,
-    width:            36,
-    height:           36,
-    borderRadius:     18,
-    backgroundColor: colors.brand.primary,
-    alignItems:      'center',
-    justifyContent:  'center',
-    borderWidth:      3,
-    borderColor:     colors.bg.primary,
-  },
-});

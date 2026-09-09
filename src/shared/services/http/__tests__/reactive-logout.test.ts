@@ -61,10 +61,14 @@ describe('interceptor de 401 — logout reativo', () => {
     expect(clearLocalSessionMock).not.toHaveBeenCalled();
   });
 
-  it('401 em /auth/login é "credencial inválida", não sessão expirada', async () => {
+  // `/auth/login` deixou de existir em AUTH-1 (o login virou PKCE, que nem passa
+  // pelo httpClient). `/auth/register` herda a mesma regra: quem cadastra ainda
+  // não tem sessão, então 401 ali é recusa do provedor de identidade — tentar
+  // refresh não faria sentido, e derrubar a sessão apagaria a de outra pessoa.
+  it('401 em /auth/register é "credencial inválida", não sessão expirada', async () => {
     httpClient.defaults.adapter = respondWith(401);
 
-    await expect(httpClient.post('/auth/login', {})).rejects.toThrow();
+    await expect(httpClient.post('/auth/register', {})).rejects.toThrow();
 
     expect(refreshTokensMock).not.toHaveBeenCalled();
     expect(clearLocalSessionMock).not.toHaveBeenCalled();

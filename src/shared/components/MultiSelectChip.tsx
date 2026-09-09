@@ -8,7 +8,8 @@ import Animated, {
   interpolateColor,
 } from 'react-native-reanimated';
 import type { LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   label:       string;
@@ -21,7 +22,11 @@ type Props = {
 // Átomo genérico reaproveitando o padrão interpolateColor de seleção do RoleCard,
 // mas em formato compacto de pílula — para grupos com muitas opções (instrumentos,
 // gêneros) onde cards grandes não caberiam.
-export function MultiSelectChip({ label, icon: Icon, selected, accentColor = colors.brand.primary, onPress }: Props) {
+export function MultiSelectChip({ label, icon: Icon, selected, accentColor, onPress }: Props) {
+  const { colors } = useTheme();
+  // Default resolvido no CORPO: na assinatura ele é avaliado fora do
+  // escopo do hook, e como constante de módulo congelava a paleta dark.
+  const accent = accentColor ?? colors.brand.primary;
   const progress = useSharedValue(selected ? 1 : 0);
   const scale    = useSharedValue(1);
 
@@ -37,11 +42,11 @@ export function MultiSelectChip({ label, icon: Icon, selected, accentColor = col
   };
 
   const chipStyle = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(progress.value, [0, 1], [colors.border.default, accentColor]),
+    borderColor: interpolateColor(progress.value, [0, 1], [colors.border.default, accent]),
     backgroundColor: interpolateColor(
       progress.value,
       [0, 1],
-      ['rgba(255,255,255,0.03)', `${accentColor}1F`],
+      ['rgba(255,255,255,0.03)', `${accent}1F`],
     ),
     transform: [{ scale: scale.value }],
   }));
@@ -64,7 +69,7 @@ export function MultiSelectChip({ label, icon: Icon, selected, accentColor = col
       <Animated.View style={[s.chip, chipStyle]}>
         {Icon && (
           <Animated.View style={iconStyle}>
-            <Icon size={14} color={accentColor} strokeWidth={2.5} />
+            <Icon size={14} color={accent} strokeWidth={2.5} />
           </Animated.View>
         )}
         <Animated.Text style={[s.label, labelStyle]}>{label}</Animated.Text>

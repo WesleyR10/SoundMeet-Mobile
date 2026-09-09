@@ -1,8 +1,10 @@
 import { useCallback, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native';
+import { View, Text, Pressable, type LayoutChangeEvent } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, interpolateColor } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { RenderableToken } from '@/shared/utils/chord-sheet';
 
 // 'static' = sem noção de posição de scroll (visualizador de repertório
@@ -45,7 +47,72 @@ type Props = {
 // pelo Play Mode (auto-scroll, precisa de onLayoutY + state) quanto pelo
 // visualizador estático de repertório compartilhado publicamente (sem
 // scroll automático, state sempre 'future').
+const useStyles = makeStyles((colors) => ({
+  root: {
+    paddingVertical:   spacing.xs,
+    paddingHorizontal: spacing.lg,
+    borderLeftWidth:    3,
+    borderLeftColor:   'transparent',
+    borderRadius:       4,
+  },
+  sectionLabel: {
+    ...typography.caption,
+    color:          colors.brand.primary,
+    letterSpacing:   1.2,
+    textTransform:  'uppercase',
+    marginBottom:    spacing.xs,
+  },
+  row: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    alignItems:    'flex-end',
+  },
+  tokenCol: {
+    alignItems:   'flex-start',
+    marginRight:   2,
+  },
+  // Modo edição (onPressToken) — borda tracejada na coluna inteira em vez do
+  // sublinhado só-no-acorde do modo visualização, pra sinalizar "toque em
+  // qualquer palavra pra corrigir/inserir/anotar", não só nos acordes.
+  tokenColEditable: {
+    borderWidth:        1,
+    borderStyle:        'dashed',
+    borderColor:        'rgba(0,224,184,0.35)',
+    borderRadius:        4,
+    paddingHorizontal:   2,
+    paddingBottom:        1,
+  },
+  chord: {
+    ...typography.chordLive,
+    color:  colors.brand.primary,
+    height: typography.chordLive.lineHeight,
+  },
+  // Sublinhado pontilhado bem sutil — sinaliza "isso é tocável" sem gritar;
+  // só aparece quando onPressChord existe (ver JSX acima).
+  chordTappable: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,224,184,0.45)',
+    borderStyle:       'dotted',
+  },
+  word: {
+    ...typography.liveBody,
+    color: colors.text.primary,
+  },
+  wordActive: {
+    color:      colors.text.primary,
+    fontFamily: 'Inter-SemiBold',
+  },
+  wordPast: {
+    color: colors.text.muted,
+  },
+  wordFuture: {
+    color: 'rgba(248,250,252,0.55)',
+  },
+}));
+
 export function ChordTokenLine({ label, tokens, index, state, onLayoutY, onPressChord, onPressToken }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const handleLayout = useCallback((e: LayoutChangeEvent) => {
     onLayoutY?.(index, e.nativeEvent.layout.y);
   }, [index, onLayoutY]);
@@ -137,66 +204,3 @@ export function ChordTokenLine({ label, tokens, index, state, onLayoutY, onPress
     </Animated.View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    paddingVertical:   spacing.xs,
-    paddingHorizontal: spacing.lg,
-    borderLeftWidth:    3,
-    borderLeftColor:   'transparent',
-    borderRadius:       4,
-  },
-  sectionLabel: {
-    ...typography.caption,
-    color:          colors.brand.primary,
-    letterSpacing:   1.2,
-    textTransform:  'uppercase',
-    marginBottom:    spacing.xs,
-  },
-  row: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    alignItems:    'flex-end',
-  },
-  tokenCol: {
-    alignItems:   'flex-start',
-    marginRight:   2,
-  },
-  // Modo edição (onPressToken) — borda tracejada na coluna inteira em vez do
-  // sublinhado só-no-acorde do modo visualização, pra sinalizar "toque em
-  // qualquer palavra pra corrigir/inserir/anotar", não só nos acordes.
-  tokenColEditable: {
-    borderWidth:        1,
-    borderStyle:        'dashed',
-    borderColor:        'rgba(0,224,184,0.35)',
-    borderRadius:        4,
-    paddingHorizontal:   2,
-    paddingBottom:        1,
-  },
-  chord: {
-    ...typography.chordLive,
-    color:  colors.brand.primary,
-    height: typography.chordLive.lineHeight,
-  },
-  // Sublinhado pontilhado bem sutil — sinaliza "isso é tocável" sem gritar;
-  // só aparece quando onPressChord existe (ver JSX acima).
-  chordTappable: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,224,184,0.45)',
-    borderStyle:       'dotted',
-  },
-  word: {
-    ...typography.liveBody,
-    color: colors.text.primary,
-  },
-  wordActive: {
-    color:      colors.text.primary,
-    fontFamily: 'Inter-SemiBold',
-  },
-  wordPast: {
-    color: colors.text.muted,
-  },
-  wordFuture: {
-    color: 'rgba(248,250,252,0.55)',
-  },
-});

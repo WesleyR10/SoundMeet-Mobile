@@ -1,10 +1,17 @@
 import { useEffect, useMemo } from 'react';
 import { StyleSheet } from 'react-native';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 import Animated, { useSharedValue, useAnimatedStyle, withDelay, withTiming, Easing } from 'react-native-reanimated';
-import { colors } from '@/shared/design-system/tokens';
 
 const PARTICLE_COUNT = 10;
-const BURST_COLORS    = [colors.brand.primary, colors.accent.violet, '#4D9CFF', colors.accent.amber];
+/*
+ * Constante virou FUNÇÃO do tema. Como array de módulo ela era avaliada no
+ * carregamento e congelava a paleta dark — as partículas continuariam neon
+ * sobre um fundo claro, sem nada quebrar.
+ */
+const burstColors = (colors: ThemeColors) =>
+  [colors.brand.primary, colors.accent.violet, '#4D9CFF', colors.accent.amber];
 
 function randomBetween(min: number, max: number) {
   return min + Math.random() * (max - min);
@@ -18,9 +25,12 @@ type Props = {
 // Diferente do Particle (drift em loop infinito) — aqui é um único burst radial,
 // consumido no momento do reveal do QR do Step 3.
 export function ConfettiBurst({ trigger }: Props) {
+  const { colors } = useTheme();
   const particles = useMemo(
-    () =>
-      Array.from({ length: PARTICLE_COUNT }, (_, i) => {
+    () => {
+      // Resolvida UMA vez por tema, não por partícula.
+      const palette = burstColors(colors);
+      return Array.from({ length: PARTICLE_COUNT }, (_, i) => {
         const angle    = (i / PARTICLE_COUNT) * Math.PI * 2 + randomBetween(-0.2, 0.2);
         const distance = randomBetween(70, 130);
         return {
@@ -28,11 +38,13 @@ export function ConfettiBurst({ trigger }: Props) {
           x:     Math.cos(angle) * distance,
           y:     Math.sin(angle) * distance,
           size:  randomBetween(4, 8),
-          color: BURST_COLORS[i % BURST_COLORS.length],
+          color: palette[i % palette.length]!,
           delay: randomBetween(0, 40) * i * 0.3,
         };
-      }),
-    [],
+      });
+    },
+    // `colors` na lista: trocar de tema recolore o burst seguinte.
+    [colors],
   );
 
   return (

@@ -43,9 +43,9 @@ describe('resolveAppEnv', () => {
 
 describe('parseEndpoint', () => {
   it('extrai esquema e host', () => {
-    expect(parseEndpoint('https://api.soundmeet.app/api/v1')).toEqual({
+    expect(parseEndpoint('https://api.soundmeet.com.br/api/v1')).toEqual({
       scheme: 'https',
-      host: 'api.soundmeet.app',
+      host: 'api.soundmeet.com.br',
     });
   });
 
@@ -57,9 +57,9 @@ describe('parseEndpoint', () => {
   });
 
   it('descarta credenciais embutidas — o host é o que vem DEPOIS do @', () => {
-    // `https://soundmeet.app@evil.com` passaria pela allowlist se o parser
+    // `https://soundmeet.com.br@evil.com` passaria pela allowlist se o parser
     // olhasse a authority inteira.
-    expect(parseEndpoint('https://soundmeet.app@evil.com/api/v1')).toEqual({
+    expect(parseEndpoint('https://soundmeet.com.br@evil.com/api/v1')).toEqual({
       scheme: 'https',
       host: 'evil.com',
     });
@@ -74,21 +74,21 @@ describe('parseEndpoint', () => {
 
   it('rejeita URL relativa e host vazio', () => {
     expect(parseEndpoint('/api/v1')).toBeNull();
-    expect(parseEndpoint('api.soundmeet.app')).toBeNull();
+    expect(parseEndpoint('api.soundmeet.com.br')).toBeNull();
     expect(parseEndpoint('https://')).toBeNull();
   });
 });
 
 describe('isHostAllowed', () => {
   it('aceita o domínio exato e seus subdomínios', () => {
-    expect(isHostAllowed('soundmeet.app', PRODUCTION_HOST_ALLOWLIST)).toBe(true);
-    expect(isHostAllowed('api.soundmeet.app', PRODUCTION_HOST_ALLOWLIST)).toBe(true);
+    expect(isHostAllowed('soundmeet.com.br', PRODUCTION_HOST_ALLOWLIST)).toBe(true);
+    expect(isHostAllowed('api.soundmeet.com.br', PRODUCTION_HOST_ALLOWLIST)).toBe(true);
     expect(isHostAllowed('auth.soundmeet.com.br', PRODUCTION_HOST_ALLOWLIST)).toBe(true);
   });
 
-  it('não cai em sufixo colado — evilsoundmeet.app NÃO é nosso', () => {
-    expect(isHostAllowed('evilsoundmeet.app', PRODUCTION_HOST_ALLOWLIST)).toBe(false);
-    expect(isHostAllowed('soundmeet.app.evil.com', PRODUCTION_HOST_ALLOWLIST)).toBe(false);
+  it('não cai em sufixo colado — evilsoundmeet.com.br NÃO é nosso', () => {
+    expect(isHostAllowed('evilsoundmeet.com.br', PRODUCTION_HOST_ALLOWLIST)).toBe(false);
+    expect(isHostAllowed('soundmeet.com.br.evil.com', PRODUCTION_HOST_ALLOWLIST)).toBe(false);
   });
 });
 
@@ -108,7 +108,7 @@ describe('describeEndpointProblem', () => {
   it('fora de development, http é recusado', () => {
     const problem = describeEndpointProblem({
       ...base,
-      value: 'http://api.soundmeet.app/api/v1',
+      value: 'http://api.soundmeet.com.br/api/v1',
       requireSecure: true,
     });
     expect(problem).toContain('não é aceito fora de development');
@@ -118,7 +118,7 @@ describe('describeEndpointProblem', () => {
     expect(
       describeEndpointProblem({
         ...base,
-        value: 'https://api.soundmeet.app/api/v1',
+        value: 'https://api.soundmeet.com.br/api/v1',
         requireSecure: true,
       }),
     ).toBeNull();
@@ -126,9 +126,9 @@ describe('describeEndpointProblem', () => {
 
   it('websocket aceita https e wss, recusa ws puro', () => {
     const ws = { label: 'WS', kind: 'ws' as const, allowlist: null, requireSecure: true };
-    expect(describeEndpointProblem({ ...ws, value: 'https://api.soundmeet.app' })).toBeNull();
-    expect(describeEndpointProblem({ ...ws, value: 'wss://api.soundmeet.app' })).toBeNull();
-    expect(describeEndpointProblem({ ...ws, value: 'ws://api.soundmeet.app' })).toContain(
+    expect(describeEndpointProblem({ ...ws, value: 'https://api.soundmeet.com.br' })).toBeNull();
+    expect(describeEndpointProblem({ ...ws, value: 'wss://api.soundmeet.com.br' })).toBeNull();
+    expect(describeEndpointProblem({ ...ws, value: 'ws://api.soundmeet.com.br' })).toContain(
       'não é aceito fora de development',
     );
   });

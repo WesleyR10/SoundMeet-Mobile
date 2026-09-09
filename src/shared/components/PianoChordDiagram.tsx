@@ -1,6 +1,7 @@
 import { View, StyleSheet } from 'react-native';
 import Svg, { Rect, Text as SvgText } from 'react-native-svg';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { PianoChordShape } from '@/shared/utils/chord-diagram-lookup';
 
 const WHITE_KEY_WIDTH  = 34;
@@ -29,6 +30,7 @@ const BLACK_KEYS = [
 // ChordDiagram.tsx (violão) — puramente apresentacional, recebe a forma já
 // resolvida por chord-diagram-lookup.ts.
 export function PianoChordDiagram({ rootPitchClass, pitchClasses }: PianoChordShape) {
+  const { colors } = useTheme();
   const width = WHITE_KEY_WIDTH * WHITE_KEYS.length;
 
   return (

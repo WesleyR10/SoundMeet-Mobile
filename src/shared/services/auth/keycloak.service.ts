@@ -109,7 +109,17 @@ function getRedirectUri(): string {
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
-export type LoginResult = 'success' | 'dismissed';
+export const ESTABLISHMENT_LOGIN_MESSAGE =
+  'Esta é uma conta de estabelecimento. Acesse o painel pelo site do SoundMeet.';
+
+export type LoginResult =
+  | 'success'
+  /** Usuário fechou o navegador antes de concluir. */
+  | 'dismissed'
+  /** Conta de estabelecimento: persona web-only, o app não tem navegação. */
+  | 'establishment-only'
+  /** Identidade existe no Keycloak mas ainda não escolheu papel no SoundMeet. */
+  | 'needs-role-selection';
 
 // Fluxo Authorization Code + PKCE genérico — usado tanto pelo login por browser
 // (Keycloak nativo) quanto pelo login social (com kc_idp_hint), que só difere
@@ -149,9 +159,46 @@ async function runAuthorizationCodeFlow(
   );
 }
 
+/*
+ * Login por Authorization Code + PKCE (AUTH-1).
+ *
+ * 🔴 Substituiu o `POST /auth/login`, que era Direct Access Grant: o app
+ * coletava a senha num TextInput e a mandava para a nossa API, que a repassava
+ * ao Keycloak. Três problemas que nenhum ajuste de código resolvia:
+ *  - a senha passava pelo app e pelo Nest, então qualquer log, crash dump ou
+ *    malware no aparelho via SENHA, não só token;
+ *  - MFA não cabe num grant que é um POST só, sem tela de segundo fator;
+ *  - o `client_id` público está dentro do APK, então um script batia direto no
+ *    `/token` do Keycloak e **pulava o `@Throttle` do Nest inteiro**.
+ *
+ * O navegador abre DENTRO do app (Chrome Custom Tab no Android,
+ * ASWebAuthenticationSession no iOS) — é o mesmo `promptAsync` que o login com
+ * Google já usava, então a experiência não é nova para quem usa o app.
+ *
+ * De brinde: a tela do Keycloak traz "Esqueci a senha" de verdade
+ * (`resetPasswordAllowed: true` no realm), que no app era um alerta "Em breve".
+ */
 export async function login(): Promise<LoginResult> {
   const tokens = await runAuthorizationCodeFlow();
   if (tokens === 'dismissed') return 'dismissed';
+
+  const user = buildAuthUser(tokens.accessToken);
+
+  /*
+   * 🔴 A checagem de papel tem que vir ANTES de persistir, e o motivo é o mesmo
+   * já documentado em `loginWithGoogle`: `RootNavigator` decide o stack por
+   * `isAuthenticated` + `isAudience`, então uma sessão sem papel de app cai no
+   * ramo do músico com `musicianId` nulo — tela quebrada, sem erro visível.
+   *
+   * O backend fazia essa barreira em `useLogin` (o `role` vinha no corpo da
+   * resposta). Com PKCE não há corpo: a verdade são as roles do JWT.
+   */
+  if (!user.musicianId && !user.audienceId) {
+    await clearLocalSession();
+    return user.roles.includes('establishment')
+      ? 'establishment-only'
+      : 'needs-role-selection';
+  }
 
   await persistAndApplyTokens(tokens);
   return 'success';

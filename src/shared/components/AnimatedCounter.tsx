@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
 import type { StyleProp, TextStyle } from 'react-native';
 import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
-import { typography, colors } from '@/shared/design-system/tokens';
+import { typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -23,7 +24,16 @@ type Props = {
 // internamente e não serve pra isso. Mesma mecânica: useAnimatedProps sobre
 // TextInput (editable=false) porque Reanimated 4 não anima o conteúdo de
 // <Text> diretamente.
+const useStyles = makeStyles((colors) => ({
+  text: {
+    ...typography.displayMd,
+    color:   colors.text.primary,
+    padding: 0,
+  },
+}));
+
 export function AnimatedCounter({ value, duration = 700, style, formatter = formatInteger }: Props) {
+  const s = useStyles();
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -47,11 +57,3 @@ export function AnimatedCounter({ value, duration = 700, style, formatter = form
     />
   );
 }
-
-const s = StyleSheet.create({
-  text: {
-    ...typography.displayMd,
-    color:   colors.text.primary,
-    padding: 0,
-  },
-});

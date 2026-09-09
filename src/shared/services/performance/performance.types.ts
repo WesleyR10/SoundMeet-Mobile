@@ -46,6 +46,11 @@ export type LivePerformance = {
   event_id:       string;
   current_song:   PerformedSong | null;
   songs_count:    number;
+  // Dedicatória do pedido que originou a música tocando agora.
+  // 🔴 O backend só preenche quando o destaque foi PAGO — dedicatória
+  // prometida e não paga nunca chega aqui. O app confia nesse portão e não
+  // reimplementa a regra.
+  current_song_dedication: string | null;
 };
 
 export type PerformanceReportSong = PerformedSong & {
