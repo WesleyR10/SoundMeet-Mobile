@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, CalendarClock, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useAvailability, useAddUnavailability, useRemoveUnavailability } from '../../application/useAvailability';
@@ -24,7 +26,119 @@ const MONTH_LABELS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho'
 // a barra contextual (bloquear 1 dia ou estender pra período); long-press é
 // atalho direto pro bloqueio de 1 dia; o + da seção de bloqueios cobre datas
 // distantes por digitação. Regras semanais na AvailabilityEditor.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    paddingHorizontal:  spacing.md,
+    paddingVertical:    spacing.sm,
+  },
+  backBtn: {
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+    gap:                spacing.lg,
+  },
+  monthNav: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  navBtn: {
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  monthLabel: {
+    ...typography.body,
+    fontFamily: 'SpaceGrotesk-SemiBold',
+    color:      colors.text.primary,
+  },
+  legend: {
+    flexDirection: 'row',
+    gap:            spacing.lg,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.xs,
+  },
+  legendDot: {
+    width:        8,
+    height:       8,
+    borderRadius: 4,
+  },
+  legendText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  weeklyBtn: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    gap:              spacing.md,
+    padding:          spacing.lg,
+    borderRadius:     radius.lg,
+    borderWidth:       1,
+    borderColor:      colors.border.brand,
+    backgroundColor:  colors.brand.muted,
+  },
+  weeklyText: {
+    flex: 1,
+  },
+  weeklyTitle: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  weeklySubtitle: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  blocksSection: {
+    gap: spacing.md,
+  },
+  sectionHeader: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  addBlockBtn: {
+    width:           40,
+    height:          40,
+    alignItems:      'center',
+    justifyContent:  'center',
+    borderRadius:     radius.md,
+    borderWidth:       1,
+    borderColor:      colors.border.brand,
+    backgroundColor:  colors.brand.muted,
+  },
+  sectionTitle: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.8,
+    textTransform: 'uppercase',
+    color:          colors.text.secondary,
+  },
+}));
+
 export function AgendaScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
 
   const now = new Date();
@@ -239,113 +353,3 @@ export function AgendaScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    paddingHorizontal:  spacing.md,
-    paddingVertical:    spacing.sm,
-  },
-  backBtn: {
-    width:           48,
-    height:          48,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-    gap:                spacing.lg,
-  },
-  monthNav: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-  },
-  navBtn: {
-    width:           48,
-    height:          48,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  monthLabel: {
-    ...typography.body,
-    fontFamily: 'SpaceGrotesk-SemiBold',
-    color:      colors.text.primary,
-  },
-  legend: {
-    flexDirection: 'row',
-    gap:            spacing.lg,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.xs,
-  },
-  legendDot: {
-    width:        8,
-    height:       8,
-    borderRadius: 4,
-  },
-  legendText: {
-    ...typography.caption,
-    color: colors.text.secondary,
-  },
-  weeklyBtn: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    gap:              spacing.md,
-    padding:          spacing.lg,
-    borderRadius:     radius.lg,
-    borderWidth:       1,
-    borderColor:      colors.border.brand,
-    backgroundColor:  colors.brand.muted,
-  },
-  weeklyText: {
-    flex: 1,
-  },
-  weeklyTitle: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  weeklySubtitle: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  blocksSection: {
-    gap: spacing.md,
-  },
-  sectionHeader: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-  },
-  addBlockBtn: {
-    width:           40,
-    height:          40,
-    alignItems:      'center',
-    justifyContent:  'center',
-    borderRadius:     radius.md,
-    borderWidth:       1,
-    borderColor:      colors.border.brand,
-    backgroundColor:  colors.brand.muted,
-  },
-  sectionTitle: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.8,
-    textTransform: 'uppercase',
-    color:          colors.text.secondary,
-  },
-});

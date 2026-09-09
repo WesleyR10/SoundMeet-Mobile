@@ -1,7 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check, CheckCheck } from 'lucide-react-native';
-import { colors, gradients, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { gradients, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { formatHHMM } from '@/shared/utils/date-format';
 import type { ChatMessage } from '../../domain/conversation.types';
 
@@ -18,36 +20,7 @@ type Props = {
 // gradiente `brand` (não cor chapada) — mesmo tratamento já dado a
 // superfícies de destaque no resto do app (CTA de salvar, card de próximo
 // show nos mockups de referência).
-export function ChatBubble({ message, isOwn }: Props) {
-  const footer = (
-    <View style={s.footer}>
-      <Text style={[s.time, isOwn && s.timeOwn]}>{formatHHMM(message.created_at)}</Text>
-      {isOwn && (
-        message.status === 'read'
-          ? <CheckCheck size={14} color={colors.text.inverse} />
-          : <Check size={14} color={`${colors.text.inverse}8C`} />
-      )}
-    </View>
-  );
-
-  return (
-    <View style={[s.row, isOwn ? s.rowOwn : s.rowOther]}>
-      {isOwn ? (
-        <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.bubble, s.bubbleOwn]}>
-          <Text style={[s.content, s.contentOwn]}>{message.content}</Text>
-          {footer}
-        </LinearGradient>
-      ) : (
-        <View style={[s.bubble, s.bubbleOther]}>
-          <Text style={[s.content, s.contentOther]}>{message.content}</Text>
-          {footer}
-        </View>
-      )}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     marginBottom:   spacing.sm,
@@ -96,4 +69,35 @@ const s = StyleSheet.create({
   timeOwn: {
     color: `${colors.text.inverse}8C`,
   },
-});
+}));
+
+export function ChatBubble({ message, isOwn }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const footer = (
+    <View style={s.footer}>
+      <Text style={[s.time, isOwn && s.timeOwn]}>{formatHHMM(message.created_at)}</Text>
+      {isOwn && (
+        message.status === 'read'
+          ? <CheckCheck size={14} color={colors.text.inverse} />
+          : <Check size={14} color={`${colors.text.inverse}8C`} />
+      )}
+    </View>
+  );
+
+  return (
+    <View style={[s.row, isOwn ? s.rowOwn : s.rowOther]}>
+      {isOwn ? (
+        <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.bubble, s.bubbleOwn]}>
+          <Text style={[s.content, s.contentOwn]}>{message.content}</Text>
+          {footer}
+        </LinearGradient>
+      ) : (
+        <View style={[s.bubble, s.bubbleOther]}>
+          <Text style={[s.content, s.contentOther]}>{message.content}</Text>
+          {footer}
+        </View>
+      )}
+    </View>
+  );
+}

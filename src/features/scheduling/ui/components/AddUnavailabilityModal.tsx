@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Modal, Pressable, Text, View, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { Modal, Pressable, Text, View } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 
@@ -15,7 +16,43 @@ type Props = {
 
 // Confirmação do bloqueio selecionado no calendário (férias/indisponibilidade):
 // período vem da seleção no grid; aqui só o motivo opcional + confirmar.
+const useStyles = makeStyles((colors) => ({
+  backdrop: {
+    flex:            1,
+    backgroundColor: colors.bg.overlay,
+    justifyContent:  'center',
+    padding:          spacing.xl,
+  },
+  card: {
+    gap:              spacing.lg,
+    padding:          spacing.xl,
+    borderRadius:     radius.lg,
+    borderWidth:       1,
+    borderColor:      colors.border.strong,
+    backgroundColor:  colors.bg.elevated,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  cancelBtn: {
+    minHeight:       48,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  cancelText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.secondary,
+  },
+}));
+
 export function AddUnavailabilityModal({ visible, startLabel, endLabel, isSaving, onConfirm, onCancel }: Props) {
+  const s = useStyles();
   const [reason, setReason] = useState('');
 
   const handleConfirm = () => {
@@ -53,38 +90,3 @@ export function AddUnavailabilityModal({ visible, startLabel, endLabel, isSaving
     </Modal>
   );
 }
-
-const s = StyleSheet.create({
-  backdrop: {
-    flex:            1,
-    backgroundColor: colors.bg.overlay,
-    justifyContent:  'center',
-    padding:          spacing.xl,
-  },
-  card: {
-    gap:              spacing.lg,
-    padding:          spacing.xl,
-    borderRadius:     radius.lg,
-    borderWidth:       1,
-    borderColor:      colors.border.strong,
-    backgroundColor:  colors.bg.elevated,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  cancelBtn: {
-    minHeight:       48,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  cancelText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.secondary,
-  },
-});

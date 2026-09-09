@@ -1,5 +1,7 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text, Pressable } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { WEEKDAY_LABELS_SHORT } from '../../domain/availability.types';
 
 export type DayMarkers = {
@@ -23,7 +25,68 @@ type Props = {
 // Grid mensal custom (sem lib de calendário — tokens do design system, mesmo
 // racional dos arcos SVG custom): dias com show (booking confirmado) em teal,
 // bloqueios/férias em coral, range em seleção com fundo brand.muted.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.xs,
+  },
+  weekRow: {
+    flexDirection: 'row',
+  },
+  weekLabel: {
+    flex:       1,
+    textAlign: 'center',
+    ...typography.caption,
+    fontFamily: 'Inter-Bold',
+    color:      colors.text.muted,
+  },
+  cell: {
+    flex:           1,
+    minHeight:       48,
+    alignItems:     'center',
+    justifyContent: 'center',
+    borderRadius:    radius.sm,
+    gap:              2,
+  },
+  cellSelected: {
+    backgroundColor: colors.brand.muted,
+  },
+  dayWrap: {
+    width:           28,
+    height:          28,
+    borderRadius:    14,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  dayToday: {
+    borderWidth: 1,
+    borderColor: colors.brand.primary,
+  },
+  dayText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-Medium',
+    color:      colors.text.primary,
+  },
+  dayTextBlocked: {
+    color: colors.accent.coral,
+  },
+  dayTextToday: {
+    color: colors.brand.primary,
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    gap:            3,
+    height:         4,
+  },
+  dot: {
+    width:        4,
+    height:       4,
+    borderRadius: 2,
+  },
+}));
+
 export function AgendaMonthGrid({ year, month, markers, selectionStart, selectionEnd, onPressDay, onLongPressDay }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const firstWeekday = new Date(year, month - 1, 1).getDay(); // 0 = domingo
   const daysInMonth  = new Date(year, month, 0).getDate();
 
@@ -92,62 +155,3 @@ export function AgendaMonthGrid({ year, month, markers, selectionStart, selectio
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.xs,
-  },
-  weekRow: {
-    flexDirection: 'row',
-  },
-  weekLabel: {
-    flex:       1,
-    textAlign: 'center',
-    ...typography.caption,
-    fontFamily: 'Inter-Bold',
-    color:      colors.text.muted,
-  },
-  cell: {
-    flex:           1,
-    minHeight:       48,
-    alignItems:     'center',
-    justifyContent: 'center',
-    borderRadius:    radius.sm,
-    gap:              2,
-  },
-  cellSelected: {
-    backgroundColor: colors.brand.muted,
-  },
-  dayWrap: {
-    width:           28,
-    height:          28,
-    borderRadius:    14,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  dayToday: {
-    borderWidth: 1,
-    borderColor: colors.brand.primary,
-  },
-  dayText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-Medium',
-    color:      colors.text.primary,
-  },
-  dayTextBlocked: {
-    color: colors.accent.coral,
-  },
-  dayTextToday: {
-    color: colors.brand.primary,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    gap:            3,
-    height:         4,
-  },
-  dot: {
-    width:        4,
-    height:       4,
-    borderRadius: 2,
-  },
-});

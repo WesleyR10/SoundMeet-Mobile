@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { View, TextInput, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { Send } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { sendMessageSchema } from '../../domain/conversation.validation';
 
 type Props = {
@@ -14,7 +16,45 @@ type Props = {
 // RHF nesta codebase é multi-campo/schema composto — LoginScreen,
 // RegisterScreen — não se aplica aqui). Validação via
 // sendMessageSchema.safeParse() só no submit.
+const useStyles = makeStyles((colors) => ({
+  row: {
+    flexDirection:     'row',
+    alignItems:        'flex-end',
+    gap:                spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical:   spacing.md,
+    borderTopWidth:     1,
+    borderTopColor:     colors.border.default,
+    backgroundColor:   colors.bg.primary,
+  },
+  input: {
+    ...typography.body,
+    flex:              1,
+    maxHeight:          120,
+    borderRadius:      radius.xl,
+    borderWidth:        1,
+    borderColor:        colors.border.default,
+    backgroundColor:   colors.bg.surface,
+    paddingHorizontal: spacing.lg,
+    paddingVertical:   spacing.sm,
+    color:              colors.text.primary,
+  },
+  sendBtn: {
+    width:            48,
+    height:           48,
+    borderRadius:     radius.full,
+    backgroundColor: colors.brand.primary,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  sendBtnDisabled: {
+    opacity: 0.4,
+  },
+}));
+
 export function ChatInputBar({ onSend, isSending = false }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [value, setValue] = useState('');
 
   function handleSend() {
@@ -55,39 +95,3 @@ export function ChatInputBar({ onSend, isSending = false }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  row: {
-    flexDirection:     'row',
-    alignItems:        'flex-end',
-    gap:                spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical:   spacing.md,
-    borderTopWidth:     1,
-    borderTopColor:     colors.border.default,
-    backgroundColor:   colors.bg.primary,
-  },
-  input: {
-    ...typography.body,
-    flex:              1,
-    maxHeight:          120,
-    borderRadius:      radius.xl,
-    borderWidth:        1,
-    borderColor:        colors.border.default,
-    backgroundColor:   colors.bg.surface,
-    paddingHorizontal: spacing.lg,
-    paddingVertical:   spacing.sm,
-    color:              colors.text.primary,
-  },
-  sendBtn: {
-    width:            48,
-    height:           48,
-    borderRadius:     radius.full,
-    backgroundColor: colors.brand.primary,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  sendBtnDisabled: {
-    opacity: 0.4,
-  },
-});

@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Palmtree, Trash2 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { Unavailability } from '../../domain/availability.types';
 
 type Props = {
@@ -19,43 +21,7 @@ function formatRange(startISO: string, endISO: string): string {
 
 // Lista de férias/bloqueios da agenda (item 9, jul/2026) — cada linha com
 // período, motivo opcional e remoção direta (DELETE blocks/:id).
-export function UnavailabilityList({ unavailabilities, onRemove, isRemoving }: Props) {
-  if (unavailabilities.length === 0) {
-    return (
-      <Text style={s.empty}>
-        Nenhum bloqueio — toque num dia do calendário pra marcar férias ou indisponibilidade.
-      </Text>
-    );
-  }
-
-  return (
-    <View style={s.list}>
-      {unavailabilities.map((block) => (
-        <View key={block.id} style={s.row}>
-          <View style={s.iconBox}>
-            <Palmtree size={16} color={colors.accent.coral} />
-          </View>
-          <View style={s.info}>
-            <Text style={s.range}>{formatRange(block.start_at, block.end_at)}</Text>
-            {!!block.reason && <Text style={s.reason} numberOfLines={1}>{block.reason}</Text>}
-          </View>
-          <Pressable
-            onPress={() => onRemove(block.id)}
-            disabled={isRemoving}
-            hitSlop={8}
-            style={s.removeBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Remover bloqueio"
-          >
-            <Trash2 size={18} color={isRemoving ? colors.text.muted : colors.status.error} />
-          </Pressable>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   empty: {
     ...typography.bodySm,
     color: colors.text.muted,
@@ -99,4 +65,42 @@ const s = StyleSheet.create({
     alignItems:      'center',
     justifyContent:  'center',
   },
-});
+}));
+
+export function UnavailabilityList({ unavailabilities, onRemove, isRemoving }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  if (unavailabilities.length === 0) {
+    return (
+      <Text style={s.empty}>
+        Nenhum bloqueio — toque num dia do calendário pra marcar férias ou indisponibilidade.
+      </Text>
+    );
+  }
+
+  return (
+    <View style={s.list}>
+      {unavailabilities.map((block) => (
+        <View key={block.id} style={s.row}>
+          <View style={s.iconBox}>
+            <Palmtree size={16} color={colors.accent.coral} />
+          </View>
+          <View style={s.info}>
+            <Text style={s.range}>{formatRange(block.start_at, block.end_at)}</Text>
+            {!!block.reason && <Text style={s.reason} numberOfLines={1}>{block.reason}</Text>}
+          </View>
+          <Pressable
+            onPress={() => onRemove(block.id)}
+            disabled={isRemoving}
+            hitSlop={8}
+            style={s.removeBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Remover bloqueio"
+          >
+            <Trash2 size={18} color={isRemoving ? colors.text.muted : colors.status.error} />
+          </Pressable>
+        </View>
+      ))}
+    </View>
+  );
+}

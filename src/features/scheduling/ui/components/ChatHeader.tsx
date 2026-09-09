@@ -1,7 +1,9 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Building2 } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { Avatar } from '@/shared/components/Avatar';
 import { getEstablishmentSummary } from '../../infrastructure/conversation.api';
 
@@ -19,7 +21,33 @@ type Props = {
 // conversation_id chega, sem nome/avatar. Só busca GET /establishments/:id
 // nesse caminho raro — na esmagadora maioria das aberturas (vindo da lista)
 // name/avatar já vêm pelos params, sem round-trip nenhum.
+const useStyles = makeStyles((colors) => ({
+  row: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:                spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.lg,
+    borderBottomWidth:  1,
+    borderBottomColor:  colors.border.default,
+  },
+  iconBtn: {
+    width:          48,
+    height:         48,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  name: {
+    ...typography.title,
+    color: colors.text.primary,
+    flex:   1,
+  },
+}));
+
 export function ChatHeader({ onBack, name, avatar, establishmentId }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const needsFallback = !name && !!establishmentId;
   const fallback = useQuery({
     queryKey: ['scheduling', 'establishment-summary', establishmentId],
@@ -43,27 +71,3 @@ export function ChatHeader({ onBack, name, avatar, establishmentId }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  row: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:                spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.lg,
-    borderBottomWidth:  1,
-    borderBottomColor:  colors.border.default,
-  },
-  iconBtn: {
-    width:          48,
-    height:         48,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  name: {
-    ...typography.title,
-    color: colors.text.primary,
-    flex:   1,
-  },
-});

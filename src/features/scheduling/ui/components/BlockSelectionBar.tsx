@@ -1,5 +1,6 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text, Pressable } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 
 type Props = {
@@ -15,38 +16,7 @@ type Props = {
 // (caso mais comum — compromisso pontual) ou estender pra período. Torna a
 // ação explícita em vez de escondê-la atrás de gesto; o long-press do grid
 // existe só como atalho.
-export function BlockSelectionBar({ dayLabel, awaitingEnd, onBlockSingle, onSelectUntil }: Props) {
-  if (awaitingEnd) {
-    return (
-      <View style={s.root}>
-        <Text style={s.hint}>
-          Toque no dia final no calendário — ou no dia inicial pra cancelar.
-        </Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={[s.root, s.row]}>
-      <PrimaryButton
-        label={`Bloquear ${dayLabel}`}
-        onPress={onBlockSingle}
-        variant="coral"
-        style={s.blockBtn}
-      />
-      <Pressable
-        onPress={onSelectUntil}
-        style={({ pressed }) => [s.untilBtn, pressed && s.untilPressed]}
-        accessibilityRole="button"
-        accessibilityLabel="Selecionar período até outro dia"
-      >
-        <Text style={s.untilText}>Selecionar até…</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     padding:          spacing.md,
     borderRadius:     radius.lg,
@@ -84,4 +54,36 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     color: colors.brand.primary,
   },
-});
+}));
+
+export function BlockSelectionBar({ dayLabel, awaitingEnd, onBlockSingle, onSelectUntil }: Props) {
+  const s = useStyles();
+  if (awaitingEnd) {
+    return (
+      <View style={s.root}>
+        <Text style={s.hint}>
+          Toque no dia final no calendário — ou no dia inicial pra cancelar.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={[s.root, s.row]}>
+      <PrimaryButton
+        label={`Bloquear ${dayLabel}`}
+        onPress={onBlockSingle}
+        variant="coral"
+        style={s.blockBtn}
+      />
+      <Pressable
+        onPress={onSelectUntil}
+        style={({ pressed }) => [s.untilBtn, pressed && s.untilPressed]}
+        accessibilityRole="button"
+        accessibilityLabel="Selecionar período até outro dia"
+      >
+        <Text style={s.untilText}>Selecionar até…</Text>
+      </Pressable>
+    </View>
+  );
+}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -7,7 +7,9 @@ import {
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { Users } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { StageTechSpecSection } from '@/shared/components/StageTechSpecSection';
@@ -35,7 +37,103 @@ type Props = {
  * `establishment_id`, e resolver por linha seria um N+1 visível — a ficha só
  * importa neste ponto.
  */
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:     radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  content: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:      spacing.xxxl,
+    gap:                 spacing.md,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  status: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+  subject: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  messageBox: {
+    borderLeftWidth:  2,
+    borderLeftColor: colors.accent.violet,
+    paddingLeft:      spacing.md,
+  },
+  messageText: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  bandNotice: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  bandNoticeText: {
+    ...typography.bodySm,
+    color: colors.text.muted,
+    flex:  1,
+  },
+  loader: {
+    marginVertical: spacing.lg,
+  },
+  actions: {
+    gap:       spacing.md,
+    alignItems: 'center',
+    marginTop:  spacing.sm,
+  },
+  fullWidth: {
+    width: '100%',
+  },
+  declineBtn: {
+    width:          '100%',
+    height:          48,
+    borderRadius:    radius.xl,
+    borderWidth:      1,
+    borderColor:     colors.border.strong,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  declineLabel: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  laterLabel: {
+    ...typography.bodySm,
+    color:              colors.text.muted,
+    textDecorationLine: 'underline',
+  },
+  reasonInput: {
+    width:            '100%',
+    minHeight:         88,
+    borderRadius:      radius.md,
+    borderWidth:        1,
+    borderColor:       colors.border.default,
+    padding:            spacing.md,
+    ...typography.body,
+    color:             colors.text.primary,
+    textAlignVertical: 'top',
+  },
+  closedNotice: {
+    ...typography.bodySm,
+    color:     colors.text.muted,
+    textAlign: 'center',
+    marginTop:  spacing.md,
+  },
+}));
+
 export function InquiryDecisionSheet({ inquiry, musicianId, onClose }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [error, setError] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState(false);
@@ -188,97 +286,3 @@ export function InquiryDecisionSheet({ inquiry, musicianId, onClose }: Props) {
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:     radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:      spacing.xxxl,
-    gap:                 spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  status: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-  subject: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  messageBox: {
-    borderLeftWidth:  2,
-    borderLeftColor: colors.accent.violet,
-    paddingLeft:      spacing.md,
-  },
-  messageText: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  bandNotice: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  bandNoticeText: {
-    ...typography.bodySm,
-    color: colors.text.muted,
-    flex:  1,
-  },
-  loader: {
-    marginVertical: spacing.lg,
-  },
-  actions: {
-    gap:       spacing.md,
-    alignItems: 'center',
-    marginTop:  spacing.sm,
-  },
-  fullWidth: {
-    width: '100%',
-  },
-  declineBtn: {
-    width:          '100%',
-    height:          48,
-    borderRadius:    radius.xl,
-    borderWidth:      1,
-    borderColor:     colors.border.strong,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  declineLabel: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  laterLabel: {
-    ...typography.bodySm,
-    color:              colors.text.muted,
-    textDecorationLine: 'underline',
-  },
-  reasonInput: {
-    width:            '100%',
-    minHeight:         88,
-    borderRadius:      radius.md,
-    borderWidth:        1,
-    borderColor:       colors.border.default,
-    padding:            spacing.md,
-    ...typography.body,
-    color:             colors.text.primary,
-    textAlignVertical: 'top',
-  },
-  closedNotice: {
-    ...typography.bodySm,
-    color:     colors.text.muted,
-    textAlign: 'center',
-    marginTop:  spacing.md,
-  },
-});

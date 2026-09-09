@@ -1,7 +1,8 @@
-import { Modal, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { maskBrDate, parseBrDate } from '@/shared/utils/date-format';
@@ -17,7 +18,43 @@ type Props = {
 // Bloqueio por datas digitadas (botão + de "Férias e bloqueios") — resolve o
 // cenário que o grid resolve mal: bloquear algo distante (férias em dezembro)
 // sem paginar mês a mês. Datas em DD/MM/AAAA validadas pelo blockPeriodSchema.
+const useStyles = makeStyles((colors) => ({
+  backdrop: {
+    flex:            1,
+    backgroundColor: colors.bg.overlay,
+    justifyContent:  'center',
+    padding:          spacing.xl,
+  },
+  card: {
+    gap:              spacing.lg,
+    padding:          spacing.xl,
+    borderRadius:     radius.lg,
+    borderWidth:       1,
+    borderColor:      colors.border.strong,
+    backgroundColor:  colors.bg.elevated,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  cancelBtn: {
+    minHeight:       48,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  cancelText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.secondary,
+  },
+}));
+
 export function BlockPeriodModal({ visible, isSaving, onConfirm, onCancel }: Props) {
+  const s = useStyles();
   const { control, handleSubmit, reset } = useForm<BlockPeriodFormValues>({
     resolver:      zodResolver(blockPeriodSchema),
     defaultValues: { start_date: '', end_date: '', reason: '' },
@@ -105,38 +142,3 @@ export function BlockPeriodModal({ visible, isSaving, onConfirm, onCancel }: Pro
     </Modal>
   );
 }
-
-const s = StyleSheet.create({
-  backdrop: {
-    flex:            1,
-    backgroundColor: colors.bg.overlay,
-    justifyContent:  'center',
-    padding:          spacing.xl,
-  },
-  card: {
-    gap:              spacing.lg,
-    padding:          spacing.xl,
-    borderRadius:     radius.lg,
-    borderWidth:       1,
-    borderColor:      colors.border.strong,
-    backgroundColor:  colors.bg.elevated,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  cancelBtn: {
-    minHeight:       48,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  cancelText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.secondary,
-  },
-});

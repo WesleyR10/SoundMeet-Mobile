@@ -1,9 +1,13 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, MessagesSquare } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { SkeletonList } from '@/shared/components/Skeleton';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useConversations } from '../../application/useConversations';
@@ -16,15 +20,65 @@ type Props = RootScreenProps<'ConversationList'>;
 // Entrada via tile "Agenda" da Home do músico (Bloco 9) — registrada no
 // nível raiz (RootStackParamList), não aninhada em nenhuma tab, mesmo
 // racional de SharedRepertoire/SharedSongViewer (Bloco 7.9b).
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  iconBtn: {
+    width:          48,
+    height:         48,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  listContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+  },
+  centerRoot: {
+    flex:            1,
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:              spacing.md,
+    padding:          spacing.xl,
+  },
+  retryBtn: {
+    backgroundColor:   colors.brand.primary,
+    borderRadius:      radius.xl,
+    paddingVertical:   spacing.md,
+    paddingHorizontal: spacing.xxl,
+  },
+  retryText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.inverse,
+  },
+}));
+
 export function ConversationListScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data, isPending, isError, isRefetching, refetch } = useConversations(musicianId);
 
   function renderBody() {
     if (isPending) {
       return (
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.listContent}>
+          {/* `withAvatar`: a conversa real abre com o avatar do local. */}
+          <SkeletonList count={5} itemHeight={84} withAvatar />
         </View>
       );
     }
@@ -44,11 +98,11 @@ export function ConversationListScreen({ navigation }: Props) {
 
     if (conversations.length === 0) {
       return (
-        <View style={s.centerRoot}>
-          <MessagesSquare size={40} color={colors.text.muted} />
-          <Text style={s.emptyTitle}>Nenhuma conversa ainda</Text>
-          <Text style={s.emptySubtitle}>Quando um estabelecimento fizer uma proposta de show, a conversa aparece aqui.</Text>
-        </View>
+        <EmptyState
+          icon={MessagesSquare}
+          title="Nenhuma conversa ainda"
+          subtitle="Quando um estabelecimento fizer uma proposta de show, a conversa aparece aqui."
+        />
       );
     }
 
@@ -101,60 +155,3 @@ export function ConversationListScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  iconBtn: {
-    width:          48,
-    height:         48,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  listContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-  },
-  centerRoot: {
-    flex:            1,
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              spacing.md,
-    padding:          spacing.xl,
-  },
-  emptyTitle: {
-    ...typography.title,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-  retryBtn: {
-    backgroundColor:   colors.brand.primary,
-    borderRadius:      radius.xl,
-    paddingVertical:   spacing.md,
-    paddingHorizontal: spacing.xxl,
-  },
-  retryText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.inverse,
-  },
-});

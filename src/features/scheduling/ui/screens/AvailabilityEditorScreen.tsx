@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList } from '@/shared/components/Skeleton';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
@@ -22,7 +25,49 @@ const EMPTY_DRAFTS: WeekdayDraft[] = WEEKDAY_LABELS.map(() => ({
 // Disponibilidade semanal (item 9, jul/2026): "sextas após as 18, sábados e
 // domingos o dia todo" — toggle por dia + janela de horário. PUT rules
 // substitui o conjunto inteiro no backend (uma janela por dia na v1).
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    paddingHorizontal:  spacing.md,
+    paddingVertical:    spacing.sm,
+  },
+  backBtn: {
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  loader: {
+    flex:           1,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+    gap:                spacing.md,
+  },
+  subtitle: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+}));
+
 export function AvailabilityEditorScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
 
   const availabilityQuery = useAvailability(musicianId);
@@ -92,7 +137,10 @@ export function AvailabilityEditorScreen({ navigation }: Props) {
       </View>
 
       {availabilityQuery.isPending ? (
-        <View style={s.loader}><ActivityIndicator color={colors.brand.primary} size="large" /></View>
+        <View style={s.skeleton}>
+          {/* Sete linhas: a grade da semana. */}
+          <SkeletonList count={7} itemHeight={64} />
+        </View>
       ) : (
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
           <Text style={s.subtitle}>
@@ -124,41 +172,3 @@ export function AvailabilityEditorScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    paddingHorizontal:  spacing.md,
-    paddingVertical:    spacing.sm,
-  },
-  backBtn: {
-    width:           48,
-    height:          48,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  loader: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-    gap:                spacing.md,
-  },
-  subtitle: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-});
