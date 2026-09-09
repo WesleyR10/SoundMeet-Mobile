@@ -321,22 +321,76 @@
 - [x] **11.5b** — **Tela nova, descoberta durante a implementação (não estava em nenhum item do roadmap):** `EventPerformersScreen` + `PerformerRow.tsx` — tocar num evento não tinha como levar direto a `SongRequestScreen` (que exige `musicianId` + `eventId` juntos), porque um evento pode ter mais de um performer escalado (`GET .../events/:event_id/performers`). Essa tela lista os performers do evento e só então navega pro perfil público com `eventId` no contexto. Banda (`band_id`, sem `musician_id`) aparece informativa, sem CTA — perfil público de banda não existe ainda
 - [x] **11.6** — Tela: `MusicianPublicProfileScreen` (+ `PublicStatCard.tsx`, `SocialLinksRow.tsx` — badge de letra IG/YT/SP, mesmo padrão de `ProfileSocialLinks.tsx` do músico, já que `lucide-react-native` não tem ícones de marca) — readonly, CTA "Pedir música" só habilitado quando a tela recebeu `eventId` no contexto (scan avulso do QR do músico não carrega evento — ver nota 11.7); CTA "Gorjeta" sempre disponível (`event_id` é opcional em `SendTipInput`)
 - [x] **11.7** — Tela: `QRScannerScreen` (`expo-camera` `CameraView` + `useCameraPermissions`, API confirmada na v56.0.8 instalada) — parse client-side via regex antes de chamar `POST /audiences/:id/scan-qr` (evita round-trip pra QR obviamente inválido), navega pro perfil **sem** `eventId` (scan do QR pessoal do músico não carrega contexto de evento — só o fluxo Estabelecimento → Evento → Performer, acima, carrega). Esquema `soundmeet://establishment/:id` não suportado (`roadmap.md` 7.15)
-- [x] **11.8** — Tela: `SongRequestScreen` (+ `SongSuggestionChips.tsx`) — chama `useAttendEvent` (silencioso, best-effort) ao abrir a tela pra satisfazer `CanMakeRequestPolicy.is_audience_attendee` antes do submit; sugestões via `GET /requests/musicians/:musician_id/suggestions`; envio via `POST /audiences/:id/music-requests` (wrapper gamificado). **Sem catálogo navegável** (`roadmap.md` 7.14) — só free-text + sugestões por popularidade
+- [x] **11.8** — Tela: `SongRequestScreen` (+ `SongSuggestionChips.tsx`) — chama `useAttendEvent` (silencioso, best-effort) ao abrir a tela pra satisfazer `CanMakeRequestPolicy.is_audience_attendee` antes do submit; sugestões via `GET /requests/musicians/:musician_id/suggestions`; envio via `POST /audiences/:id/music-requests` (wrapper gamificado).
+      ~~**Sem catálogo navegável** (`roadmap.md` 7.14) — só free-text + sugestões por popularidade~~
+      — **catálogo entregue em 09/set/2026** (`RepertoirePicker` + `RepertoireRow` +
+      `useMusicianRepertoire`, sobre `GET /musicians/:id/repertoire`, backend 9.6c). A rota que
+      destravava isto existia desde **07/ago/2026** e ficou um mês sem cliente nenhum — nem aqui,
+      nem no `soundmeet-web`. 🔴 O texto livre **continua**: `MusicLibrary` é biblioteca pessoal e
+      a maioria dos itens tem só título/artista; pedir música que o artista toca mas não cadastrou
+      é caso legítimo, e travar o pedido no catálogo transformaria ajuda em barreira. Escolher no
+      catálogo passa a mandar `genre` — e `stillMatchesPick`
+      (`domain/song-request.rules.ts`) desfaz a escolha quando o fã edita o texto, senão o pedido
+      viajaria com o gênero de uma música que já não é aquela
 - [x] **11.9** — `MyRequestsScreen`: **confirmado ainda bloqueado, não implementado** — `GET /audiences/:id/requests` não existe (`roadmap.md` 7.12); tile "Meus Pedidos" em `QuickActionsRow` fica desabilitado ("Em breve"), mesma honestidade visual das tiles Cifras/Agenda da Home do músico
 - [x] **11.10** — Tela: `TipMusicianScreen` (+ `TipAmountSelector.tsx`) — `POST /tips` direto (payment-module, confirmado que retorna `qr_code`/`copy_paste_code`, ao contrário do wrapper de audiences-module); QR renderizado com `shared/components/QRFrame.tsx` (reaproveitado); código copia-e-cola exibido como `<Text selectable>` (sem `expo-clipboard` instalado — copiar via long-press nativo do SO, não há botão "copiar" dedicado ainda). Aviso visível de gateway mock (`roadmap.md` Bloco 1.6)
 - [x] **11.11** — Tela: `GamificationScreen` (+ `BadgeGrid.tsx`) — pontos/nível/progresso/badges via o MESMO adapter `shared/services/gamification/` criado no Bloco 10.3 (músico), sem duplicar
-- [x] **11.12** — Tela: `LeaderboardScreen` (+ `LeaderboardRow.tsx`) — `GET /gamification/leaderboard`. **Gap descoberto:** `UserPointsPresenter` não tem nome/avatar (só `user_id`), e um fã não pode consultar o perfil de OUTRO fã (`GET /audiences/:id` é dono/admin-only) pra resolver isso — tela mostra posição+nível+pontos, sem nome fabricado (ver `roadmap.md` backend 7.16, novo)
+- [x] **11.12** — Tela: `LeaderboardScreen` (+ `LeaderboardRow.tsx`) — `GET /gamification/leaderboard`. **O gap que a tela descobriu foi fechado no backend (7.16b):** o `UserPointsPresenter` só devolvia `user_id`, e um fã não pode consultar o perfil de OUTRO fã (`GET /audiences/:id` é dono/admin-only), então a primeira versão exibia "Fã #\<hash\>" — posição+nível+pontos, sem nome fabricado. Hoje a rota já traz `nickname`/`avatar` (JOIN no mesmo SQL, sem round-trip extra) e a linha mostra o nome real. ⚠️ **O fallback "Fã #\<hash\>" continua e não é código morto:** `nickname` é `null` para quem nunca preencheu o apelido. A própria linha do usuário mostra "Você" em vez do nome — `isSelf` tem precedência sobre o `nickname`. Ver `roadmap.md` backend 7.16
 - [x] **11.13** — Tela: `FanProfileScreen` — avatar/nome/nível, edição de `favorite_genres`/`favorite_instruments` via `PATCH /audiences/:id/complete-profile`, logout (mesmo `keycloak.service.ts` do músico)
 
-- [ ] **11.14** — **Ligar o `PlansPaywallScreen` no checkout real** *(06/ago/2026 — desbloqueado por auditoria: o backend estava pronto e o roadmap dizia que não; ver a correção na linha do paywall, seção "Ciclo de correções")*:
-  - [ ] **11.14a** Adapter `features/musician/infrastructure/subscription.api.ts` — `getPlans()` (`GET /plans`), `getActiveSubscription(musicianId)`, `createCheckout(musicianId, { tier, billing_cycle })`, `cancelSubscription(musicianId)`. Envelope `ApiEnvelope<T>` como todo adapter (retornar `data.data`)
-  - [ ] **11.14b** Hooks `useSubscription.ts` / `useCreateCheckout.ts` (TanStack Query, mesmo padrão de `useWallet.ts`)
-  - [ ] **11.14c** CTA do `PlansPaywallScreen` → `createCheckout` → abrir o `invoiceUrl` em Chrome Custom Tab (`expo-web-browser`, **já instalado**; mesmo padrão decidido para o Google OAuth). **Não** coletar cartão dentro do app
-  - [ ] **11.14d** Estado de assinatura ativa na tela (tier atual, `expires_at`, botão cancelar) + invalidação do cache de plano ao voltar do browser
-  - [ ] **11.14e** Decidir: `plans.config.ts` segue como fallback offline ou passa a ser hidratado por `GET /plans`? Hoje os valores estão duplicados manualmente entre backend e app — divergem em silêncio se um dos lados mudar de preço
-  - [ ] **11.14f** `MyRequestsScreen` (item 11.9) — **também desbloqueada**: `GET /requests/audiences/:audience_id` existe desde o backend 7.12. Reabilitar a tile "Meus Pedidos" do `QuickActionsRow`
+- [x] **11.14** — **`PlansPaywallScreen` ligado no checkout real** *(05/set/2026)*:
+  - [x] **11.14a** `features/musician/infrastructure/subscription.api.ts` — `getPlans()`, `getActiveSubscription()`, `createCheckout()`, `cancelSubscription()`. ⚠️ **`GET /plans` PASSA pelo envelope** apesar de `@Public()`: `PlansCatalogPresenter` não tem `meta`, então o `WrapperDataInterceptor` embrulha e é `data.data` — o `soundmeet-web` tropeçou exatamente aqui. ⚠️ **`DELETE .../subscription` responde 200 com corpo**, não 204, ao contrário de todo outro DELETE do sistema
+  - [x] **11.14b** `application/useSubscription.ts` — `usePlansCatalog`, `useActiveSubscription`, `useCreateCheckout`, `useCancelSubscription`
+  - [x] **11.14c** CTA → `CheckoutSheet` → `createCheckout` → `openAuthSessionAsync` na fatura hospedada do Asaas. **Cartão nunca entra no app.** ⚠️ **`checkout_url` é nullable** — sem URL a folha mostra "assinatura registrada, aguardando confirmação" em vez de navegar para `null`
+  - [x] **11.14d** `ActiveSubscriptionCard` (ciclo, `expires_at`, cancelar com confirmação). ⚠️ Lê **`effective_tier`**, nunca `subscription?.plan_tier` — o segundo é `undefined` no plano gratuito, que é um tier legítimo. Invalida `musicianProfileKey` além da assinatura: `plan_tier` do perfil é o que o resto do app lê para liberar feature
+  - [x] **11.14e** **Decidido: hidratado por `GET /plans`.** `hydratePlanPricing` substitui os PREÇOS do `plans.config.ts` quando a rota responde; o local segue como fallback de primeira pintura/offline e como fonte de copy (`tagline`/`keyStats`, que o backend não devolve). Era divergência silenciosa: mudar o preço no backend deixava o paywall anunciando o antigo e a fatura vindo com outro, sem erro em lugar nenhum
+  - [x] **11.14f** **`MyRequestsScreen` entregue** — ver 11.16
+  - 🔴 **O CPF não vem do perfil, e é do backend:** `MusicianPresenter` expõe `cnpj` (MEI) mas **nunca** o CPF, nem para o dono. `CheckoutSheet` pré-preenche nome e e-mail e pede o documento. A validação do app é **mais rígida que a do backend** (`@Matches` frouxo, sem checksum): CPF/CNPJ errado passaria pela API, criaria a assinatura no Asaas e falharia **lá**, depois de o músico já ter saído do app
 
-- [ ] **11.15** — **Criar banda pelo app** — `band.api.ts` cobre entrar/gerenciar, mas não `POST /bands` (criar), `DELETE /bands/:id` (dissolver) nem `PATCH /bands/:id/leadership` (transferir liderança). Todas as três rotas existem em `bands.controller.ts`. Hoje o músico só consegue participar de uma banda que outra pessoa criou — fora do app
+- [x] **11.15** — **Criar / dissolver banda e transferir liderança** *(05/set/2026)* — `band.api.ts` ganhou `createBand` (`POST /bands`), `deleteBand` (`DELETE /bands/:id`) e `transferBandLeadership` (`PATCH /bands/:id/leadership`); hooks em `useBandMutations.ts`; UI em `CreateBandSheet` (botão no header e no estado vazio de `MyBandsScreen`) e `BandDangerZone` (dentro de `BandDetailScreen`, só para líder).
+  - **O estado vazio era um beco sem saída:** dizia "peça pro líder de uma banda te convidar", e `POST /bands` existia no backend desde sempre — a única forma de ter banda era alguém de fora criá-la.
+  - ⚠️ **Só campos do `CreateBandDto` podem viajar.** Desde o INP-1 o backend roda `forbidNonWhitelisted`: campo extra deixou de ser descartado em silêncio e virou **422**. O payload é montado por desestruturação explícita, nunca spread de estado de formulário. `creator_musician_id` **não** é enviado — o controller o sobrescreve com o `sub` do JWT.
+  - **`genres` é obrigatório no app e NÃO no backend** (`@IsArray()` aceita lista vazia): o filtro de descoberta do estabelecimento é `hasSome` sobre esse array, então banda sem gênero nasce invisível para quem contrata, sem nenhum erro que denuncie.
+  - **`open_to_gigs` fica fora da criação** — tri-state, nunca nasce `true`; quem liga o radar é `PATCH .../open-to-gigs`, com consentimento explícito do líder.
+  - 🔴 **Dissolver exige digitar o nome da banda.** Irreversível, e o backend só checa liderança — nada impede apagar por engano uma banda com histórico de shows.
+  - 🔴 **Transferir só oferece membro `accepted`.** O backend recusa `pending` com 422, e um convidado que não respondeu virando líder deixaria a banda sem ninguém que possa aceitar show.
+
+- [x] **11.16** — **`MyRequestsScreen`** *(05/set/2026)* — histórico de pedidos do fã.
+  - A tile "Meus Pedidos" ficou desabilitada desde jul/2026 com um comentário afirmando que `GET /audiences/:id/requests` não existia. A rota certa é `GET /requests/audiences/:audience_id` (backend 7.12) — e **o app já a consumia**: `PendingBoostHost` a usa no cold start do destaque pago. Faltava só a tela.
+  - `request.rules.ts` (novo, com testes) é **espelho intencional** de `features/musician/domain/request-boost.rules.ts`, não import: a regra FSD proíbe `features/audience` importar de `features/musician`, e as duas telas dizem coisas diferentes sobre o mesmo dado — o músico lê "a confirmar" como *ele* vai receber, o fã lê como *ele* ainda precisa pagar.
+  - 🔴 **`awaiting_payment` vira AÇÃO ("Conclua o PIX"), não selo.** É o único estado com cobrança criada e dinheiro não pago; rotular como destaque garantido faria o fã acreditar que pagou, o QR vencer e a dedicatória nunca subir ao palco.
+  - **Reaproveita `RequestBoostPaymentSheet`** em vez de duplicar o QR — é a mesma cobrança; o que muda é o caminho até ela (banner para quem está com o app aberto, lista para quem voltou depois).
+  - **Card só é tocável quando há o que fazer:** um cartão que afunda ao toque e não leva a lugar nenhum promete ação inexistente.
+
+- [x] **11.17** — 🔴 **Saque PIX no app** *(05/set/2026)* — o backend entregou o `WithdrawToPixUseCase` completo em 26/ago (SM-023: lock `FOR UPDATE`, idempotência, estorno, teto diário, e2e contra Postgres real) e **o músico não tinha como acionar**. Pior: a `WithdrawProgressBar` anunciava *"Você já pode sacar!"* e a tela acabava ali — o cachê liberado da custódia entrava em `balance` e ficava preso.
+  - `domain/withdraw.rules.ts` (+13 testes) · `application/useWithdraw.ts` · `ui/components/WithdrawSheet.tsx`.
+  - 🔴 **A `Idempotency-Key` é a única barreira contra o duplo clique, e só o cliente pode dar.** O lock serializa concorrentes e o saldo barra o segundo quando não há fundo para os dois — mas **com saldo sobrando os dois saques são legítimos vistos um de cada vez**, e sairiam os dois.
+  - 🔴 **O ciclo de vida da chave é a parte não intuitiva.** O backend **replica** qualquer transação que já exista com a chave, inclusive uma que falhou. Então: **sem resposta** do servidor (timeout, rede) → reenviar com a MESMA chave (a transferência pode ter saído com a resposta perdida); **resposta conclusiva** (422/409/403) → chave nova, senão o servidor replica a recusa para sempre. `shouldReuseIdempotencyKey` decide, com teste nos dois lados.
+  - 🔴 **A chave precisa ser IMPREVISÍVEL, não só única.** `findByIdempotencyKey` no backend é lookup **global, sem escopo de músico** — chave derivada de dado público (`saque-<musician_id>-<valor>`, um contador) permitiria colidir de propósito com o saque de outra pessoa. Ver o achado aberto no fim deste bloco.
+  - 🔴 **`useRef`, nunca `useState`, para guardar a chave.** `setState` é assíncrono e em lote: dois toques rápidos leriam o valor antigo e um deles geraria chave nova — exatamente o duplo saque que a chave existe para impedir. Mesmo motivo do guard de reentrância do `QRScannerScreen`.
+  - 🔴 **Bug pré-existente corrigido junto:** `getWithdrawEligibility` só olhava VALOR, então quem tinha saldo e **nenhuma chave PIX cadastrada** lia "Você já pode sacar!" e levava 422. `getWithdrawAvailability` checa a chave **antes** do valor e a barra vira um atalho para o cadastro.
+  - **`held_balance` fica fora do teto sacável**, com teste dedicado: cachê em custódia é dinheiro recebido e não liberado; somá-lo ofereceria um saque que o provedor recusa.
+  - **"Saque solicitado", nunca "recebido"** na confirmação — quem confirma a transferência é o provedor, e o webhook pode levar minutos.
+  - **Destino exibido mascarado** antes de confirmar: o músico precisa reconhecer a chave (última chance de perceber uma troca), mas a chave inteira na tela é PII exposta a quem olha por cima do ombro num bar.
+
+- [x] **11.18** — **Aviso de "gateway mock" da `TipMusicianScreen` amarrado ao ambiente** *(05/set/2026)*. Era texto fixo dizendo *"o gateway PIX real ainda não está ativo"* — deixou de ser verdade quando o backend passou a usar o Mercado Pago de verdade (`MercadoPagoPixGateway`; o mock só entra sem `MERCADOPAGO_API_URL`). Num build de produção, um QR PIX **legítimo** era apresentado com selo de "ambiente de testes": quem lê isso não paga, e ninguém no time descobre — não há erro, só gorjeta que não acontece. Hoje o aviso só existe sob `ENV.IS_DEV`.
+
+### ✅ Achado de backend — corrigido em 05/set/2026
+
+**`findByIdempotencyKey` passou a exigir o dono na assinatura** (`(key, musicianId)`). Antes a busca
+era global: a chave é escolhida pelo cliente e o UNIQUE da coluna vale para o banco inteiro, então um
+músico que usasse a chave de outro com o mesmo valor recebia de volta o `transaction_id` e o `status`
+alheios — e, se aquela transação estivesse `pending` sem `external_id`, o ramo de redespacho chegava
+a pedir a transferência ao provedor usando a **chave PIX de quem fez a chamada**.
+
+Não era alcançável enquanto os clientes gerassem chave aleatória (é o que `newIdempotencyKey` faz),
+mas a defesa não pode depender do cliente. O escopo entrou na **assinatura da interface**, e não numa
+composição de string na gravação, para que esquecê-lo seja **erro de compilação** — um call site
+futuro que compusesse errado voltaria ao lookup global em silêncio.
+
+Sem migration: a coluna segue `String? @unique`. Regressão em `withdraw-to-pix.use-case.spec.ts`
+("mesma chave em MÚSICOS DIFERENTES"), **exercitada contra o caso negativo** — removendo o escopo, o
+teste devolve o `transaction_id` do primeiro músico ao segundo e falha na primeira asserção.
 
 **Componentes novos reutilizáveis criados neste bloco:** `shared/components/Pressable3DCard.tsx` (efeito de profundidade — scale + translateY + rotateX via Reanimated 4 — em toque, usado em `EstablishmentCard`/`MusicianRecommendationCard`/`EventListItem`/`PerformerRow`; deliberadamente não usa `GestureDetector`/Pan pra não roubar o gesto de scroll de listas horizontais). `features/audience/ui/components/EmptyState.tsx` reaproveitado em 4 telas.
 
@@ -613,3 +667,74 @@ que o músico está tocando, e isso acompanha quando ele passa para a próxima?"
 - [ ] Confirmação em device físico (mesma ressalva dos demais blocos).
 - [ ] Push em vez de polling para o fã.
 - [ ] Wrapped anual do fã (B2).
+
+---
+
+## Bloco 15 — Pedido com gorjeta, celebração e QR universal ✅ *(27/ago/2026)*
+
+> Backend em `soundmeet-backend/Docs/roadmap.md` Bloco 15. Regras de negócio em
+> `business-rules.md` (Request → "Destaque pago").
+
+### Fã
+
+- [x] **`RequestBoostSection`** em `SongRequestScreen` — chips de valor (piso R$2),
+      dedicatória revelada com mola ao escolher o valor, e um **preview do card
+      como o músico vai vê-lo** (gradiente `energy` + `TravelingBorderGlow`). O
+      fã está comprando posição numa fila que não enxerga; o preview é o que
+      torna isso compreensível sem explicação.
+- [x] **`PendingBoostHost`** — banner flutuante "pedido aceito, conclua o PIX" +
+      `RequestBoostPaymentSheet` com QR, copia-e-cola e contagem regressiva.
+      Montado no `FanTabNavigator`, **não numa tela**: a confirmação chega por
+      socket em qualquer aba.
+- [x] **`TipCelebrationOverlay`** — cinco fases (bloom radial → 56 partículas com
+      gravidade → contagem do valor → montagem do recibo → dedicatória), com
+      `TipReceiptCard` compartilhável via `imageShare.ts`.
+- [x] `NowPlayingCard` mostra a dedicatória quando a música tocando veio de um
+      destaque pago.
+
+### Músico
+
+- [x] `RequestCard` com faixa de destaque, valor e dedicatória.
+- [x] `request.boost.confirmed` no `useRequestsSocket` — o selo vira "confirmado"
+      ao vivo.
+
+### Armadilhas registradas neste bloco
+
+- 🔴 **O fã NUNCA havia conectado no socket.** `connectSocket()` só era chamado
+  em `MusicianTabNavigator`; o backend já emitia `request.status_changed` para a
+  room do público desde sempre e ninguém escutava. `useFanNotificationsSocket`
+  (novo, montado em `FanTabNavigator`) é o par simétrico — e, como o socket é
+  singleton **não** reference-counted, é o único lugar do lado do fã que
+  conecta/desconecta.
+- 🔴 **"a confirmar" nunca vira "recebido".** `awaiting_payment` significa que a
+  cobrança existe e o fã ainda não pagou. A regra mora em
+  `features/musician/domain/request-boost.rules.ts` **com teste** — dentro do
+  JSX seria intestável (o app não tem biblioteca de teste de componente) e um
+  ajuste de copy poderia inverter o sentido sem nada falhar.
+- 🔴 **Reduce motion não é "animação mais lenta".** Com a preferência ligada, o
+  `TipCelebrationOverlay` vai DIRETO ao estado final. Uma versão atenuada
+  continuaria provocando o mesmo desconforto — a preferência pede ausência de
+  movimento. Primeiro tratamento do gênero no app (`useReducedMotion`).
+- 🔴 **`parseQrTarget` faz parse MANUAL, nunca `new URL()`.** Mesma decisão de
+  `external-url.ts`: o `URL` do React Native é imitação por regex que diverge da
+  WHATWG, e o Jest roda em Node, onde `URL` é o de verdade — um validador
+  escrito sobre `URL` passaria em todos os testes e falharia no aparelho.
+- **`CelebrationBurst` é arquivo NOVO, não substitui `ConfettiBurst`.** Aquele é
+  um burst radial de 10 partículas calibrado para o reveal do QR no wizard —
+  discreto de propósito, e continua servindo ali. Trocar um pelo outro mudaria
+  um momento calmo do produto.
+- **Celebração deduplica por `tip_id` e ENRIQUECE.** Um pedido com destaque
+  dispara `tip.confirmed` **e** `request.boost.paid`; a ordem entre os handlers
+  do backend não é garantida. Se o payload pobre chegasse primeiro e o rico
+  fosse descartado, o fã veria a comemoração sem música nem dedicatória — que é
+  justamente o que ele pagou para aparecer.
+
+### Pendente
+
+- [ ] **Rebuild nativo** — `app.json` ganhou `associatedDomains` e
+      `intentFilters`; configuração nativa não sai por OTA, e o APK do EAS
+      expira em 14 dias.
+- [ ] **Push para o público.** `Audience` não tem `push_token` (só `Musician`):
+      quem está com o app fechado no momento do aceite não é avisado. O banner
+      de pendência recupera ao abrir, mas é recuperação, não notificação.
+- [ ] Confirmação em device físico (mesma ressalva dos demais blocos).

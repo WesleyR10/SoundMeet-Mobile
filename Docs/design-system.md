@@ -102,16 +102,52 @@ Teal  + #0C0C14 → Matrix/holograma, ultra premium    (backgrounds, dark mode)
 
 ## Tokens — Light Mode (toggle)
 
+> 🔴 **Tabela reescrita em 08/set/2026 a partir do `tokens.ts` real.** A anterior listava as **8
+> chaves** da paleta parcial antiga, com valores **anteriores** à medição WCAG de 05/set —
+> `brand.primary` como `#008F74`, que dá **3.70** como texto e **3.87** no rótulo do botão
+> primário: exatamente a falha que a correção fechou. Este documento é declarado fonte de verdade
+> de cor no `CLAUDE.md`, então segui-lo reintroduziria o defeito.
+>
+> ⚠️ Hoje a paleta clara nasce **inteira** em `tokens.ts` (era completada em runtime pelo
+> `ThemeContext`, com valores que não existiam em documento nenhum).
+>
+> ⚠️ **Precedência:** `tokens.ts` > este documento, e a paleta espelha
+> `soundmeet-web/src/app/globals.css` — há teste de paridade cruzada no web
+> (`src/shared/config/__tests__/theme-contrast.spec.ts`). Mexeu numa, mexa na outra e rode os dois.
+
 | Token | Hex | Uso |
 |-------|-----|-----|
-| `colors.bg.primary` | #F0FEFA | Background levemente teal (não branco puro) |
-| `colors.bg.surface` | #FFFFFF | Cards, surfaces |
-| `colors.bg.elevated` | #E0FAF5 | Elementos elevados |
-| `colors.brand.primary` | #008F74 | Teal mais escuro para contraste no claro |
-| `colors.brand.light` | #00B896 | Hover no light mode |
-| `colors.text.primary` | #081A17 | Quase preto com tom teal |
-| `colors.text.secondary` | #2D5047 | Cinza esverdeado |
-| `colors.border.default` | #C0EDE5 | Bordas suaves |
+| `colors.bg.primary` | `#F0FEFA` | Background levemente teal (não branco puro) |
+| `colors.bg.surface` | `#FFFFFF` | Cards, surfaces |
+| `colors.bg.elevated` | `#E0FAF5` | Elementos elevados |
+| `colors.bg.overlay` | `rgba(0,0,0,0.50)` | Fundo de modal/backdrop |
+| `colors.brand.primary` | `#007D66` | CTA, ativo — 🔴 3.91 → **4.91** como texto; 3.87 → **4.87** no rótulo do botão |
+| `colors.brand.light` | `#00B896` | Hover |
+| `colors.brand.dark` | `#00614A` | Pressed |
+| `colors.brand.muted` | `rgba(0,125,102,0.12)` | Fundo de chip/badge da marca |
+| `colors.brand.glow` | `rgba(0,125,102,0.15)` | Glow suave |
+| `colors.accent.coral` | `#DB1F25` | Gorjeta, CTA de energia — 3.78 → **4.78** |
+| `colors.accent.coralDeep` | `#D4206A` | Gradiente de gorjeta |
+| `colors.accent.amber` | `#B45309` | Gamificação, ranking |
+| `colors.accent.violet` | `#6D28D9` | Momentos premium, assinatura — alinhado ao web em 08/set |
+| `colors.accent.violetLight` | `#7E22CE` | Hover violeta |
+| `colors.status.success` | `#048059` | PIX confirmado, aceito — 3.64 → **4.78** |
+| `colors.status.warning` | `#B45309` | Atenção |
+| `colors.status.error` | `#DA2323` | Erro, recusado |
+| `colors.status.live` | `#007D66` | Ao vivo |
+| `colors.text.primary` | `#081A17` | Quase preto com tom teal |
+| `colors.text.secondary` | `#2D5047` | Cinza esverdeado |
+| `colors.text.muted` | `#61736D` | Caption, timestamp — 4.06 → **4.85** (texto normal, não decoração) |
+| `colors.text.inverse` | `#F8FAFC` | Rótulo sobre superfície sólida |
+| `colors.text.brand` | `#007D66` | Link, destaque da marca |
+| `colors.border.default` | `#86D5C5` | Separador decorativo — 1.23 → 1.64 |
+| `colors.border.strong` | `#309D8B` | 🔴 Borda de campo: 1.54 → **3.03**, o piso do 1.4.11 |
+| `colors.border.brand` | `rgba(0,125,102,0.30)` | Borda da marca |
+
+✅ **Medido, não estimado** (`design-system/__tests__/theme-contrast.test.ts`).
+⚠️ O tema **escuro**, que está em produção, tem falhas conhecidas e deliberadamente não corrigidas
+(`accent.violet`, `text.muted`, `border.strong`) — fixadas como `KNOWN_DARK_FAILURES` num conjunto
+exato que não pode crescer.
 
 ---
 
