@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Music2 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { SongRequestSuggestion } from '../../domain/request.types';
 
 type Props = {
@@ -10,30 +12,7 @@ type Props = {
 
 // Sugestões por popularidade (histórico de pedidos), não catálogo de
 // repertório — gap real, ver soundmeet-backend/Docs/roadmap.md Bloco 7.14.
-export function SongSuggestionChips({ suggestions, onSelect }: Props) {
-  if (suggestions.length === 0) return null;
-
-  return (
-    <View style={s.wrap}>
-      {suggestions.map((suggestion, index) => (
-        <Pressable
-          key={`${suggestion.song_title}-${index}`}
-          onPress={() => onSelect(suggestion)}
-          style={s.chip}
-          accessibilityRole="button"
-          accessibilityLabel={`Usar sugestão ${suggestion.song_title}`}
-        >
-          <Music2 size={13} color={colors.brand.primary} />
-          <Text style={s.chipText} numberOfLines={1}>
-            {suggestion.song_title}{suggestion.artist ? ` · ${suggestion.artist}` : ''}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   wrap: {
     flexDirection: 'row',
     flexWrap:      'wrap',
@@ -59,4 +38,29 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-Medium',
     color:      colors.text.primary,
   },
-});
+}));
+
+export function SongSuggestionChips({ suggestions, onSelect }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  if (suggestions.length === 0) return null;
+
+  return (
+    <View style={s.wrap}>
+      {suggestions.map((suggestion, index) => (
+        <Pressable
+          key={`${suggestion.song_title}-${index}`}
+          onPress={() => onSelect(suggestion)}
+          style={s.chip}
+          accessibilityRole="button"
+          accessibilityLabel={`Usar sugestão ${suggestion.song_title}`}
+        >
+          <Music2 size={13} color={colors.brand.primary} />
+          <Text style={s.chipText} numberOfLines={1}>
+            {suggestion.song_title}{suggestion.artist ? ` · ${suggestion.artist}` : ''}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}

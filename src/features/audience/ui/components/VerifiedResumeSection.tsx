@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { BadgeCheck, Building2, MapPin, Music2, Users } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { useMusicianResume } from '../../application/useLivePerformance';
 
 type Props = { musicianId: string };
@@ -21,7 +23,62 @@ function hasSomethingToShow(shows: number, songs: number) {
  * Nenhum valor de cachê aparece, e não é filtragem de UI: o backend nunca
  * produz o campo. Esta tela é lida por qualquer fã.
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap:             spacing.md,
+    padding:         spacing.lg,
+    borderRadius:    radius.xl,
+    borderWidth:     1,
+    borderColor:     colors.border.default,
+    backgroundColor: colors.bg.elevated,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.xs,
+  },
+  headerText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    rowGap:        spacing.md,
+  },
+  cell: {
+    width:      '50%',
+    gap:        2,
+  },
+  value: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  label: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+  venues: {
+    gap: 2,
+  },
+  venuesLabel: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+  venuesList: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  footnote: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+}));
+
 export function VerifiedResumeSection({ musicianId }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { data: resume } = useMusicianResume(musicianId);
 
   if (!resume) return null;
@@ -91,56 +148,3 @@ function formatCompact(value: number): string {
   if (value < 1000) return String(value);
   return `${(value / 1000).toFixed(1).replace('.', ',')} mil`;
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap:             spacing.md,
-    padding:         spacing.lg,
-    borderRadius:    radius.xl,
-    borderWidth:     1,
-    borderColor:     colors.border.default,
-    backgroundColor: colors.bg.elevated,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.xs,
-  },
-  headerText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    rowGap:        spacing.md,
-  },
-  cell: {
-    width:      '50%',
-    gap:        2,
-  },
-  value: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  label: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-  venues: {
-    gap: 2,
-  },
-  venuesLabel: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-  venuesList: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  footnote: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-});

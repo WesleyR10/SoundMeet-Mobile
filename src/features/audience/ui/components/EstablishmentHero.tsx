@@ -1,6 +1,8 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { Star, BadgeCheck, Building2 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { Establishment } from '../../domain/establishment.types';
 
 type Props = {
@@ -13,43 +15,7 @@ const TYPE_LABEL: Record<Establishment['establishment_type'], string> = {
   club:       'Casa noturna',
 };
 
-export function EstablishmentHero({ establishment }: Props) {
-  return (
-    <View style={s.root}>
-      <View style={s.avatarBox}>
-        {establishment.avatar ? (
-          <Image source={{ uri: establishment.avatar }} style={s.avatarImg} />
-        ) : (
-          <Building2 size={32} color={colors.text.muted} />
-        )}
-      </View>
-
-      <View style={s.nameRow}>
-        <Text style={s.name}>{establishment.name}</Text>
-        {establishment.is_verified && <BadgeCheck size={20} color={colors.brand.primary} />}
-      </View>
-
-      <View style={s.metaRow}>
-        <View style={s.ratingRow}>
-          <Star size={15} color={colors.accent.amber} fill={colors.accent.amber} />
-          <Text style={s.ratingText}>
-            {establishment.rating.toFixed(1)} · {establishment.total_ratings} avaliaç{establishment.total_ratings === 1 ? 'ão' : 'ões'}
-          </Text>
-        </View>
-        <Text style={s.typeText}>{TYPE_LABEL[establishment.establishment_type]}</Text>
-        {establishment.is_open_now && (
-          <View style={s.openPill}>
-            <Text style={s.openPillText}>Aberto agora</Text>
-          </View>
-        )}
-      </View>
-
-      {!!establishment.description && <Text style={s.description}>{establishment.description}</Text>}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root:  { alignItems: 'center', gap: spacing.sm },
   avatarBox: {
     width:            88,
@@ -111,4 +77,42 @@ const s = StyleSheet.create({
     textAlign:  'center',
     marginTop:   spacing.xs,
   },
-});
+}));
+
+export function EstablishmentHero({ establishment }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={s.root}>
+      <View style={s.avatarBox}>
+        {establishment.avatar ? (
+          <Image source={{ uri: establishment.avatar }} style={s.avatarImg} />
+        ) : (
+          <Building2 size={32} color={colors.text.muted} />
+        )}
+      </View>
+
+      <View style={s.nameRow}>
+        <Text style={s.name}>{establishment.name}</Text>
+        {establishment.is_verified && <BadgeCheck size={20} color={colors.brand.primary} />}
+      </View>
+
+      <View style={s.metaRow}>
+        <View style={s.ratingRow}>
+          <Star size={15} color={colors.accent.amber} fill={colors.accent.amber} />
+          <Text style={s.ratingText}>
+            {establishment.rating.toFixed(1)} · {establishment.total_ratings} avaliaç{establishment.total_ratings === 1 ? 'ão' : 'ões'}
+          </Text>
+        </View>
+        <Text style={s.typeText}>{TYPE_LABEL[establishment.establishment_type]}</Text>
+        {establishment.is_open_now && (
+          <View style={s.openPill}>
+            <Text style={s.openPillText}>Aberto agora</Text>
+          </View>
+        )}
+      </View>
+
+      {!!establishment.description && <Text style={s.description}>{establishment.description}</Text>}
+    </View>
+  );
+}

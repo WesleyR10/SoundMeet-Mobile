@@ -1,6 +1,8 @@
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable } from 'react-native';
 import { Music4 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { SpotifyTrackCandidate } from '../../domain/spotify.types';
 
 type Props = {
@@ -17,62 +19,7 @@ type Props = {
  * um relance se o catálogo devolveu a versão certa. Sem a capa, "Garota de
  * Ipanema — Tom Jobim" descreve dezenas de gravações diferentes.
  */
-export function SpotifyTrackConfirmCard({
-  track,
-  isSaving,
-  onConfirm,
-  onReject,
-}: Props) {
-  return (
-    <View style={s.box}>
-      <Text style={s.title}>É esta?</Text>
-
-      <View style={s.trackRow}>
-        {track.artwork_url ? (
-          <Image source={{ uri: track.artwork_url }} style={s.artwork} />
-        ) : (
-          <View style={[s.artwork, s.artworkFallback]}>
-            <Music4 size={18} color={colors.text.muted} />
-          </View>
-        )}
-
-        <View style={s.info}>
-          <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
-          <Text style={s.artist} numberOfLines={1}>{track.artist}</Text>
-          {!!track.album && (
-            <Text style={s.album} numberOfLines={1}>{track.album}</Text>
-          )}
-        </View>
-      </View>
-
-      <View style={s.actions}>
-        <Pressable
-          onPress={onConfirm}
-          disabled={isSaving}
-          style={s.confirmBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Confirmar e salvar no Spotify"
-          accessibilityState={{ disabled: isSaving }}
-        >
-          <Text style={s.confirmText}>{isSaving ? 'Salvando…' : 'Salvar'}</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={onReject}
-          disabled={isSaving}
-          style={s.cancelBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Não é esta música"
-          hitSlop={8}
-        >
-          <Text style={s.cancelText}>Não é essa</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   box: {
     backgroundColor: colors.bg.elevated,
     borderRadius:    radius.lg,
@@ -145,4 +92,61 @@ const s = StyleSheet.create({
     color:              colors.text.muted,
     textDecorationLine: 'underline',
   },
-});
+}));
+
+export function SpotifyTrackConfirmCard({
+  track,
+  isSaving,
+  onConfirm,
+  onReject,
+}: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={s.box}>
+      <Text style={s.title}>É esta?</Text>
+
+      <View style={s.trackRow}>
+        {track.artwork_url ? (
+          <Image source={{ uri: track.artwork_url }} style={s.artwork} />
+        ) : (
+          <View style={[s.artwork, s.artworkFallback]}>
+            <Music4 size={18} color={colors.text.muted} />
+          </View>
+        )}
+
+        <View style={s.info}>
+          <Text style={s.trackTitle} numberOfLines={1}>{track.title}</Text>
+          <Text style={s.artist} numberOfLines={1}>{track.artist}</Text>
+          {!!track.album && (
+            <Text style={s.album} numberOfLines={1}>{track.album}</Text>
+          )}
+        </View>
+      </View>
+
+      <View style={s.actions}>
+        <Pressable
+          onPress={onConfirm}
+          disabled={isSaving}
+          style={s.confirmBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Confirmar e salvar no Spotify"
+          accessibilityState={{ disabled: isSaving }}
+        >
+          <Text style={s.confirmText}>{isSaving ? 'Salvando…' : 'Salvar'}</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={onReject}
+          disabled={isSaving}
+          style={s.cancelBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Não é esta música"
+          hitSlop={8}
+        >
+          <Text style={s.cancelText}>Não é essa</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}

@@ -4,12 +4,15 @@ import Animated, { useSharedValue, useAnimatedStyle, withDelay, withRepeat, with
 import { Award } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
 import type { UserBadge } from '@/shared/services/gamification/gamification.types';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 
 type Props = {
   badges: UserBadge[];
 };
 
 function BadgeCell({ badge, index }: { badge: UserBadge; index: number }) {
+  // Helper não exportado chama o hook por conta própria (ver CLAUDE.md).
+  const reducedMotion = useReducedMotion();
   const glow = useSharedValue(0.35);
 
   // Depende de `is_unlocked` (não array vazio) — GamificationScreen invalida
@@ -19,11 +22,18 @@ function BadgeCell({ badge, index }: { badge: UserBadge; index: number }) {
   // sem essa dependência o glow nunca começaria a pulsar até desmontar.
   useEffect(() => {
     if (!badge.is_unlocked) return;
+    // Para no valor ALTO: o glow é o que distingue badge conquistada de
+    // travada — congelar no inicial apagaria a conquista. Mesma decisão do
+    // `RecentBadgesRow`.
+    if (reducedMotion) {
+      glow.value = 0.9;
+      return;
+    }
     glow.value = withDelay(
       index * 120,
       withRepeat(withTiming(0.9, { duration: 1400, easing: Easing.inOut(Easing.ease) }), -1, true),
     );
-  }, [badge.is_unlocked, index, glow]);
+  }, [badge.is_unlocked, reducedMotion, index, glow]);
 
   const glowStyle = useAnimatedStyle(() => ({
     shadowOpacity: badge.is_unlocked ? glow.value : 0,

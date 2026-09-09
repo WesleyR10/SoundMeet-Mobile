@@ -1,7 +1,9 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Star, User, ChevronRight, BadgeCheck } from 'lucide-react-native';
-import { colors, spacing, radius, typography, gradients } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, gradients } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import { formatDistanceKm } from '@/shared/utils/geo';
 import type { MusicianPublic } from '../../domain/musician-public.types';
@@ -28,58 +30,7 @@ function priceHint(musician: MusicianPublic): string | null {
 // Resultado de músico na busca do fã (FanExplore aba "Músicos", 7.13c) —
 // layout de lista irmão do EstablishmentCard, com o anel gradiente
 // teal→violeta que identifica músicos no resto do app.
-export function MusicianResultCard({ musician, onPress, distanceKm }: Props) {
-  const name = musician.stage_name || musician.display_name || musician.name;
-  const city = musician.profile?.location?.city ?? null;
-  const price = priceHint(musician);
-
-  return (
-    <Pressable3DCard onPress={onPress} style={s.card} accessibilityLabel={name}>
-      <View style={s.row}>
-        <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
-          <View style={s.avatarInner}>
-            {musician.avatar ? (
-              <Image source={{ uri: musician.avatar }} style={s.avatarImg} />
-            ) : (
-              <User size={22} color={colors.text.muted} />
-            )}
-          </View>
-        </LinearGradient>
-
-        <View style={s.info}>
-          <View style={s.nameRow}>
-            <Text style={s.name} numberOfLines={1}>{name}</Text>
-            {musician.is_verified && (
-              <BadgeCheck size={14} color={colors.brand.primary} />
-            )}
-          </View>
-
-          <Text style={s.meta} numberOfLines={1}>
-            {city ?? 'Sem cidade'}
-            {distanceKm !== null && distanceKm !== undefined ? ` · ${formatDistanceKm(distanceKm)}` : ''}
-            {price ? ` · ${price}` : ''}
-          </Text>
-
-          <View style={s.bottomRow}>
-            <View style={s.ratingRow}>
-              <Star size={13} color={colors.accent.amber} fill={colors.accent.amber} />
-              <Text style={s.ratingText}>{musician.rating.toFixed(1)}</Text>
-            </View>
-            {musician.genres.slice(0, 2).map((genre) => (
-              <View key={genre} style={s.chip}>
-                <Text style={s.chipText}>{genre}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <ChevronRight size={18} color={colors.text.muted} />
-      </View>
-    </Pressable3DCard>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     borderRadius:     radius.lg,
     borderWidth:       1,
@@ -154,4 +105,57 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.muted,
   },
-});
+}));
+
+export function MusicianResultCard({ musician, onPress, distanceKm }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const name = musician.stage_name || musician.display_name || musician.name;
+  const city = musician.profile?.location?.city ?? null;
+  const price = priceHint(musician);
+
+  return (
+    <Pressable3DCard onPress={onPress} style={s.card} accessibilityLabel={name}>
+      <View style={s.row}>
+        <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
+          <View style={s.avatarInner}>
+            {musician.avatar ? (
+              <Image source={{ uri: musician.avatar }} style={s.avatarImg} />
+            ) : (
+              <User size={22} color={colors.text.muted} />
+            )}
+          </View>
+        </LinearGradient>
+
+        <View style={s.info}>
+          <View style={s.nameRow}>
+            <Text style={s.name} numberOfLines={1}>{name}</Text>
+            {musician.is_verified && (
+              <BadgeCheck size={14} color={colors.brand.primary} />
+            )}
+          </View>
+
+          <Text style={s.meta} numberOfLines={1}>
+            {city ?? 'Sem cidade'}
+            {distanceKm !== null && distanceKm !== undefined ? ` · ${formatDistanceKm(distanceKm)}` : ''}
+            {price ? ` · ${price}` : ''}
+          </Text>
+
+          <View style={s.bottomRow}>
+            <View style={s.ratingRow}>
+              <Star size={13} color={colors.accent.amber} fill={colors.accent.amber} />
+              <Text style={s.ratingText}>{musician.rating.toFixed(1)}</Text>
+            </View>
+            {musician.genres.slice(0, 2).map((genre) => (
+              <View key={genre} style={s.chip}>
+                <Text style={s.chipText}>{genre}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <ChevronRight size={18} color={colors.text.muted} />
+      </View>
+    </Pressable3DCard>
+  );
+}

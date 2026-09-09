@@ -5,21 +5,92 @@ import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { QrCode } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
+import { parseQrTarget } from '@/shared/utils/qr-link';
 import type { FanStackScreenProps } from '@/navigation/types';
 import { useScanQr } from '../../application/useScanQr';
 
 type Props = FanStackScreenProps<'QRScanner'>;
 
-// Esquema aceito hoje pelo backend (ScanQRUseCase): só soundmeet://musician/<uuid>.
-// soundmeet://establishment/<uuid> NÃO é validado ainda (ver
-// soundmeet-backend/Docs/roadmap.md Bloco 7.15).
-const MUSICIAN_QR_REGEX = /^soundmeet:\/\/musician\/([^/]+)$/;
+// O parse (e a allowlist de host) mora em `shared/utils/qr-link.ts`, testado
+// isoladamente. QR de estabelecimento é lido mas ainda não tem fluxo próprio —
+// ver soundmeet-backend/Docs/roadmap.md Bloco 7.15.
+
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  overlay: {
+    flex:              1,
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:                spacing.xxl,
+  },
+  instruction: {
+    ...typography.body,
+    fontFamily:      'Inter-SemiBold',
+    color:           colors.text.primary,
+    backgroundColor: colors.bg.overlay,
+    paddingHorizontal: spacing.md,
+    paddingVertical:   spacing.sm,
+    borderRadius:      radius.md,
+  },
+  frameWrap: {
+    width:          FRAME_SIZE,
+    height:         FRAME_SIZE,
+  },
+  frame: {
+    flex:           1,
+    borderRadius:   radius.lg,
+  },
+  corner: {
+    position:      'absolute',
+    width:          CORNER,
+    height:         CORNER,
+    borderColor:   colors.brand.primary,
+  },
+  cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: radius.md },
+  cornerTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: radius.md },
+  cornerBL: { bottom: 0, left: 0, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: radius.md },
+  cornerBR: { bottom: 0, right: 0, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: radius.md },
+  errorBanner: {
+    marginHorizontal: spacing.xl,
+  },
+  validating: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  permissionRoot: {
+    flex:           1,
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.md,
+    paddingHorizontal: spacing.xl,
+  },
+  permissionTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  permissionSubtitle: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+  permissionBtn: {
+    marginTop: spacing.md,
+    width:     '100%',
+  },
+}));
 
 export function QRScannerScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -46,15 +117,15 @@ export function QRScannerScreen({ navigation }: Props) {
     setScanned(true);
     setErrorMessage(null);
 
-    const match = MUSICIAN_QR_REGEX.exec(result.data);
-    if (!match) {
+    const target = parseQrTarget(result.data);
+    if (!target || target.kind !== 'musician') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       setErrorMessage('Esse QR Code não é de um músico SoundMeet.');
       scheduleReset();
       return;
     }
 
-    const musicianId = match[1];
+    const musicianId = target.id;
     scanQrMutation.mutate(
       { qr_code: result.data, musician_id: musicianId },
       {
@@ -120,70 +191,3 @@ export function QRScannerScreen({ navigation }: Props) {
 
 const FRAME_SIZE = 240;
 const CORNER = 28;
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  overlay: {
-    flex:              1,
-    alignItems:        'center',
-    justifyContent:    'center',
-    gap:                spacing.xxl,
-  },
-  instruction: {
-    ...typography.body,
-    fontFamily:      'Inter-SemiBold',
-    color:           colors.text.primary,
-    backgroundColor: colors.bg.overlay,
-    paddingHorizontal: spacing.md,
-    paddingVertical:   spacing.sm,
-    borderRadius:      radius.md,
-  },
-  frameWrap: {
-    width:          FRAME_SIZE,
-    height:         FRAME_SIZE,
-  },
-  frame: {
-    flex:           1,
-    borderRadius:   radius.lg,
-  },
-  corner: {
-    position:      'absolute',
-    width:          CORNER,
-    height:         CORNER,
-    borderColor:   colors.brand.primary,
-  },
-  cornerTL: { top: 0, left: 0, borderTopWidth: 3, borderLeftWidth: 3, borderTopLeftRadius: radius.md },
-  cornerTR: { top: 0, right: 0, borderTopWidth: 3, borderRightWidth: 3, borderTopRightRadius: radius.md },
-  cornerBL: { bottom: 0, left: 0, borderBottomWidth: 3, borderLeftWidth: 3, borderBottomLeftRadius: radius.md },
-  cornerBR: { bottom: 0, right: 0, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: radius.md },
-  errorBanner: {
-    marginHorizontal: spacing.xl,
-  },
-  validating: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  permissionRoot: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.md,
-    paddingHorizontal: spacing.xl,
-  },
-  permissionTitle: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  permissionSubtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-  permissionBtn: {
-    marginTop: spacing.md,
-    width:     '100%',
-  },
-});

@@ -1,10 +1,15 @@
-import { ScrollView, View, Text, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, View, Text, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Star, BadgeCheck, User, Music, Clock } from 'lucide-react-native';
-import { colors, spacing, radius, typography, gradients, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, gradients, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList, SkeletonProfileHeader, SkeletonStatRow, SkeletonText } from '@/shared/components/Skeleton';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
+import { IndicateMusicianSheet } from '../components/IndicateMusicianSheet';
 import type { FanStackScreenProps } from '@/navigation/types';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useMusicianPublic } from '../../application/useMusicianPublic';
@@ -18,17 +23,119 @@ type Props = FanStackScreenProps<'MusicianPublicProfile'>;
 
 const AVATAR_SIZE = 108;
 
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.xxxl,
+    gap:                spacing.xl,
+  },
+  centerRoot: {
+    flex:           1,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  hero: { alignItems: 'center', gap: spacing.sm },
+  avatarRing: {
+    width:          AVATAR_SIZE,
+    height:         AVATAR_SIZE,
+    borderRadius:   AVATAR_SIZE / 2,
+    padding:         3,
+    alignItems:     'center',
+    justifyContent: 'center',
+    ...shadows.violet,
+  },
+  avatarInner: {
+    width:            '100%',
+    height:           '100%',
+    borderRadius:     AVATAR_SIZE / 2,
+    backgroundColor: colors.bg.surface,
+    alignItems:      'center',
+    justifyContent:  'center',
+    overflow:         'hidden',
+  },
+  avatarImg: { width: '100%', height: '100%' },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.xs,
+    marginTop:      spacing.sm,
+  },
+  name: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.xs,
+  },
+  ratingText: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  bio: {
+    ...typography.body,
+    color:      colors.text.secondary,
+    textAlign:  'center',
+    marginTop:  spacing.sm,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap:            spacing.md,
+  },
+  ctaSection: { gap: spacing.md },
+  ctaBlockedNote: {
+    borderRadius:      radius.lg,
+    borderWidth:         1,
+    borderColor:        colors.border.default,
+    backgroundColor:   'rgba(255,255,255,0.03)',
+    padding:              spacing.md,
+  },
+  ctaBlockedText: {
+    ...typography.bodySm,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+  indicateBtn: {
+    height:          48,
+    borderRadius:    radius.xl,
+    borderWidth:     1,
+    borderColor:     colors.border.strong,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  indicateLabel: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+}));
+
 export function MusicianPublicProfileScreen({ route, navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { musicianId, eventId, establishmentId } = route.params;
   const { data: musician, isPending } = useMusicianPublic(musicianId);
   const audienceId = useAuthStore((s) => s.user?.audienceId ?? null);
+  const [indicating, setIndicating] = useState(false);
 
   if (isPending || !musician) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
         <StatusBar style="light" />
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.skeleton}>
+          <SkeletonProfileHeader />
+          {/* Stats públicos: shows, avaliação, público alcançado. */}
+          <SkeletonStatRow count={3} />
+          <SkeletonText lines={3} />
+          <SkeletonList count={2} itemHeight={88} />
         </View>
       </SafeAreaView>
     );
@@ -115,88 +222,30 @@ export function MusicianPublicProfileScreen({ route, navigation }: Props) {
             variant="coral"
             onPress={() => navigation.navigate('TipMusician', { musicianId, eventId, establishmentId })}
           />
+
+          {/*
+            Indicar é a única aquisição B2B que só o SoundMeet consegue fazer:
+            o público apontando artista para a casa. Fica DEPOIS de pedir e
+            dar gorjeta de propósito — as duas primeiras são o que o fã veio
+            fazer; esta é o que ele pode fazer pelo artista.
+          */}
+          <Pressable
+            onPress={() => setIndicating(true)}
+            style={s.indicateBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Indicar este artista para um local"
+          >
+            <Text style={s.indicateLabel}>Indicar para um local</Text>
+          </Pressable>
         </View>
       </ScrollView>
+
+      <IndicateMusicianSheet
+        musicianId={musicianId}
+        musicianName={name}
+        visible={indicating}
+        onClose={() => setIndicating(false)}
+      />
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.xxxl,
-    gap:                spacing.xl,
-  },
-  centerRoot: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  hero: { alignItems: 'center', gap: spacing.sm },
-  avatarRing: {
-    width:          AVATAR_SIZE,
-    height:         AVATAR_SIZE,
-    borderRadius:   AVATAR_SIZE / 2,
-    padding:         3,
-    alignItems:     'center',
-    justifyContent: 'center',
-    ...shadows.violet,
-  },
-  avatarInner: {
-    width:            '100%',
-    height:           '100%',
-    borderRadius:     AVATAR_SIZE / 2,
-    backgroundColor: colors.bg.surface,
-    alignItems:      'center',
-    justifyContent:  'center',
-    overflow:         'hidden',
-  },
-  avatarImg: { width: '100%', height: '100%' },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.xs,
-    marginTop:      spacing.sm,
-  },
-  name: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.xs,
-  },
-  ratingText: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  bio: {
-    ...typography.body,
-    color:      colors.text.secondary,
-    textAlign:  'center',
-    marginTop:  spacing.sm,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap:            spacing.md,
-  },
-  ctaSection: { gap: spacing.md },
-  ctaBlockedNote: {
-    borderRadius:      radius.lg,
-    borderWidth:         1,
-    borderColor:        colors.border.default,
-    backgroundColor:   'rgba(255,255,255,0.03)',
-    padding:              spacing.md,
-  },
-  ctaBlockedText: {
-    ...typography.bodySm,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-});

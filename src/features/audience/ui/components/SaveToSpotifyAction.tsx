@@ -1,8 +1,12 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, Linking, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { CheckCircle2, ExternalLink, Music4 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { openExternalHref } from '@/shared/services/external-link/openExternalUrl';
+import { SOCIAL_DOMAINS } from '@/shared/utils/external-url';
 import {
   getSpotifyErrorMessage,
   useSpotifyStatus,
@@ -50,7 +54,46 @@ type Props = {
  * pelo Spotify em 27/nov/2024 para apps criados depois disso, e vem sempre
  * `null`. A confirmação é visual (capa e álbum).
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.sm,
+  },
+  cta: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            spacing.sm,
+    minHeight:      48,
+    borderRadius:   radius.xl,
+    borderWidth:    1,
+    borderColor:    colors.border.brand,
+  },
+  ctaText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  doneRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:            spacing.sm,
+    minHeight:      48,
+  },
+  doneText: {
+    ...typography.bodySm,
+    color: colors.status.success,
+  },
+  notFound: {
+    ...typography.bodySm,
+    color:     colors.text.muted,
+    textAlign: 'center',
+  },
+}));
+
 export function SaveToSpotifyAction({ audienceId, title, artist, spotifyUrl }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [candidate, setCandidate] = useState<SpotifyTrackCandidate | null>(null);
   const [saved, setSaved] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -77,11 +120,11 @@ export function SaveToSpotifyAction({ audienceId, title, artist, spotifyUrl }: P
   async function openInSpotify() {
     if (!spotifyUrl) return;
     setError(null);
-    try {
-      await Linking.openURL(spotifyUrl);
-    } catch {
-      setError('Não foi possível abrir o Spotify.');
-    }
+    // Mesmo invariante do resto do app (SM-025): toda URL de terceiro passa
+    // pela allowlist antes de chegar ao SO. `open.spotify.com` está na
+    // allowlist do Spotify e abre direto; um host inesperado no `spotify_url`
+    // cai em confirmação/bloqueio de `openExternalUrl` em vez de abrir cego.
+    await openExternalHref(spotifyUrl, SOCIAL_DOMAINS.spotify);
   }
 
   async function findTrack() {
@@ -164,40 +207,3 @@ export function SaveToSpotifyAction({ audienceId, title, artist, spotifyUrl }: P
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.sm,
-  },
-  cta: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            spacing.sm,
-    minHeight:      48,
-    borderRadius:   radius.xl,
-    borderWidth:    1,
-    borderColor:    colors.border.brand,
-  },
-  ctaText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  doneRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:            spacing.sm,
-    minHeight:      48,
-  },
-  doneText: {
-    ...typography.bodySm,
-    color: colors.status.success,
-  },
-  notFound: {
-    ...typography.bodySm,
-    color:     colors.text.muted,
-    textAlign: 'center',
-  },
-});

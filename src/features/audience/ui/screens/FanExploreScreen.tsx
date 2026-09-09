@@ -1,9 +1,10 @@
 import { useMemo, useState, type ReactElement } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { SearchX } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { FanStackScreenProps } from '@/navigation/types';
 import { useEstablishments } from '../../application/useEstablishments';
 import { useMusiciansSearch } from '../../application/useMusiciansSearch';
@@ -15,7 +16,8 @@ import { EstablishmentCard } from '../components/EstablishmentCard';
 import { MusicianResultCard } from '../components/MusicianResultCard';
 import { ExploreModeToggle, type ExploreMode } from '../components/ExploreModeToggle';
 import { RadiusChipsRow } from '../components/RadiusChipsRow';
-import { EmptyState } from '../components/EmptyState';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { SkeletonList } from '@/shared/components/Skeleton';
 import { useUserLocation } from '@/shared/services/location/useUserLocation';
 import { haversineKm } from '@/shared/utils/geo';
 
@@ -42,7 +44,41 @@ function distanceTo(coords: Coords | null, active: boolean, location?: { latitud
 // Busca & filtro (Bloco 11.4) + raio geográfico (7.13a) + músicos (7.13c):
 // o toggle Locais | Músicos compartilha SearchBar e chips de raio; só a
 // query da aba ativa roda (enabled). FilterSheet segue exclusivo de locais.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.md,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  toggleWrap: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.md,
+  },
+  searchWrap: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.md,
+  },
+  list: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+  },
+  centerRoot: {
+    flex:           1,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+}));
+
 export function FanExploreScreen({ navigation }: Props) {
+  const s = useStyles();
   const [mode, setMode]       = useState<ExploreMode>('places');
   const [search, setSearch]   = useState('');
   const [filter, setFilter]   = useState<EstablishmentFilter>({});
@@ -107,8 +143,8 @@ export function FanExploreScreen({ navigation }: Props) {
       />
 
       {activeQuery.isPending ? (
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.list}>
+          <SkeletonList count={5} itemHeight={96} withAvatar />
         </View>
       ) : mode === 'places' ? (
         <ResultList<Establishment>
@@ -154,6 +190,9 @@ function ResultList<T extends { id: string }>({ items, renderItem, onRefresh, re
   onRefresh:  () => void;
   refreshing: boolean;
 }) {
+  // Helper é COMPONENTE: chama o hook por conta própria. O `useStyles()` do
+  // componente exportado não alcança este escopo.
+  const s = useStyles();
   if (items.length === 0) {
     return (
       <EmptyState
@@ -176,36 +215,3 @@ function ResultList<T extends { id: string }>({ items, renderItem, onRefresh, re
     />
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.md,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  toggleWrap: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.md,
-  },
-  searchWrap: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.md,
-  },
-  list: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-  },
-  centerRoot: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-});

@@ -1,6 +1,8 @@
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable } from 'react-native';
 import { User, Sparkles } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { AudienceProfile } from '../../domain/audience.types';
 
 type Props = {
@@ -9,33 +11,7 @@ type Props = {
 };
 
 // Extraído de FanProfileScreen.tsx (limite de ~200 linhas/screen, CLAUDE.md).
-export function FanProfileHero({ audience, onPressLevel }: Props) {
-  return (
-    <View style={s.hero}>
-      <View style={s.avatarBox}>
-        {audience.avatar ? (
-          <Image source={{ uri: audience.avatar }} style={s.avatarImg} />
-        ) : (
-          <User size={36} color={colors.text.muted} />
-        )}
-      </View>
-      <Text style={s.name}>{audience.nickname || audience.name}</Text>
-      <Text style={s.email}>{audience.email}</Text>
-
-      <Pressable
-        onPress={onPressLevel}
-        style={s.levelChip}
-        accessibilityRole="button"
-        accessibilityLabel="Ver gamificação"
-      >
-        <Sparkles size={14} color={colors.accent.amber} />
-        <Text style={s.levelChipText}>Nível {audience.current_level} · {audience.points.total} pts</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   hero: { alignItems: 'center', gap: spacing.xs },
   avatarBox: {
     width:            84,
@@ -73,4 +49,32 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color:      colors.accent.amber,
   },
-});
+}));
+
+export function FanProfileHero({ audience, onPressLevel }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={s.hero}>
+      <View style={s.avatarBox}>
+        {audience.avatar ? (
+          <Image source={{ uri: audience.avatar }} style={s.avatarImg} />
+        ) : (
+          <User size={36} color={colors.text.muted} />
+        )}
+      </View>
+      <Text style={s.name}>{audience.nickname || audience.name}</Text>
+      <Text style={s.email}>{audience.email}</Text>
+
+      <Pressable
+        onPress={onPressLevel}
+        style={s.levelChip}
+        accessibilityRole="button"
+        accessibilityLabel="Ver gamificação"
+      >
+        <Sparkles size={14} color={colors.accent.amber} />
+        <Text style={s.levelChipText}>Nível {audience.current_level} · {audience.points.total} pts</Text>
+      </Pressable>
+    </View>
+  );
+}

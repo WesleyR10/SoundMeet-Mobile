@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
+import { ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { PartyPopper } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
@@ -11,22 +11,45 @@ import { extractApiMessage } from '@/shared/services/http/types';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { FanStackScreenProps } from '@/navigation/types';
 import { useAttendEvent } from '../../application/useAttendEvent';
+import { useSongRequestForm } from '../../application/useSongRequestForm';
 import { useMakeMusicRequest, useRequestSuggestions } from '../../application/useSongRequest';
-import { SaveToSpotifyAction } from '../components/SaveToSpotifyAction';
+import { RepertoirePicker } from '../components/RepertoirePicker';
+import { RequestBoostSection, BOOST_MIN_AMOUNT } from '../components/RequestBoostSection';
+import { SongRequestSuccess } from '../components/SongRequestSuccess';
 import { SongSuggestionChips } from '../components/SongSuggestionChips';
 
 type Props = FanStackScreenProps<'SongRequest'>;
 
-export function SongRequestScreen({ route, navigation }: Props) {
-  const { musicianId, eventId, establishmentId } = route.params;
-  const audienceId = useAuthStore((s) => s.user?.audienceId ?? null);
+const useStyles = makeStyles((colors) => ({
+  root:   { flex: 1, backgroundColor: colors.bg.primary },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.xxxl,
+    gap:                spacing.lg,
+  },
+  title:    { ...typography.displayMd, color: colors.text.primary },
+  subtitle: { ...typography.body,      color: colors.text.secondary },
+  boostHint: {
+    ...typography.caption,
+    color:      colors.text.muted,
+    textAlign:  'center',
+    marginTop:  -spacing.sm,
+    lineHeight: 15,
+  },
+}));
 
-  const [songTitle, setSongTitle] = useState('');
-  const [artistName, setArtistName] = useState('');
-  const [message, setMessage] = useState('');
+export function SongRequestScreen({ route, navigation }: Props) {
+  const s = useStyles();
+  const { musicianId, eventId, establishmentId } = route.params;
+  const audienceId = useAuthStore((state) => state.user?.audienceId ?? null);
+
+  const form = useSongRequestForm(musicianId);
+  const [boostAmount, setBoostAmount] = useState<number | null>(null);
+  const [dedication, setDedication] = useState('');
 
   const attendEventMutation = useAttendEvent(audienceId);
-  const requestMutation      = useMakeMusicRequest(audienceId);
+  const requestMutation     = useMakeMusicRequest(audienceId);
   const { data: suggestionsData } = useRequestSuggestions(musicianId);
 
   // Pré-requisito silencioso: CanMakeRequestPolicy exige is_audience_attendee
@@ -38,121 +61,115 @@ export function SongRequestScreen({ route, navigation }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleSelectSuggestion(suggestion: { song_title: string; artist?: string }) {
-    setSongTitle(suggestion.song_title);
-    if (suggestion.artist) setArtistName(suggestion.artist);
-  }
+  // O destaque só entra no payload quando é válido. Mandar um valor abaixo do
+  // piso daria 422 do servidor — a policy `BoostMinimumAmountPolicy` é a fonte
+  // da verdade, esta checagem só evita a viagem.
+  const hasValidBoost = boostAmount !== null && boostAmount >= BOOST_MIN_AMOUNT;
 
   function handleSubmit() {
     requestMutation.mutate({
-      musician_id: musicianId,
-      song_title:  songTitle.trim(),
-      artist_name: artistName.trim(),
-      event_id:    eventId,
+      musician_id:      musicianId,
+      song_title:       form.songTitle.trim(),
+      artist_name:      form.artistName.trim(),
+      event_id:         eventId,
       establishment_id: establishmentId,
-      message:     message.trim() || undefined,
+      message:          form.message.trim() || undefined,
+      // Só quando veio do catálogo E o texto ainda corresponde: é o único
+      // momento em que o gênero é um fato do repertório do artista, e não um
+      // palpite. Quem decide é `catalogGenre` (domain/song-request.rules.ts).
+      ...(form.genre ? { genre: form.genre } : {}),
+      ...(hasValidBoost
+        ? {
+            boost: {
+              amount: boostAmount,
+              ...(dedication.trim() ? { dedication: dedication.trim() } : {}),
+            },
+          }
+        : {}),
     });
   }
 
   if (requestMutation.isSuccess) {
+    const boost = requestMutation.data.request_metadata.boost;
     return (
       <SafeAreaView style={s.root} edges={['top']}>
         <StatusBar style="light" />
-        <View style={s.successRoot}>
-          <PartyPopper size={56} color={colors.brand.primary} />
-          <Text style={s.successTitle}>Pedido enviado!</Text>
-          <Text style={s.successSubtitle}>
-            +{requestMutation.data.points_earned} pontos ganhos. O músico vai ver seu pedido em breve.
-          </Text>
-          {/*
-            O momento certo para oferecer o Spotify: o fã acabou de dizer que
-            quer ouvir ESTA música. Só aparece para quem já conectou a conta —
-            virar CTA de integração aqui transformaria a comemoração num funil,
-            no meio do show.
-          */}
-          <View style={s.successSpotify}>
-            <SaveToSpotifyAction
-              audienceId={audienceId}
-              title={songTitle.trim()}
-              artist={artistName.trim()}
-            />
-          </View>
-
-          <PrimaryButton label="Voltar ao perfil" onPress={() => navigation.goBack()} style={s.successBtn} />
-        </View>
+        <SongRequestSuccess
+          audienceId={audienceId}
+          songTitle={form.songTitle.trim()}
+          artistName={form.artistName.trim()}
+          pointsEarned={requestMutation.data.points_earned}
+          boostAmount={boost?.is_boosting === true ? boost.amount ?? 0 : null}
+          onDone={() => navigation.goBack()}
+        />
       </SafeAreaView>
     );
   }
 
-  const canSubmit = songTitle.trim().length > 0 && artistName.trim().length > 0 && !requestMutation.isPending;
-
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="light" />
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={s.scroll}
+        showsVerticalScrollIndicator={false}
+        // Sem isto, o primeiro toque num resultado do catálogo só fecharia o
+        // teclado — o fã tocaria duas vezes para escolher uma música.
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={s.title}>Pedir uma música</Text>
         <Text style={s.subtitle}>Escolha a música que você quer ouvir agora.</Text>
 
-        <SongSuggestionChips suggestions={suggestionsData?.suggestions ?? []} onSelect={handleSelectSuggestion} />
+        <RepertoirePicker
+          items={form.catalogItems}
+          isPending={form.catalogPending}
+          query={form.catalogQuery}
+          onChangeQuery={form.setCatalogQuery}
+          selectedId={form.pickedSong?.id ?? null}
+          onSelect={form.selectFromCatalog}
+        />
 
-        <FormField label="Música" value={songTitle} onChangeText={setSongTitle} placeholder="Nome da música" autoCapitalize="sentences" />
-        <FormField label="Artista" value={artistName} onChangeText={setArtistName} placeholder="Nome do artista" autoCapitalize="sentences" />
-        <FormField label="Mensagem (opcional)" value={message} onChangeText={setMessage} placeholder="Dedique um recado..." autoCapitalize="sentences" multiline />
+        <SongSuggestionChips
+          suggestions={suggestionsData?.suggestions ?? []}
+          onSelect={form.selectSuggestion}
+        />
+
+        <FormField label="Música"  value={form.songTitle}  onChangeText={form.changeTitle}  placeholder="Nome da música"  autoCapitalize="sentences" />
+        <FormField label="Artista" value={form.artistName} onChangeText={form.changeArtist} placeholder="Nome do artista" autoCapitalize="sentences" />
+        <FormField label="Mensagem (opcional)" value={form.message} onChangeText={form.setMessage} placeholder="Deixe um recado..." autoCapitalize="sentences" multiline />
+
+        {/*
+          Só aparece quando o músico tem conta de pagamento vinculada
+          (`accepts_tips`, servido junto das sugestões). Oferecer o destaque a
+          quem não pode receber seria oferecer algo que a API vai recusar.
+        */}
+        {suggestionsData?.accepts_tips && (
+          <RequestBoostSection
+            amount={boostAmount}
+            onAmountChange={setBoostAmount}
+            dedication={dedication}
+            onDedicationChange={setDedication}
+            songTitle={form.songTitle}
+            artistName={form.artistName}
+          />
+        )}
 
         {requestMutation.isError && <ErrorBanner message={extractApiMessage(requestMutation.error)} />}
 
         <PrimaryButton
-          label="Enviar pedido"
+          label={hasValidBoost ? `Pedir com destaque de R$ ${boostAmount.toFixed(2).replace('.', ',')}` : 'Enviar pedido'}
+          variant={hasValidBoost ? 'coral' : 'brand'}
           onPress={handleSubmit}
-          disabled={!canSubmit}
+          disabled={!form.isComplete || requestMutation.isPending}
           loading={requestMutation.isPending}
         />
+
+        {hasValidBoost && (
+          <Text style={s.boostHint}>
+            Nada é cobrado agora. Se o artista aceitar, você recebe o PIX pra
+            concluir.
+          </Text>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.xxxl,
-    gap:                spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  successRoot: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.md,
-    paddingHorizontal: spacing.xl,
-  },
-  successTitle: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  successSubtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-  successSpotify: {
-    width:     '100%',
-    marginTop: spacing.md,
-  },
-  successBtn: {
-    marginTop: spacing.lg,
-    width:     '100%',
-  },
-});

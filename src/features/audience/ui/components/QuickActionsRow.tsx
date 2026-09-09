@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { QrCode, Trophy, ListMusic, type LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Action = {
   key:         string;
@@ -11,55 +13,20 @@ type Action = {
 };
 
 type Props = {
-  onScanQr:   () => void;
-  onMyPoints: () => void;
+  onScanQr:     () => void;
+  onMyPoints:   () => void;
+  onMyRequests: () => void;
 };
 
-// Atalhos da Home do fã (Bloco 11.3) — "Meus Pedidos" fica desabilitado
-// (sem GET /audiences/:id/requests ainda, ver
-// soundmeet-backend/Docs/roadmap.md Bloco 7.12 / MyRequestsScreen bloqueado)
-// mesma honestidade visual das tiles "Cifras"/"Agenda" na Home do músico —
-// sem inventar destino.
-export function QuickActionsRow({ onScanQr, onMyPoints }: Props) {
-  const actions: Action[] = [
-    { key: 'scan',   label: 'Escanear QR',  icon: QrCode,   accentColor: colors.brand.primary, onPress: onScanQr },
-    { key: 'points', label: 'Meus Pontos',  icon: Trophy,   accentColor: colors.accent.amber,  onPress: onMyPoints },
-    { key: 'orders', label: 'Meus Pedidos', icon: ListMusic, accentColor: colors.accent.violet },
-  ];
-
-  return (
-    <View style={s.row}>
-      {actions.map((action) => {
-        const disabled = !action.onPress;
-        const Icon = action.icon;
-        return (
-          <Pressable
-            key={action.key}
-            onPress={action.onPress}
-            disabled={disabled}
-            style={({ pressed }) => [
-              s.tile,
-              { borderColor: `${action.accentColor}40` },
-              disabled && s.tileDisabled,
-              pressed && !disabled && s.tilePressed,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={action.label}
-            accessibilityState={{ disabled }}
-          >
-            <View style={[s.iconBox, { backgroundColor: `${action.accentColor}24` }]}>
-              <Icon size={20} color={action.accentColor} strokeWidth={2.2} />
-            </View>
-            <Text style={s.label} numberOfLines={1}>{action.label}</Text>
-            {disabled && <Text style={s.sub}>Em breve</Text>}
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+// Atalhos da Home do fã (Bloco 11.3).
+//
+// "Meus Pedidos" ficou desabilitado desde jul/2026 com um comentário afirmando
+// que `GET /audiences/:id/requests` não existia. A rota certa é
+// `GET /requests/audiences/:audience_id` (backend 7.12) e o app já a consumia —
+// `PendingBoostHost` a usa no cold start do destaque pago. A tile foi ligada
+// junto com `MyRequestsScreen`; o mecanismo de tile desabilitada continua aqui
+// porque é a honestidade visual certa para o próximo destino que faltar.
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     gap:            spacing.md,
@@ -93,4 +60,45 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
-});
+}));
+
+export function QuickActionsRow({ onScanQr, onMyPoints, onMyRequests }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const actions: Action[] = [
+    { key: 'scan',   label: 'Escanear QR',  icon: QrCode,   accentColor: colors.brand.primary, onPress: onScanQr },
+    { key: 'points', label: 'Meus Pontos',  icon: Trophy,   accentColor: colors.accent.amber,  onPress: onMyPoints },
+    { key: 'orders', label: 'Meus Pedidos', icon: ListMusic, accentColor: colors.accent.violet, onPress: onMyRequests },
+  ];
+
+  return (
+    <View style={s.row}>
+      {actions.map((action) => {
+        const disabled = !action.onPress;
+        const Icon = action.icon;
+        return (
+          <Pressable
+            key={action.key}
+            onPress={action.onPress}
+            disabled={disabled}
+            style={({ pressed }) => [
+              s.tile,
+              { borderColor: `${action.accentColor}40` },
+              disabled && s.tileDisabled,
+              pressed && !disabled && s.tilePressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={action.label}
+            accessibilityState={{ disabled }}
+          >
+            <View style={[s.iconBox, { backgroundColor: `${action.accentColor}24` }]}>
+              <Icon size={20} color={action.accentColor} strokeWidth={2.2} />
+            </View>
+            <Text style={s.label} numberOfLines={1}>{action.label}</Text>
+            {disabled && <Text style={s.sub}>Em breve</Text>}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}

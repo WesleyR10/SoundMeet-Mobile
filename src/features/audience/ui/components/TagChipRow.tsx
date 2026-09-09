@@ -1,5 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   label:  string;
@@ -9,24 +11,7 @@ type Props = {
 
 // Fileira de tags somente-leitura (gêneros/comodidades/instrumentos) —
 // reaproveitada por EstablishmentDetailScreen e FanProfileScreen.
-export function TagChipRow({ label, tags, accentColor = colors.brand.primary }: Props) {
-  if (tags.length === 0) return null;
-
-  return (
-    <View style={s.root}>
-      <Text style={s.label}>{label}</Text>
-      <View style={s.row}>
-        {tags.map((tag) => (
-          <View key={tag} style={[s.chip, { borderColor: `${accentColor}40` }]}>
-            <Text style={[s.chipText, { color: accentColor }]}>{tag}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { gap: spacing.sm },
   label: {
     ...typography.caption,
@@ -51,4 +36,25 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     fontFamily: 'Inter-Medium',
   },
-});
+}));
+
+export function TagChipRow({ label, tags, accentColor }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  // Default no CORPO: na assinatura ele é avaliado fora do escopo do hook.
+  const accent = accentColor ?? colors.brand.primary;
+  if (tags.length === 0) return null;
+
+  return (
+    <View style={s.root}>
+      <Text style={s.label}>{label}</Text>
+      <View style={s.row}>
+        {tags.map((tag) => (
+          <View key={tag} style={[s.chip, { borderColor: `${accent}40` }]}>
+            <Text style={[s.chipText, { color: accent }]}>{tag}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}

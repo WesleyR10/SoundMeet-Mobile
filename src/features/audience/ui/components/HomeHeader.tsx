@@ -1,7 +1,9 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { User, Sparkles } from 'lucide-react-native';
-import { colors, spacing, radius, typography, gradients } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, gradients } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { AudienceProfile } from '../../domain/audience.types';
 
 type Props = {
@@ -20,38 +22,7 @@ function greeting(): string {
 // Header da Home do fã (Bloco 11.3) — mesmo idioma visual do HomeHeader do
 // músico (avatar com ring gradiente + saudação), mas com chip de
 // nível/pontos no lugar do saldo (o fã não tem carteira).
-export function HomeHeader({ audience }: Props) {
-  const name = audience?.nickname || audience?.name || '';
-
-  return (
-    <View style={s.root}>
-      <View style={s.identity}>
-        <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
-          <View style={s.avatarInner}>
-            {audience?.avatar ? (
-              <Image source={{ uri: audience.avatar }} style={s.avatarImg} />
-            ) : (
-              <User size={22} color={colors.text.muted} />
-            )}
-          </View>
-        </LinearGradient>
-        <View style={s.textCol}>
-          <Text style={s.greeting}>{greeting()}</Text>
-          <Text style={s.name} numberOfLines={1}>{name}</Text>
-        </View>
-      </View>
-
-      {!!audience && (
-        <View style={s.levelChip}>
-          <Sparkles size={13} color={colors.accent.amber} />
-          <Text style={s.levelText}>Nível {audience.current_level}</Text>
-        </View>
-      )}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flexDirection:  'row',
     alignItems:     'center',
@@ -107,4 +78,37 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color:      colors.accent.amber,
   },
-});
+}));
+
+export function HomeHeader({ audience }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const name = audience?.nickname || audience?.name || '';
+
+  return (
+    <View style={s.root}>
+      <View style={s.identity}>
+        <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
+          <View style={s.avatarInner}>
+            {audience?.avatar ? (
+              <Image source={{ uri: audience.avatar }} style={s.avatarImg} />
+            ) : (
+              <User size={22} color={colors.text.muted} />
+            )}
+          </View>
+        </LinearGradient>
+        <View style={s.textCol}>
+          <Text style={s.greeting}>{greeting()}</Text>
+          <Text style={s.name} numberOfLines={1}>{name}</Text>
+        </View>
+      </View>
+
+      {!!audience && (
+        <View style={s.levelChip}>
+          <Sparkles size={13} color={colors.accent.amber} />
+          <Text style={s.levelText}>Nível {audience.current_level}</Text>
+        </View>
+      )}
+    </View>
+  );
+}

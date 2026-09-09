@@ -24,3 +24,21 @@ export interface SendTipResult {
   qr_code?:         string;
   copy_paste_code?: string;
 }
+
+export type TipStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+
+// GET /tips/:id — visão do próprio pagador (AudienceTipPresenter no backend).
+// Não confundir com a visão do músico na carteira, que é outro presenter.
+export interface TipDetail {
+  id:              string;
+  status:          TipStatus;
+  amount:          number;
+  musician_id:     string | null;
+  band_id:         string | null;
+  event_id:        string | null;
+  message:         string | null;
+  qr_code:         string | null;
+  copy_paste_code: string | null;
+  created_at:      string;
+  updated_at:      string;
+}

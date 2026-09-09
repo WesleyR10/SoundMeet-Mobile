@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Modal, View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { X } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { FormField } from '@/shared/components/FormField';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
@@ -24,7 +26,66 @@ function toggle(list: string[] = [], value: string): string[] {
 // instalado ainda (recomendado só a partir do Bloco 10.5.1), então é um
 // `Modal` + slide manual via Reanimated, mesma filosofia de "hand-roll direto
 // em Reanimated 4" já usada no resto do app.
+const useStyles = makeStyles((colors) => ({
+  backdrop: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: colors.bg.overlay,
+  },
+  sheet: {
+    position:          'absolute',
+    left: 0, right: 0, bottom: 0,
+    maxHeight:         '82%',
+    backgroundColor:  colors.bg.elevated,
+    borderTopLeftRadius:  radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.lg,
+    paddingBottom:     spacing.xxl,
+    borderTopWidth:     1,
+    borderColor:       colors.border.strong,
+  },
+  header: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    marginBottom:    spacing.md,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  scroll: { maxHeight: 420 },
+  sectionLabel: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.8,
+    textTransform: 'uppercase',
+    color:         colors.text.muted,
+    marginTop:      spacing.lg,
+    marginBottom:   spacing.sm,
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:            spacing.sm,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.lg,
+    marginTop:      spacing.lg,
+  },
+  clearText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.secondary,
+  },
+  applyBtn: { flex: 1 },
+}));
+
 export function FilterSheet({ visible, onClose, filter, onApply }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [draft, setDraft] = useState<EstablishmentFilter>(filter);
   const translateY = useSharedValue(400);
 
@@ -120,60 +181,3 @@ export function FilterSheet({ visible, onClose, filter, onApply }: Props) {
     </Modal>
   );
 }
-
-const s = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: colors.bg.overlay,
-  },
-  sheet: {
-    position:          'absolute',
-    left: 0, right: 0, bottom: 0,
-    maxHeight:         '82%',
-    backgroundColor:  colors.bg.elevated,
-    borderTopLeftRadius:  radius.xl,
-    borderTopRightRadius: radius.xl,
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.lg,
-    paddingBottom:     spacing.xxl,
-    borderTopWidth:     1,
-    borderColor:       colors.border.strong,
-  },
-  header: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    marginBottom:    spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  scroll: { maxHeight: 420 },
-  sectionLabel: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.8,
-    textTransform: 'uppercase',
-    color:         colors.text.muted,
-    marginTop:      spacing.lg,
-    marginBottom:   spacing.sm,
-  },
-  chipWrap: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:            spacing.sm,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.lg,
-    marginTop:      spacing.lg,
-  },
-  clearText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.secondary,
-  },
-  applyBtn: { flex: 1 },
-});

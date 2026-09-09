@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, View, Text, Pressable, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { LogOut, Users } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { ThemeMenuRow } from '@/shared/components/ThemeMenuRow';
+import { SkeletonList, SkeletonProfileHeader, SkeletonText } from '@/shared/components/Skeleton';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
@@ -29,7 +33,63 @@ function toggle(list: string[], value: string): string[] {
 // FanProfileScreen (Bloco 11.13) — perfil completa progressivamente (sem
 // wizard, decisão fechada em roadmap-mobile.md): editar preferências de
 // gêneros/instrumentos aqui é o único fluxo de "completar cadastro" do fã.
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.xxxl,
+    gap:                spacing.xl,
+  },
+  centerRoot: {
+    flex:           1,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  section: { gap: spacing.sm },
+  sectionTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:            spacing.sm,
+  },
+  accountsRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.xs,
+    paddingVertical: spacing.md,
+  },
+  accountsText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  logoutRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    justifyContent: 'center',
+    gap:            spacing.xs,
+    paddingVertical: spacing.md,
+  },
+  logoutText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.status.error,
+  },
+}));
+
 export function FanProfileScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const audienceId = useAuthStore((s) => s.user?.audienceId ?? null);
   const { data: audience, isPending } = useAudience(audienceId);
   const completeMutation = useCompleteAudienceProfile(audienceId);
@@ -64,8 +124,11 @@ export function FanProfileScreen({ navigation }: Props) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
         <StatusBar style="light" />
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.skeleton}>
+          <SkeletonProfileHeader />
+          <SkeletonText lines={2} />
+          {/* Gêneros e instrumentos favoritos entram como duas grades de chips. */}
+          <SkeletonList count={2} itemHeight={72} />
         </View>
       </SafeAreaView>
     );
@@ -131,6 +194,9 @@ export function FanProfileScreen({ navigation }: Props) {
           <Text style={s.accountsText}>Trocar de conta</Text>
         </Pressable>
 
+        {/* Aparência antes de "Sair": preferência, não ação terminal. */}
+        <ThemeMenuRow />
+
         <Pressable onPress={handleLogout} style={s.logoutRow} accessibilityRole="button" accessibilityLabel="Sair da conta">
           <LogOut size={18} color={colors.status.error} />
           <Text style={s.logoutText}>Sair da conta</Text>
@@ -145,55 +211,3 @@ export function FanProfileScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.xxxl,
-    gap:                spacing.xl,
-  },
-  centerRoot: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  section: { gap: spacing.sm },
-  sectionTitle: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  chipWrap: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:            spacing.sm,
-  },
-  accountsRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.xs,
-    paddingVertical: spacing.md,
-  },
-  accountsText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  logoutRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    justifyContent: 'center',
-    gap:            spacing.xs,
-    paddingVertical: spacing.md,
-  },
-  logoutText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.status.error,
-  },
-});

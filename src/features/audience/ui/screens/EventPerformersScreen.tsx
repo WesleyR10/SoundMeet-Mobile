@@ -1,52 +1,21 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Music2 } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { FanStackScreenProps } from '@/navigation/types';
 import { useEventPerformers } from '../../application/useEstablishment';
 import { PerformerRow } from '../components/PerformerRow';
-import { EmptyState } from '../components/EmptyState';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { SkeletonList } from '@/shared/components/Skeleton';
 
 type Props = FanStackScreenProps<'EventPerformers'>;
 
 // Tela nova, descoberta durante a implementação do Bloco 11.5 — sem ela, o
 // fã não tinha como escolher PRA QUEM pedir música num evento com mais de um
 // performer. Ver nota em navigation/types.ts (FanSharedStackParamList).
-export function EventPerformersScreen({ route, navigation }: Props) {
-  const { establishmentId, eventId } = route.params;
-  const { data, isPending } = useEventPerformers(establishmentId, eventId);
-
-  return (
-    <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
-      <View style={s.header}>
-        <Text style={s.title}>Quem toca hoje</Text>
-        <Text style={s.subtitle}>Escolha um artista pra pedir uma música ou deixar uma gorjeta.</Text>
-      </View>
-
-      {isPending ? (
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
-        </View>
-      ) : !data || data.data.length === 0 ? (
-        <EmptyState icon={Music2} title="Nenhum performer escalado ainda" subtitle="O estabelecimento ainda não confirmou quem vai tocar." />
-      ) : (
-        <View style={s.list}>
-          {data.data.map((performer) => (
-            <PerformerRow
-              key={performer.id}
-              performer={performer}
-              onPress={(musicianId) => navigation.navigate('MusicianPublicProfile', { musicianId, eventId, establishmentId })}
-            />
-          ))}
-        </View>
-      )}
-    </SafeAreaView>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flex:            1,
     backgroundColor: colors.bg.primary,
@@ -74,4 +43,36 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     gap:                spacing.md,
   },
-});
+}));
+
+export function EventPerformersScreen({ route, navigation }: Props) {
+  const s = useStyles();
+  const { establishmentId, eventId } = route.params;
+  const { data, isPending } = useEventPerformers(establishmentId, eventId);
+
+  return (
+    <SafeAreaView style={s.root} edges={['top']}>
+      <StatusBar style="light" />
+      <View style={s.header}>
+        <Text style={s.title}>Quem toca hoje</Text>
+        <Text style={s.subtitle}>Escolha um artista pra pedir uma música ou deixar uma gorjeta.</Text>
+      </View>
+
+      {isPending ? (
+        <View style={s.list}><SkeletonList count={3} itemHeight={80} withAvatar /></View>
+      ) : !data || data.data.length === 0 ? (
+        <EmptyState icon={Music2} title="Nenhum performer escalado ainda" subtitle="O estabelecimento ainda não confirmou quem vai tocar." />
+      ) : (
+        <View style={s.list}>
+          {data.data.map((performer) => (
+            <PerformerRow
+              key={performer.id}
+              performer={performer}
+              onPress={(musicianId) => navigation.navigate('MusicianPublicProfile', { musicianId, eventId, establishmentId })}
+            />
+          ))}
+        </View>
+      )}
+    </SafeAreaView>
+  );
+}

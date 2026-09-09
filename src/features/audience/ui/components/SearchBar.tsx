@@ -1,6 +1,8 @@
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable } from 'react-native';
 import { Search, SlidersHorizontal } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   value:        string;
@@ -11,44 +13,7 @@ type Props = {
   placeholder?: string;
 };
 
-export function SearchBar({ value, onChangeText, onPressFilter, activeFilterCount = 0, placeholder }: Props) {
-  return (
-    <View style={s.row}>
-      <View style={s.inputWrap}>
-        <Search size={18} color={colors.text.muted} />
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder ?? 'Buscar estabelecimentos...'}
-          placeholderTextColor={colors.text.muted}
-          style={s.input}
-          cursorColor={colors.brand.primary}
-          selectionColor={`${colors.brand.primary}66`}
-          autoCapitalize="none"
-          accessibilityLabel="Buscar"
-        />
-      </View>
-
-      {onPressFilter && (
-        <Pressable
-          onPress={onPressFilter}
-          style={s.filterBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Abrir filtros"
-        >
-          <SlidersHorizontal size={18} color={activeFilterCount > 0 ? colors.brand.primary : colors.text.secondary} />
-          {activeFilterCount > 0 && (
-            <View style={s.badge}>
-              <Text style={s.badgeText}>{activeFilterCount}</Text>
-            </View>
-          )}
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     alignItems:    'center',
@@ -99,4 +64,43 @@ const s = StyleSheet.create({
     padding:     0,
     height:      12,
   },
-});
+}));
+
+export function SearchBar({ value, onChangeText, onPressFilter, activeFilterCount = 0, placeholder }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={s.row}>
+      <View style={s.inputWrap}>
+        <Search size={18} color={colors.text.muted} />
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder ?? 'Buscar estabelecimentos...'}
+          placeholderTextColor={colors.text.muted}
+          style={s.input}
+          cursorColor={colors.brand.primary}
+          selectionColor={`${colors.brand.primary}66`}
+          autoCapitalize="none"
+          accessibilityLabel="Buscar"
+        />
+      </View>
+
+      {onPressFilter && (
+        <Pressable
+          onPress={onPressFilter}
+          style={s.filterBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir filtros"
+        >
+          <SlidersHorizontal size={18} color={activeFilterCount > 0 ? colors.brand.primary : colors.text.secondary} />
+          {activeFilterCount > 0 && (
+            <View style={s.badge}>
+              <Text style={s.badgeText}>{activeFilterCount}</Text>
+            </View>
+          )}
+        </Pressable>
+      )}
+    </View>
+  );
+}

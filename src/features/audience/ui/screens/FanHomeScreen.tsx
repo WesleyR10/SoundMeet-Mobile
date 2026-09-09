@@ -1,10 +1,13 @@
 import { useCallback } from 'react';
-import { ScrollView, RefreshControl, View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+import { ScrollView, RefreshControl, View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Building2, ChevronRight } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { FanStackScreenProps, FanTabParamList } from '@/navigation/types';
@@ -15,19 +18,63 @@ import { HomeHeader } from '../components/HomeHeader';
 import { QuickActionsRow } from '../components/QuickActionsRow';
 import { MusicianRecommendationCard } from '../components/MusicianRecommendationCard';
 import { EstablishmentCard } from '../components/EstablishmentCard';
-import { EmptyState } from '../components/EmptyState';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { SkeletonList } from '@/shared/components/Skeleton';
 
 type Props = FanStackScreenProps<'FanHome'>;
 
 // Amber+violeta como a Home do músico, mas com respiração mais lenta (feed
 // de descoberta é "navegar com calma", não "atenção imediata" como o
 // contexto ao vivo do músico).
-const HOME_GLOWS = [
+/*
+ * Função do tema, não constante: como array de módulo era avaliada no
+ * carregamento e congelava o glow teal do tema escuro.
+ */
+const homeGlows = (colors: ThemeColors) => [
   { color: `${colors.brand.primary}24`, size: 300, top: -100, right: -90, duration: 9000 },
-  { color: 'rgba(124,58,237,0.16)', size: 320, top: 220, left: -110, duration: 10500 },
+  { color: `${colors.accent.violet}29`, size: 320, top: 220, left: -110, duration: 10500 },
 ];
 
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+    gap:                spacing.xl,
+  },
+  section: { gap: spacing.md },
+  sectionHeaderRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  seeAllRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            2,
+  },
+  seeAllText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  establishmentList: { gap: spacing.md },
+  emptyInline: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+}));
+
 export function FanHomeScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const audienceId = useAuthStore((s) => s.user?.audienceId ?? null);
 
   const audienceQuery      = useAudience(audienceId);
@@ -57,7 +104,7 @@ export function FanHomeScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="light" />
-      <AmbientGlowBackground glows={HOME_GLOWS} />
+      <AmbientGlowBackground glows={homeGlows(colors)} />
 
       <ScrollView
         contentContainerStyle={s.scroll}
@@ -71,6 +118,7 @@ export function FanHomeScreen({ navigation }: Props) {
         <QuickActionsRow
           onScanQr={() => navigation.navigate('QRScanner')}
           onMyPoints={goToMyPoints}
+          onMyRequests={() => navigation.navigate('MyRequests')}
         />
 
         <View style={s.section}>
@@ -108,7 +156,7 @@ export function FanHomeScreen({ navigation }: Props) {
           </View>
 
           {establishmentsQuery.isPending ? (
-            <Text style={s.emptyInline}>Carregando...</Text>
+            <SkeletonList count={3} itemHeight={96} withAvatar />
           ) : establishmentsQuery.data?.data.length ? (
             <View style={s.establishmentList}>
               {establishmentsQuery.data.data.map((establishment) => (
@@ -127,40 +175,3 @@ export function FanHomeScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-    gap:                spacing.xl,
-  },
-  section: { gap: spacing.md },
-  sectionHeaderRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  seeAllRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            2,
-  },
-  seeAllText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  establishmentList: { gap: spacing.md },
-  emptyInline: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-});

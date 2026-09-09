@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import type { EventItem } from '../../domain/event.types';
 
@@ -20,31 +22,7 @@ function formatTime(iso: string): string {
 // Linha de evento (EstablishmentDetailScreen, Bloco 11.5) — mesma linguagem
 // de "date box" do mockup Home do Músico (Próximo Show), reaproveitada aqui
 // como o análogo do fã (descobrir/entrar num show, não gerenciar o próprio).
-export function EventListItem({ event, onPress }: Props) {
-  const start = new Date(event.start_at);
-
-  return (
-    <Pressable3DCard onPress={onPress} style={s.card} accessibilityLabel={event.name}>
-      <View style={s.dateBox}>
-        <Text style={s.dateWeekday}>{WEEKDAYS[start.getDay()]}</Text>
-        <Text style={s.dateDay}>{start.getDate()}</Text>
-        <Text style={s.dateMonth}>{MONTHS[start.getMonth()]}</Text>
-      </View>
-
-      <View style={s.info}>
-        <Text style={s.name} numberOfLines={1}>{event.name}</Text>
-        <Text style={s.meta}>
-          {formatTime(event.start_at)} – {formatTime(event.end_at)}
-          {event.cover_charge ? ` · R$ ${event.cover_charge.toFixed(2)}` : ' · Entrada grátis'}
-        </Text>
-      </View>
-
-      <ChevronRight size={18} color={colors.text.muted} />
-    </Pressable3DCard>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     flexDirection: 'row',
     alignItems:    'center',
@@ -84,4 +62,30 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     color: colors.text.secondary,
   },
-});
+}));
+
+export function EventListItem({ event, onPress }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const start = new Date(event.start_at);
+
+  return (
+    <Pressable3DCard onPress={onPress} style={s.card} accessibilityLabel={event.name}>
+      <View style={s.dateBox}>
+        <Text style={s.dateWeekday}>{WEEKDAYS[start.getDay()]}</Text>
+        <Text style={s.dateDay}>{start.getDate()}</Text>
+        <Text style={s.dateMonth}>{MONTHS[start.getMonth()]}</Text>
+      </View>
+
+      <View style={s.info}>
+        <Text style={s.name} numberOfLines={1}>{event.name}</Text>
+        <Text style={s.meta}>
+          {formatTime(event.start_at)} – {formatTime(event.end_at)}
+          {event.cover_charge ? ` · R$ ${event.cover_charge.toFixed(2)}` : ' · Entrada grátis'}
+        </Text>
+      </View>
+
+      <ChevronRight size={18} color={colors.text.muted} />
+    </Pressable3DCard>
+  );
+}

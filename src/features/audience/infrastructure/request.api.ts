@@ -1,8 +1,10 @@
 import { httpClient } from '@/shared/services/http/client';
 import type { ApiEnvelope } from '@/shared/services/http/types';
 import type {
+  AudienceRequest,
   MakeMusicRequestPayload,
   MakeMusicRequestResult,
+  RequestBoostPayment,
   RequestSuggestionsResult,
   VoteType,
 } from '../domain/request.types';
@@ -38,4 +40,32 @@ export async function getRequestSuggestions(musicianId: string, limit = 8): Prom
 // audiences-module).
 export async function voteOnRequest(requestId: string, voteType: VoteType): Promise<void> {
   await httpClient.post(`/requests/${requestId}/votes`, { vote_type: voteType });
+}
+
+// GET /requests/:id/boost/payment — o QR da cobrança do destaque.
+//
+// Existe porque a cobrança nasce quando o MÚSICO aceita: o fã não está na tela
+// nesse instante. O socket entrega o QR a quem está com o app aberto; esta rota
+// é o caminho de quem voltou depois (e o público não tem push registrado).
+export async function getRequestBoostPayment(requestId: string): Promise<RequestBoostPayment> {
+  const { data } = await httpClient.get<ApiEnvelope<RequestBoostPayment>>(
+    `/requests/${requestId}/boost/payment`,
+  );
+  return data.data;
+}
+
+// GET /requests/audiences/:audience_id — os pedidos do próprio fã.
+//
+// Usado no cold start: o `pending-boost.store` vive em memória de propósito
+// (um QR em cache de disco poderia ressuscitar vencido), então quem fecha o
+// app perde o banner. Esta lista é o que o traz de volta.
+export async function getAudienceRequests(
+  audienceId: string,
+  perPage = 20,
+): Promise<AudienceRequest[]> {
+  const { data } = await httpClient.get<{ data: AudienceRequest[] }>(
+    `/requests/audiences/${audienceId}`,
+    { params: { per_page: perPage, sort: 'created_at', sort_dir: 'desc' } },
+  );
+  return data.data;
 }

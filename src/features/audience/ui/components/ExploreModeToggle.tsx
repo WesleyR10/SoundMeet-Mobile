@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 export type ExploreMode = 'places' | 'musicians';
 
@@ -12,40 +13,7 @@ type Props = {
 
 // Alternador Locais | Músicos do FanExplore (7.13c) — pílula deslizante com
 // withSpring, mesmo padrão visual do BillingCycleToggle do paywall.
-export function ExploreModeToggle({ mode, onChange }: Props) {
-  const progress = useSharedValue(mode === 'musicians' ? 1 : 0);
-
-  useEffect(() => {
-    progress.value = withSpring(mode === 'musicians' ? 1 : 0, { damping: 18, stiffness: 180 });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
-
-  const indicatorStyle = useAnimatedStyle(() => ({
-    left: `${progress.value * 50}%`,
-  }));
-
-  return (
-    <View style={s.root} accessibilityRole="tablist">
-      <Animated.View style={[s.indicator, indicatorStyle]} />
-      {(['places', 'musicians'] as const).map((value) => (
-        <Pressable
-          key={value}
-          style={s.segment}
-          onPress={() => onChange(value)}
-          accessibilityRole="tab"
-          accessibilityState={{ selected: mode === value }}
-          accessibilityLabel={value === 'places' ? 'Buscar locais' : 'Buscar músicos'}
-        >
-          <Text style={[s.label, mode === value && s.labelActive]}>
-            {value === 'places' ? 'Locais' : 'Músicos'}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flexDirection:   'row',
     height:           40,
@@ -78,4 +46,38 @@ const s = StyleSheet.create({
   labelActive: {
     color: colors.brand.primary,
   },
-});
+}));
+
+export function ExploreModeToggle({ mode, onChange }: Props) {
+  const s = useStyles();
+  const progress = useSharedValue(mode === 'musicians' ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withSpring(mode === 'musicians' ? 1 : 0, { damping: 18, stiffness: 180 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    left: `${progress.value * 50}%`,
+  }));
+
+  return (
+    <View style={s.root} accessibilityRole="tablist">
+      <Animated.View style={[s.indicator, indicatorStyle]} />
+      {(['places', 'musicians'] as const).map((value) => (
+        <Pressable
+          key={value}
+          style={s.segment}
+          onPress={() => onChange(value)}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: mode === value }}
+          accessibilityLabel={value === 'places' ? 'Buscar locais' : 'Buscar músicos'}
+        >
+          <Text style={[s.label, mode === value && s.labelActive]}>
+            {value === 'places' ? 'Locais' : 'Músicos'}
+          </Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}

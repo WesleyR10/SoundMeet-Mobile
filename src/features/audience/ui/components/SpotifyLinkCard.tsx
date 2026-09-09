@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { CheckCircle2, Link2, Music4 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 
 type Props = {
@@ -20,6 +22,61 @@ type Props = {
  * não quebra nada, só deixa de oferecer uma comodidade. Tratar as duas coisas
  * com a mesma urgência visual gastaria o alarme onde ele não é preciso.
  */
+const useStyles = makeStyles((colors) => ({
+  card: {
+    gap:     spacing.sm,
+    padding: spacing.md,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:           spacing.sm,
+  },
+  title: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+    flex:       1,
+  },
+  titleOk: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.status.success,
+    flex:       1,
+  },
+  body: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  button: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:             spacing.sm,
+    minHeight:       48,
+    borderRadius:    radius.xl,
+    backgroundColor: colors.brand.primary,
+    marginTop:       spacing.xs,
+  },
+  buttonPressed: {
+    opacity: 0.85,
+  },
+  buttonText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.inverse,
+  },
+  unlinkRow: {
+    minHeight:      48,
+    justifyContent: 'center',
+  },
+  unlinkText: {
+    ...typography.bodySm,
+    color:              colors.text.muted,
+    textDecorationLine: 'underline',
+  },
+}));
+
 export function SpotifyLinkCard({
   linked,
   isConnecting,
@@ -27,6 +84,8 @@ export function SpotifyLinkCard({
   onConnect,
   onDisconnect,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   if (linked) {
     return (
       <GlowCard accentColor={colors.status.success} style={s.card}>
@@ -85,58 +144,3 @@ export function SpotifyLinkCard({
     </GlowCard>
   );
 }
-
-const s = StyleSheet.create({
-  card: {
-    gap:     spacing.sm,
-    padding: spacing.md,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:           spacing.sm,
-  },
-  title: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-    flex:       1,
-  },
-  titleOk: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.status.success,
-    flex:       1,
-  },
-  body: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  button: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:             spacing.sm,
-    minHeight:       48,
-    borderRadius:    radius.xl,
-    backgroundColor: colors.brand.primary,
-    marginTop:       spacing.xs,
-  },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.inverse,
-  },
-  unlinkRow: {
-    minHeight:      48,
-    justifyContent: 'center',
-  },
-  unlinkText: {
-    ...typography.bodySm,
-    color:              colors.text.muted,
-    textDecorationLine: 'underline',
-  },
-});
