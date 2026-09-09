@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { colors, spacing, radius } from '@/shared/design-system/tokens';
+import { View } from 'react-native';
+import { spacing, radius } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { completeCadastroSchema } from '@/features/auth/domain/auth.validation';
@@ -16,7 +17,19 @@ type Props = {
 // obrigatórios (anti multi-conta, mesma regra do cadastro). Zod-only, sem
 // react-hook-form: 2 campos com submit próprio dentro de um bottom sheet,
 // mesmo racional dos steps do wizard (ver CLAUDE.md, seção Formulários).
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap:               spacing.md,
+    padding:           spacing.lg,
+    borderRadius:      radius.lg,
+    borderWidth:        1,
+    borderColor:       colors.border.default,
+    backgroundColor:   colors.bg.surface,
+  },
+}));
+
 export function BecomeMusicianForm({ submitting, onSubmit }: Props) {
+  const s = useStyles();
   const [cpf, setCpf]     = useState('');
   const [phone, setPhone] = useState('');
   const [errors, setErrors] = useState<{ cpf?: string; phone?: string }>({});
@@ -58,14 +71,3 @@ export function BecomeMusicianForm({ submitting, onSubmit }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap:               spacing.md,
-    padding:           spacing.lg,
-    borderRadius:      radius.lg,
-    borderWidth:        1,
-    borderColor:       colors.border.default,
-    backgroundColor:   colors.bg.surface,
-  },
-});

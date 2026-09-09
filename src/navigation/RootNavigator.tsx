@@ -43,6 +43,8 @@ export function RootNavigator() {
   const gate = useMusicianWizardGate();
   const pendingSharedToken = useDeepLinkStore((s) => s.pendingSharedRepertoireToken);
   const clearPendingSharedToken = useDeepLinkStore((s) => s.clearPendingSharedRepertoireToken);
+  const pendingMusicianId = useDeepLinkStore((s) => s.pendingMusicianId);
+  const clearPendingMusicianId = useDeepLinkStore((s) => s.clearPendingMusicianId);
 
   const restoreLiveSet = useLiveSetStore((s) => s.restore);
 
@@ -80,6 +82,31 @@ export function RootNavigator() {
       clearPendingSharedToken();
     }
   }, [pendingSharedToken, isAuthenticated, gate.kind, clearPendingSharedToken]);
+
+  /*
+   * QR code escaneado pela câmera nativa (App Link `https://soundmeet.com.br/musico/<id>`).
+   *
+   * Mesmo relay do token de repertório: espera a sessão resolver antes de
+   * navegar, porque `MusicianPublicProfile` vive dentro do stack do fã.
+   *
+   * 🔴 Navegação ANINHADA — `navigate('MusicianPublicProfile', ...)` do ref
+   * raiz não compila e não funcionaria: a tela não é filha direta do
+   * Stack.Navigator raiz. O caminho é FanTabs → Home → tela.
+   */
+  useEffect(() => {
+    if (!pendingMusicianId) return;
+    if (!isAuthenticated || gate.kind === 'loading' || gate.kind === 'error' || gate.kind === 'needs-wizard') return;
+    if (!navigationRef.isReady()) return;
+
+    navigationRef.navigate('FanTabs', {
+      screen: 'Home',
+      params: {
+        screen: 'MusicianPublicProfile',
+        params: { musicianId: pendingMusicianId },
+      },
+    });
+    clearPendingMusicianId();
+  }, [pendingMusicianId, isAuthenticated, gate.kind, clearPendingMusicianId]);
 
   if (isLoading) {
     return (

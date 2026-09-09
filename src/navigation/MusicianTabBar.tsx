@@ -2,7 +2,7 @@ import { View, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Home, Radio, Music, Wallet, User, type LucideIcon } from 'lucide-react-native';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
 import { TabBarItem } from './components/TabBarItem';
 import { TabBarFabItem } from './components/TabBarFabItem';
 

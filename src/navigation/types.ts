@@ -78,6 +78,11 @@ export type FanSharedStackParamList = {
   MusicianPublicProfile: { musicianId: string; eventId?: string; establishmentId?: string };
   SongRequest:           { musicianId: string; eventId: string; establishmentId?: string };
   TipMusician:           { musicianId: string; eventId?: string; establishmentId?: string };
+  // Histórico de pedidos do próprio fã. Fica na stack COMPARTILHADA (e não na
+  // de Perfil, ao lado de Gamification) porque a entrada é a tile da Home e o
+  // destino natural de "Meus Pedidos" é um drill-down — pular de aba para ler
+  // o próprio histórico perderia a pilha de onde o fã veio.
+  MyRequests?: undefined;
   QRScanner?: undefined;
 };
 

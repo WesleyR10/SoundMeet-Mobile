@@ -6,6 +6,7 @@ import { MusicianPublicProfileScreen } from '@/features/audience/ui/screens/Musi
 import { SongRequestScreen } from '@/features/audience/ui/screens/SongRequestScreen';
 import { TipMusicianScreen } from '@/features/audience/ui/screens/TipMusicianScreen';
 import { QRScannerScreen } from '@/features/audience/ui/screens/QRScannerScreen';
+import { MyRequestsScreen } from '@/features/audience/ui/screens/MyRequestsScreen';
 import type { FanSharedStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<FanSharedStackParamList>();
@@ -23,6 +24,7 @@ export function FanHomeStackNavigator() {
       <Stack.Screen name="MusicianPublicProfile" component={MusicianPublicProfileScreen} />
       <Stack.Screen name="SongRequest" component={SongRequestScreen} />
       <Stack.Screen name="TipMusician" component={TipMusicianScreen} />
+      <Stack.Screen name="MyRequests" component={MyRequestsScreen} />
       <Stack.Screen name="QRScanner" component={QRScannerScreen} />
     </Stack.Navigator>
   );

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -11,7 +11,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { LucideIcon } from 'lucide-react-native';
-import { colors, typography } from '@/shared/design-system/tokens';
+import { typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   label:        string;
@@ -35,88 +38,7 @@ type Props = {
 // apareceu no device). Fix: o círculo agora é `position:absolute` de verdade
 // (sai do fluxo), e um spacer invisível do tamanho do ícone das outras abas
 // mantém o label na mesma altura da linha de base dos demais.
-export function TabBarFabItem({ label, icon: Icon, isFocused, pendingCount, onPress }: Props) {
-  const glow     = useSharedValue(0);
-  const badgePop = useSharedValue(pendingCount > 0 ? 1 : 0);
-  const ring     = useSharedValue(isFocused ? 1 : 0);
-  // Entrada em mola. O FAB agora acompanha a aba ativa, então este componente
-  // monta do zero a cada troca de aba (a aba anterior vira TabBarItem e a nova
-  // vira FAB). Sem a entrada, o círculo aparecia "estalado" na posição nova.
-  const enter    = useSharedValue(0);
-
-  useEffect(() => {
-    enter.value = withSpring(1, { damping: 12, stiffness: 260 });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (pendingCount > 0) {
-      glow.value = withRepeat(withSequence(withTiming(1, { duration: 900 }), withTiming(0, { duration: 900 })), -1, true);
-      badgePop.value = withSequence(withSpring(1.3, { damping: 6, stiffness: 250 }), withSpring(1, { damping: 8 }));
-    } else {
-      cancelAnimation(glow);
-      glow.value = withTiming(0, { duration: 200 });
-      badgePop.value = withTiming(0, { duration: 150 });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingCount]);
-
-  useEffect(() => {
-    ring.value = withSpring(isFocused ? 1 : 0, { damping: 10, stiffness: 220 });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isFocused]);
-
-  const fabStyle = useAnimatedStyle(() => ({
-    shadowOpacity: 0.35 + glow.value * 0.25,
-    shadowRadius:  16 + glow.value * 10,
-    // A escala combina a entrada (0.6→1) com o respiro do glow, para as duas
-    // animações não brigarem pela mesma propriedade.
-    transform:     [{ scale: (0.6 + enter.value * 0.4) * (1 + glow.value * 0.05) }],
-    opacity:       enter.value,
-  }));
-  const ringStyle = useAnimatedStyle(() => ({
-    opacity:     ring.value,
-    borderWidth: 2.5 * ring.value,
-  }));
-  const badgeStyle = useAnimatedStyle(() => ({
-    opacity:   badgePop.value,
-    transform: [{ scale: badgePop.value }],
-  }));
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={s.fabWrap}
-      accessibilityRole="button"
-      accessibilityState={{ selected: isFocused }}
-      accessibilityLabel={label}
-      hitSlop={8}
-    >
-      <View style={s.spacer} />
-
-      <Animated.View style={[s.fab, fabStyle]}>
-        <Animated.View style={[s.ring, ringStyle]} />
-        <LinearGradient
-          colors={[colors.accent.coral, '#ff8a5b']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={s.fabFill}
-        >
-          <Icon size={22} color="#2a0d0d" strokeWidth={2.4} />
-        </LinearGradient>
-        {pendingCount > 0 && (
-          <Animated.View style={[s.badge, badgeStyle]}>
-            <Text style={s.badgeText}>{pendingCount > 9 ? '9+' : pendingCount}</Text>
-          </Animated.View>
-        )}
-      </Animated.View>
-
-      <Text style={s.fabLabel}>{label}</Text>
-    </Pressable>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   fabWrap: {
     alignItems: 'center',
     gap:         4,
@@ -182,4 +104,96 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color:      '#fff',
   },
-});
+}));
+
+export function TabBarFabItem({ label, icon: Icon, isFocused, pendingCount, onPress }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const reducedMotion = useReducedMotion();
+  const glow     = useSharedValue(0);
+  const badgePop = useSharedValue(pendingCount > 0 ? 1 : 0);
+  const ring     = useSharedValue(isFocused ? 1 : 0);
+  // Entrada em mola. O FAB agora acompanha a aba ativa, então este componente
+  // monta do zero a cada troca de aba (a aba anterior vira TabBarItem e a nova
+  // vira FAB). Sem a entrada, o círculo aparecia "estalado" na posição nova.
+  const enter    = useSharedValue(0);
+
+  useEffect(() => {
+    enter.value = withSpring(1, { damping: 12, stiffness: 260 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (pendingCount > 0) {
+      // 🔴 O glow pulsante ANUNCIA pedido pendente. Sob reduce motion ele para
+      // aceso (1), nunca apagado: o número no badge continua sendo a
+      // informação, e o realce tem de sobreviver ao desligamento do
+      // movimento, senão a preferência esconde um aviso.
+      glow.value = reducedMotion
+        ? withTiming(1, { duration: 200 })
+        : withRepeat(withSequence(withTiming(1, { duration: 900 }), withTiming(0, { duration: 900 })), -1, true);
+      if (!reducedMotion) {
+        badgePop.value = withSequence(withSpring(1.3, { damping: 6, stiffness: 250 }), withSpring(1, { damping: 8 }));
+      }
+    } else {
+      cancelAnimation(glow);
+      glow.value = withTiming(0, { duration: 200 });
+      badgePop.value = withTiming(0, { duration: 150 });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reducedMotion, pendingCount]);
+
+  useEffect(() => {
+    ring.value = withSpring(isFocused ? 1 : 0, { damping: 10, stiffness: 220 });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocused]);
+
+  const fabStyle = useAnimatedStyle(() => ({
+    shadowOpacity: 0.35 + glow.value * 0.25,
+    shadowRadius:  16 + glow.value * 10,
+    // A escala combina a entrada (0.6→1) com o respiro do glow, para as duas
+    // animações não brigarem pela mesma propriedade.
+    transform:     [{ scale: (0.6 + enter.value * 0.4) * (1 + glow.value * 0.05) }],
+    opacity:       enter.value,
+  }));
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity:     ring.value,
+    borderWidth: 2.5 * ring.value,
+  }));
+  const badgeStyle = useAnimatedStyle(() => ({
+    opacity:   badgePop.value,
+    transform: [{ scale: badgePop.value }],
+  }));
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={s.fabWrap}
+      accessibilityRole="button"
+      accessibilityState={{ selected: isFocused }}
+      accessibilityLabel={label}
+      hitSlop={8}
+    >
+      <View style={s.spacer} />
+
+      <Animated.View style={[s.fab, fabStyle]}>
+        <Animated.View style={[s.ring, ringStyle]} />
+        <LinearGradient
+          colors={[colors.accent.coral, '#ff8a5b']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={s.fabFill}
+        >
+          <Icon size={22} color="#2a0d0d" strokeWidth={2.4} />
+        </LinearGradient>
+        {pendingCount > 0 && (
+          <Animated.View style={[s.badge, badgeStyle]}>
+            <Text style={s.badgeText}>{pendingCount > 9 ? '9+' : pendingCount}</Text>
+          </Animated.View>
+        )}
+      </Animated.View>
+
+      <Text style={s.fabLabel}>{label}</Text>
+    </Pressable>
+  );
+}
