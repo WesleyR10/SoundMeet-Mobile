@@ -1,7 +1,8 @@
 import { useCallback, useRef, useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { RadarPulseIndicator } from '@/shared/components/RadarPulseIndicator';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
@@ -18,7 +19,61 @@ type Props = {
 // decidir. Disparado pela HomeScreen quando musician.open_to_gigs === null,
 // uma vez por sessão. "Decidir depois" só fecha o sheet (o valor continua
 // null, reaparece no próximo cold start) — nunca força a decisão.
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:     radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  content: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:      spacing.xxl,
+    gap:                 spacing.md,
+    alignItems:         'center',
+  },
+  hero: {
+    paddingVertical: spacing.md,
+  },
+  title: {
+    ...typography.title,
+    color:      colors.text.primary,
+    textAlign:  'center',
+  },
+  subtitle: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+  btnSpacing: {
+    width:      '100%',
+    marginTop:  spacing.sm,
+  },
+  declineBtn: {
+    width:             '100%',
+    height:            48,
+    borderRadius:      radius.xl,
+    borderWidth:        1,
+    borderColor:       colors.border.strong,
+    alignItems:        'center',
+    justifyContent:    'center',
+  },
+  declineLabel: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  laterLabel: {
+    ...typography.bodySm,
+    color:        colors.text.muted,
+    textDecorationLine: 'underline',
+    marginTop:     spacing.xs,
+  },
+}));
+
 export function OpenToGigsDecisionSheet({ visible, onClose, musicianId }: Props) {
+  const s = useStyles();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [error, setError] = useState<string | null>(null);
   const updateOpenToGigs = useUpdateOpenToGigs(musicianId);
@@ -88,56 +143,3 @@ export function OpenToGigsDecisionSheet({ visible, onClose, musicianId }: Props)
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:     radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:      spacing.xxl,
-    gap:                 spacing.md,
-    alignItems:         'center',
-  },
-  hero: {
-    paddingVertical: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color:      colors.text.primary,
-    textAlign:  'center',
-  },
-  subtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-  btnSpacing: {
-    width:      '100%',
-    marginTop:  spacing.sm,
-  },
-  declineBtn: {
-    width:             '100%',
-    height:            48,
-    borderRadius:      radius.xl,
-    borderWidth:        1,
-    borderColor:       colors.border.strong,
-    alignItems:        'center',
-    justifyContent:    'center',
-  },
-  declineLabel: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  laterLabel: {
-    ...typography.bodySm,
-    color:        colors.text.muted,
-    textDecorationLine: 'underline',
-    marginTop:     spacing.xs,
-  },
-});

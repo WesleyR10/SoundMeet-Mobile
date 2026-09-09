@@ -1,6 +1,8 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { AlertTriangle, Music2, PencilLine, Users, Globe2 } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import { useMusicLibraryItem } from '../../application/useMusicLibraryItem';
@@ -14,7 +16,33 @@ type Props = {
   riseDelay?: number;
 };
 
+const useStyles = makeStyles((colors) => ({
+  card: { ...shadows.sm },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  icon: {
+    width: 44, height: 44, borderRadius: radius.md, alignItems: 'center',
+    justifyContent: 'center', backgroundColor: colors.brand.muted,
+  },
+  titleWrap: { flex: 1, gap: 2 },
+  title: { ...typography.title, color: colors.text.primary },
+  artist: { ...typography.bodySm, color: colors.text.secondary },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
+  badge: {
+    minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+    borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: spacing.sm,
+  },
+  badgeText: { ...typography.caption, color: colors.text.secondary },
+  bandBadge: { backgroundColor: colors.brand.muted },
+  bandText: { color: colors.brand.primary },
+  communityBadge: { backgroundColor: `${colors.accent.violet}24` },
+  communityText: { color: colors.accent.violetLight },
+  conflictBadge: { backgroundColor: `${colors.accent.coral}1F` },
+  conflictText: { color: colors.accent.coral },
+}));
+
 export function PersonalChordSheetCard({ sheet, onPress, riseDelay = 0 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const itemQuery = useMusicLibraryItem(sheet.music_library_id);
   const viewQuery = usePersonalChordSheetView(sheet.musician_id, sheet.personal_chord_sheet_id);
   const conflictCount = viewQuery.data?.conflict_count ?? 0;
@@ -61,27 +89,3 @@ export function PersonalChordSheetCard({ sheet, onPress, riseDelay = 0 }: Props)
     </Pressable3DCard>
   );
 }
-
-const s = StyleSheet.create({
-  card: { ...shadows.sm },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  icon: {
-    width: 44, height: 44, borderRadius: radius.md, alignItems: 'center',
-    justifyContent: 'center', backgroundColor: colors.brand.muted,
-  },
-  titleWrap: { flex: 1, gap: 2 },
-  title: { ...typography.title, color: colors.text.primary },
-  artist: { ...typography.bodySm, color: colors.text.secondary },
-  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
-  badge: {
-    minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-    borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: spacing.sm,
-  },
-  badgeText: { ...typography.caption, color: colors.text.secondary },
-  bandBadge: { backgroundColor: colors.brand.muted },
-  bandText: { color: colors.brand.primary },
-  communityBadge: { backgroundColor: `${colors.accent.violet}24` },
-  communityText: { color: colors.accent.violetLight },
-  conflictBadge: { backgroundColor: `${colors.accent.coral}1F` },
-  conflictText: { color: colors.accent.coral },
-});

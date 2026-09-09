@@ -1,9 +1,12 @@
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Settings, Plus } from 'lucide-react-native';
 import DraggableFlatList, { type DragEndParams } from 'react-native-draggable-flatlist';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList, SkeletonText } from '@/shared/components/Skeleton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
@@ -19,7 +22,69 @@ type Props = RepertoireScreenProps<'RepertoireDetail'>;
 // (react-native-draggable-flatlist, decisão confirmada com o usuário — Bloco
 // 7). Reorder é otimista (useReorderSongs já atualiza o cache local antes da
 // resposta do servidor), então o drag-solto não "pisca" de volta.
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:                spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.lg,
+  },
+  headerBtn: {
+    width:          44,
+    height:         44,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+    flex:   1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+  },
+  listContainer: {
+    flex: 1,
+  },
+  listContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+  },
+  centerRoot: {
+    flex:            1,
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:              spacing.md,
+    padding:          spacing.xl,
+  },
+  emptyTitle: {
+    ...typography.title,
+    color:     colors.text.primary,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+  retryText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+}));
+
 export function RepertoireDetailScreen({ navigation, route }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { repertoireId } = route.params;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data: repertoire, isPending, isError, refetch } = useRepertoire(musicianId, repertoireId);
@@ -36,8 +101,9 @@ export function RepertoireDetailScreen({ navigation, route }: Props) {
   function renderBody() {
     if (isPending) {
       return (
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.skeleton}>
+          <SkeletonText lines={2} />
+          <SkeletonList count={5} itemHeight={72} />
         </View>
       );
     }
@@ -126,61 +192,3 @@ export function RepertoireDetailScreen({ navigation, route }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:                spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.lg,
-  },
-  headerBtn: {
-    width:          44,
-    height:         44,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-    flex:   1,
-  },
-  headerActions: {
-    flexDirection: 'row',
-  },
-  listContainer: {
-    flex: 1,
-  },
-  listContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-  },
-  centerRoot: {
-    flex:            1,
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              spacing.md,
-    padding:          spacing.xl,
-  },
-  emptyTitle: {
-    ...typography.title,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-  retryText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-});

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Search } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { useMusicianSearch } from '../../application/useMusicianSearch';
@@ -25,7 +27,147 @@ type Props = {
 // busca reaproveitando useMusicianSearch/musician-search.api.ts (já usado
 // por EditRepertoireInviteSection para outro fluxo de convite), + escolha de
 // instrumento e papel de governança (líder/membro) antes de enviar.
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:     radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  content: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:      spacing.xxl,
+    gap:                 spacing.md,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  searchWrap: {
+    flexDirection:      'row',
+    alignItems:         'center',
+    gap:                 spacing.sm,
+    height:              44,
+    borderRadius:        radius.md,
+    borderWidth:          1,
+    borderColor:         colors.border.default,
+    backgroundColor:    'rgba(255,255,255,0.04)',
+    paddingHorizontal:   spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.bodySm,
+    fontFamily: 'Inter-Medium',
+    color:      colors.text.primary,
+  },
+  resultsWrap: {
+    gap: spacing.xs,
+  },
+  emptyText: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  resultRow: {
+    borderRadius:      radius.md,
+    paddingVertical:   spacing.sm,
+    paddingHorizontal: spacing.sm,
+    backgroundColor:  'rgba(255,255,255,0.03)',
+  },
+  resultName: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  resultMeta: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  selectedRow: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    borderRadius:      radius.md,
+    borderWidth:        1,
+    borderColor:       colors.border.brand,
+    backgroundColor:   colors.brand.muted,
+    paddingHorizontal: spacing.md,
+    paddingVertical:   spacing.sm,
+  },
+  selectedName: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+    flex:        1,
+  },
+  changeLabel: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  fieldLabel: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.6,
+    textTransform: 'uppercase',
+    color:          colors.text.secondary,
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:            spacing.sm,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical:   spacing.sm,
+    borderRadius:      radius.full,
+    borderWidth:        1,
+    borderColor:       colors.border.default,
+  },
+  chipActive: {
+    borderColor:      colors.brand.primary,
+    backgroundColor: colors.brand.muted,
+  },
+  chipLabel: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  chipLabelActive: {
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  segmentRow: {
+    flexDirection: 'row',
+    borderRadius:  radius.lg,
+    borderWidth:    1,
+    borderColor:   colors.border.default,
+    overflow:      'hidden',
+  },
+  segment: {
+    flex:           1,
+    height:         44,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  segmentActive: {
+    backgroundColor: colors.brand.muted,
+  },
+  segmentLabel: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  segmentLabelActive: {
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  submitBtn: {
+    marginTop: spacing.sm,
+  },
+}));
+
 export function InviteMemberSheet({ visible, onClose, bandId, musicianId, existingMemberIds }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<MusicianSearchResult | null>(null);
@@ -197,141 +339,3 @@ export function InviteMemberSheet({ visible, onClose, bandId, musicianId, existi
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:     radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:      spacing.xxl,
-    gap:                 spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  searchWrap: {
-    flexDirection:      'row',
-    alignItems:         'center',
-    gap:                 spacing.sm,
-    height:              44,
-    borderRadius:        radius.md,
-    borderWidth:          1,
-    borderColor:         colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.04)',
-    paddingHorizontal:   spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    ...typography.bodySm,
-    fontFamily: 'Inter-Medium',
-    color:      colors.text.primary,
-  },
-  resultsWrap: {
-    gap: spacing.xs,
-  },
-  emptyText: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  resultRow: {
-    borderRadius:      radius.md,
-    paddingVertical:   spacing.sm,
-    paddingHorizontal: spacing.sm,
-    backgroundColor:  'rgba(255,255,255,0.03)',
-  },
-  resultName: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  resultMeta: {
-    ...typography.caption,
-    color: colors.text.secondary,
-  },
-  selectedRow: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    borderRadius:      radius.md,
-    borderWidth:        1,
-    borderColor:       colors.border.brand,
-    backgroundColor:   colors.brand.muted,
-    paddingHorizontal: spacing.md,
-    paddingVertical:   spacing.sm,
-  },
-  selectedName: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-    flex:        1,
-  },
-  changeLabel: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  fieldLabel: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.6,
-    textTransform: 'uppercase',
-    color:          colors.text.secondary,
-  },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:            spacing.sm,
-  },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical:   spacing.sm,
-    borderRadius:      radius.full,
-    borderWidth:        1,
-    borderColor:       colors.border.default,
-  },
-  chipActive: {
-    borderColor:      colors.brand.primary,
-    backgroundColor: colors.brand.muted,
-  },
-  chipLabel: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  chipLabelActive: {
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  segmentRow: {
-    flexDirection: 'row',
-    borderRadius:  radius.lg,
-    borderWidth:    1,
-    borderColor:   colors.border.default,
-    overflow:      'hidden',
-  },
-  segment: {
-    flex:           1,
-    height:         44,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  segmentActive: {
-    backgroundColor: colors.brand.muted,
-  },
-  segmentLabel: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  segmentLabelActive: {
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  submitBtn: {
-    marginTop: spacing.sm,
-  },
-});

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { Controller, type Control } from 'react-hook-form';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
 import { FormField } from '@/shared/components/FormField';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
 

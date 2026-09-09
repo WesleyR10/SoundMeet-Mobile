@@ -1,6 +1,8 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { AudioLines, Clock, TriangleAlert } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import type { PracticeJobStatus } from '../../domain/practice.types';
 
@@ -21,6 +23,47 @@ type Props = {
  * músico achar que travou e sair; por isso o estágio do worker é exibido em
  * texto e o tempo esperado é dito na cara, sem eufemismo.
  */
+const useStyles = makeStyles((colors) => ({
+  card: {
+    alignItems:      'center',
+    gap:              spacing.md,
+    padding:          spacing.xl,
+    borderRadius:     radius.xl,
+    borderWidth:      1,
+    borderColor:      colors.border.default,
+    backgroundColor:  colors.bg.elevated,
+  },
+  title: {
+    ...typography.title,
+    color:     colors.text.primary,
+    textAlign: 'center',
+  },
+  text: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+  track: {
+    alignSelf:       'stretch',
+    height:          6,
+    borderRadius:    radius.full,
+    backgroundColor: colors.border.default,
+    overflow:       'hidden',
+  },
+  trackFill: {
+    height:          '100%',
+    borderRadius:    radius.full,
+    backgroundColor: colors.brand.primary,
+  },
+  stage: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+  cta: {
+    alignSelf: 'stretch',
+  },
+}));
+
 export function PracticePrepareCard({
   status,
   progress,
@@ -29,6 +72,8 @@ export function PracticePrepareCard({
   isRequesting,
   onStart,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   if (status === 'queued' || status === 'processing' || isRequesting) {
     return (
       <View style={s.card}>
@@ -95,44 +140,3 @@ export function PracticePrepareCard({
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  card: {
-    alignItems:      'center',
-    gap:              spacing.md,
-    padding:          spacing.xl,
-    borderRadius:     radius.xl,
-    borderWidth:      1,
-    borderColor:      colors.border.default,
-    backgroundColor:  colors.bg.elevated,
-  },
-  title: {
-    ...typography.title,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  text: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-  track: {
-    alignSelf:       'stretch',
-    height:          6,
-    borderRadius:    radius.full,
-    backgroundColor: colors.border.default,
-    overflow:       'hidden',
-  },
-  trackFill: {
-    height:          '100%',
-    borderRadius:    radius.full,
-    backgroundColor: colors.brand.primary,
-  },
-  stage: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-  cta: {
-    alignSelf: 'stretch',
-  },
-});

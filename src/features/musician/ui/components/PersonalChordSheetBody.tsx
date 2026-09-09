@@ -1,5 +1,6 @@
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { ScrollView, View, Text } from 'react-native';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { ChordTokenLine } from '@/shared/components/ChordTokenLine';
 import type { ChordSheetTokenGrid, RenderableToken } from '@/shared/utils/chord-sheet';
 import { PersonalChordSheetReadOnlyBody } from './PersonalChordSheetReadOnlyBody';
@@ -13,7 +14,22 @@ type Props = {
   onPressToken: (token: RenderableToken, tokenIndex: number) => void;
 };
 
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1 },
+  content: { paddingHorizontal: spacing.sm, paddingTop: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.lg },
+  section: { gap: spacing.xs },
+  editHint: {
+    ...typography.bodySm, color: colors.text.secondary, textAlign: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  emptySection: {
+    ...typography.caption, color: colors.brand.primary, textTransform: 'uppercase',
+    letterSpacing: 1.2, paddingHorizontal: spacing.lg,
+  },
+}));
+
 export function PersonalChordSheetBody({ grid, mode, annotations, onPressChord, onPressToken }: Props) {
+  const s = useStyles();
   if (mode === 'view') {
     return <PersonalChordSheetReadOnlyBody grid={grid} annotations={annotations} onPressChord={onPressChord} />;
   }
@@ -43,17 +59,3 @@ export function PersonalChordSheetBody({ grid, mode, annotations, onPressChord, 
     </ScrollView>
   );
 }
-
-const s = StyleSheet.create({
-  root: { flex: 1 },
-  content: { paddingHorizontal: spacing.sm, paddingTop: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.lg },
-  section: { gap: spacing.xs },
-  editHint: {
-    ...typography.bodySm, color: colors.text.secondary, textAlign: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  emptySection: {
-    ...typography.caption, color: colors.brand.primary, textTransform: 'uppercase',
-    letterSpacing: 1.2, paddingHorizontal: spacing.lg,
-  },
-});

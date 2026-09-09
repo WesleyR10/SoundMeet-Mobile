@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { FormField } from '@/shared/components/FormField';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { STAGE_NAME_SOFT_MAX, BIO_SOFT_MAX, type Step1FieldErrors } from '../../domain/musician.validation';
 
 type Props = {
@@ -13,7 +14,30 @@ type Props = {
   onChangeBio:       (v: string) => void;
 };
 
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  field: {
+    gap: spacing.xs,
+  },
+  counter: {
+    ...typography.caption,
+    color:      colors.text.muted,
+    textAlign:  'right',
+  },
+}));
+
 export function StepOneIdentity({ stageName, bio, errors, onChangeStageName, onChangeBio }: Props) {
+  const s = useStyles();
   const opacity = useSharedValue(0);
   const y       = useSharedValue(16);
 
@@ -59,25 +83,3 @@ export function StepOneIdentity({ stageName, bio, errors, onChangeStageName, onC
     </Animated.View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  field: {
-    gap: spacing.xs,
-  },
-  counter: {
-    ...typography.caption,
-    color:      colors.text.muted,
-    textAlign:  'right',
-  },
-});

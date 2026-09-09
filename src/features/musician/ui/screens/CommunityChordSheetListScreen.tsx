@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Search } from 'lucide-react-native';
 import { useQueries } from '@tanstack/react-query';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { SkeletonList } from '@/shared/components/Skeleton';
 import { isApiError } from '@/shared/services/http/types';
 import type { RepertoireScreenProps } from '@/navigation/types';
 import { useCommunityChordSheets } from '../../application/useCommunityChordSheets';
@@ -17,7 +20,29 @@ import { CommunityChordSheetCard } from '../components/CommunityChordSheetCard';
 
 type Props = RepertoireScreenProps<'CommunityChordSheetList'>;
 
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.bg.primary },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
+  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  titleWrap: { flex: 1, gap: 1 },
+  title: { ...typography.title, color: colors.text.primary },
+  subtitle: { ...typography.caption, color: colors.text.secondary },
+  search: {
+    height: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    marginHorizontal: spacing.xl, marginBottom: spacing.md, paddingHorizontal: spacing.md,
+    borderRadius: radius.md, borderWidth: 1, borderColor: colors.border.default, backgroundColor: colors.bg.surface,
+  },
+  input: { flex: 1, ...typography.body, color: colors.text.primary },
+  list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
+  retry: { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.brand.primary },
+  emptyTitle: { ...typography.title, color: colors.text.primary, textAlign: 'center' },
+  emptyText: { ...typography.body, color: colors.text.secondary, textAlign: 'center' },
+}));
+
 export function CommunityChordSheetListScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [search, setSearch] = useState('');
   const query = useCommunityChordSheets({ per_page: 50, sort: 'shared_at', sort_dir: 'desc' });
   const sheets = query.data?.data ?? [];
@@ -57,7 +82,7 @@ export function CommunityChordSheetListScreen({ navigation }: Props) {
       </View>
 
       {query.isPending ? (
-        <View style={s.center}><ActivityIndicator size="large" color={colors.accent.violetLight} /></View>
+        <View style={s.list}><SkeletonList count={5} itemHeight={84} /></View>
       ) : unavailable ? (
         <View style={s.center}>
           <Text style={s.emptyTitle}>Comunidade temporariamente indisponível</Text>
@@ -66,7 +91,7 @@ export function CommunityChordSheetListScreen({ navigation }: Props) {
       ) : query.isError ? (
         <View style={s.center}>
           <ErrorBanner message="Não conseguimos carregar a comunidade." />
-          <Pressable onPress={() => query.refetch()}><Text style={s.retry}>Tentar novamente</Text></Pressable>
+          <Pressable onPress={() => query.refetch()} accessibilityRole="button" accessibilityLabel="Tentar novamente"><Text style={s.retry}>Tentar novamente</Text></Pressable>
         </View>
       ) : visibleSheets.length === 0 ? (
         <View style={s.center}>
@@ -87,23 +112,3 @@ export function CommunityChordSheetListScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg.primary },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
-  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  titleWrap: { flex: 1, gap: 1 },
-  title: { ...typography.title, color: colors.text.primary },
-  subtitle: { ...typography.caption, color: colors.text.secondary },
-  search: {
-    height: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    marginHorizontal: spacing.xl, marginBottom: spacing.md, paddingHorizontal: spacing.md,
-    borderRadius: radius.md, borderWidth: 1, borderColor: colors.border.default, backgroundColor: colors.bg.surface,
-  },
-  input: { flex: 1, ...typography.body, color: colors.text.primary },
-  list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl },
-  retry: { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.brand.primary },
-  emptyTitle: { ...typography.title, color: colors.text.primary, textAlign: 'center' },
-  emptyText: { ...typography.body, color: colors.text.secondary, textAlign: 'center' },
-});

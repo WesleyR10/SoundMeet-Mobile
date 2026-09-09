@@ -1,8 +1,11 @@
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { Skeleton, SkeletonText } from '@/shared/components/Skeleton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
@@ -17,7 +20,48 @@ type Props = ProfileScreenProps<'QRCode'>;
 // EditProfileScreen/ViewProfileScreen, o back button fica visível em todo
 // estado (inclusive loading/erro) — aqui não há outra forma de sair da tela
 // exceto o gesto de voltar do sistema, então deixamos a affordance explícita.
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  // Mesmo estilo (sem chip/fundo, ícone puro sobre o AmbientGlowBackground) de
+  // EditProfileScreen.tsx — único precedente de back button neste stack.
+  backBtn: {
+    position:       'absolute',
+    top:             spacing.lg,
+    left:            spacing.lg,
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
+    zIndex:          10,
+  },
+  loaderRoot: {
+    flex:            1,
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:              spacing.md,
+    padding:          spacing.xl,
+  },
+  retryBtn: {
+    backgroundColor:   colors.brand.primary,
+    borderRadius:      radius.xl,
+    paddingVertical:   spacing.md,
+    paddingHorizontal: spacing.xxl,
+  },
+  retryText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.inverse,
+  },
+}));
+
 export function QRCodeScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data: musician, isPending, isError, refetch } = useMusician(musicianId);
 
@@ -25,7 +69,11 @@ export function QRCodeScreen({ navigation }: Props) {
     if (isPending) {
       return (
         <View style={s.loaderRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+          <View style={s.skeleton}>
+          {/* O QR é um quadrado; lista genérica mentiria a forma. */}
+          <Skeleton height={260} borderRadius={radius.lg} />
+          <SkeletonText lines={2} />
+        </View>
         </View>
       );
     }
@@ -63,40 +111,3 @@ export function QRCodeScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  // Mesmo estilo (sem chip/fundo, ícone puro sobre o AmbientGlowBackground) de
-  // EditProfileScreen.tsx — único precedente de back button neste stack.
-  backBtn: {
-    position:       'absolute',
-    top:             spacing.lg,
-    left:            spacing.lg,
-    width:           48,
-    height:          48,
-    alignItems:      'center',
-    justifyContent:  'center',
-    zIndex:          10,
-  },
-  loaderRoot: {
-    flex:            1,
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              spacing.md,
-    padding:          spacing.xl,
-  },
-  retryBtn: {
-    backgroundColor:   colors.brand.primary,
-    borderRadius:      radius.xl,
-    paddingVertical:   spacing.md,
-    paddingHorizontal: spacing.xxl,
-  },
-  retryText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.inverse,
-  },
-});

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
+import { useTheme } from '@/shared/hooks/useTheme';
 import Animated, {
   useSharedValue, useAnimatedProps, withTiming, interpolateColor, interpolate, Extrapolation,
 } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
-import { colors } from '@/shared/design-system/tokens';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -54,6 +54,7 @@ type Props = {
 };
 
 export function TunerCentsMeter({ cents, hasSignal }: Props) {
+  const { colors } = useTheme();
   const animatedCents = useSharedValue(0);
   const active = hasSignal && cents !== null;
 

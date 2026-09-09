@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Alert, ScrollView, Share, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Alert, ScrollView, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Trash2 } from 'lucide-react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
@@ -33,7 +35,54 @@ type Props = RepertoireScreenProps<'EditRepertoire'>;
 // Create/EditProfile pelo mesmo motivo — telas separadas seriam puramente
 // redundantes pra um repertório que já existe). Seções de share/invite
 // extraídas em componentes próprios (limite ~200 linhas/arquivo).
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  backBtn: {
+    position:       'absolute',
+    top:             spacing.lg,
+    left:            spacing.lg,
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
+    zIndex:          10,
+  },
+  body: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.xxxl + spacing.lg,
+    paddingBottom:     spacing.xxxl,
+    gap:                spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  banner: {},
+  deleteBtn: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:                spacing.sm,
+    borderRadius:       radius.md,
+    borderWidth:         1,
+    borderColor:        `${colors.status.error}59`,
+    paddingVertical:    spacing.md,
+    marginTop:          spacing.md,
+    ...shadows.sm,
+  },
+  deleteText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.status.error,
+  },
+}));
+
 export function EditRepertoireScreen({ navigation, route }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { repertoireId } = route.params;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data: repertoire } = useRepertoire(musicianId, repertoireId);
@@ -155,48 +204,3 @@ export function EditRepertoireScreen({ navigation, route }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  backBtn: {
-    position:       'absolute',
-    top:             spacing.lg,
-    left:            spacing.lg,
-    width:           48,
-    height:          48,
-    alignItems:      'center',
-    justifyContent:  'center',
-    zIndex:          10,
-  },
-  body: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.xxxl + spacing.lg,
-    paddingBottom:     spacing.xxxl,
-    gap:                spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  banner: {},
-  deleteBtn: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'center',
-    gap:                spacing.sm,
-    borderRadius:       radius.md,
-    borderWidth:         1,
-    borderColor:        `${colors.status.error}59`,
-    paddingVertical:    spacing.md,
-    marginTop:          spacing.md,
-    ...shadows.sm,
-  },
-  deleteText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.status.error,
-  },
-});

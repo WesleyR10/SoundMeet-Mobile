@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   title:    string;
@@ -10,16 +11,7 @@ type Props = {
 // Título + card agrupador de ProfileMenuRow — mesmo estilo de seção já
 // usado em ProfileInfoSection.tsx (título uppercase discreto + card com
 // borda sutil), reaproveitado aqui pro hub de navegação do Perfil.
-export function ProfileMenuSection({ title, children }: Props) {
-  return (
-    <View style={s.root}>
-      <Text style={s.title}>{title}</Text>
-      <View style={s.card}>{children}</View>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap: spacing.md,
   },
@@ -39,4 +31,14 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     gap:                2,
   },
-});
+}));
+
+export function ProfileMenuSection({ title, children }: Props) {
+  const s = useStyles();
+  return (
+    <View style={s.root}>
+      <Text style={s.title}>{title}</Text>
+      <View style={s.card}>{children}</View>
+    </View>
+  );
+}

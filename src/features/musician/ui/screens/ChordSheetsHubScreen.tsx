@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { ArrowLeft, FileText, Globe2, Plus, ChevronRight, type LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { RepertoireScreenProps } from '@/navigation/types';
@@ -22,7 +24,83 @@ type Props = RepertoireScreenProps<'ChordSheetsHub'>;
 // (music-library.controller.ts, `currentUser.userId` para não-admin), então não
 // há biblioteca global para listar. Quando esse conceito existir, entra aqui
 // como mais uma entrada — a tela já é um hub, não precisa de reestruturação.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex: 1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:                spacing.sm,
+    paddingHorizontal:  spacing.xl,
+    paddingVertical:    spacing.md,
+  },
+  iconBtn: {
+    width:          44,
+    height:         44,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  titleWrap: {
+    flex: 1,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxl,
+    gap:               spacing.md,
+  },
+  card: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:                spacing.md,
+    backgroundColor:   colors.bg.surface,
+    borderRadius:       radius.lg,
+    borderWidth:        1,
+    padding:            spacing.md,
+    ...shadows.sm,
+  },
+  cardPressed: {
+    opacity: 0.8,
+  },
+  iconBox: {
+    width:          40,
+    height:         40,
+    borderRadius:   radius.md,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  cardBody: {
+    flex: 1,
+    gap:   2,
+  },
+  cardTitle: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  cardDescription: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  cardMeta: {
+    ...typography.caption,
+    fontFamily: 'Inter-SemiBold',
+    marginTop:  2,
+  },
+}));
+
 export function ChordSheetsHubScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   // Mesma query key de PersonalChordSheetListScreen — cache compartilhado, sem
   // request extra; serve só para o contador do card.
@@ -106,6 +184,8 @@ type HubCardProps = {
 };
 
 function HubCard({ delay, icon: Icon, accentColor, title, description, meta, onPress }: HubCardProps) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const style = useReveal(delay);
 
   return (
@@ -131,77 +211,3 @@ function HubCard({ delay, icon: Icon, accentColor, title, description, meta, onP
     </Animated.View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:                spacing.sm,
-    paddingHorizontal:  spacing.xl,
-    paddingVertical:    spacing.md,
-  },
-  iconBtn: {
-    width:          44,
-    height:         44,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  titleWrap: {
-    flex: 1,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.caption,
-    color: colors.text.secondary,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxl,
-    gap:               spacing.md,
-  },
-  card: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:                spacing.md,
-    backgroundColor:   colors.bg.surface,
-    borderRadius:       radius.lg,
-    borderWidth:        1,
-    padding:            spacing.md,
-    ...shadows.sm,
-  },
-  cardPressed: {
-    opacity: 0.8,
-  },
-  iconBox: {
-    width:          40,
-    height:         40,
-    borderRadius:   radius.md,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  cardBody: {
-    flex: 1,
-    gap:   2,
-  },
-  cardTitle: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  cardDescription: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  cardMeta: {
-    ...typography.caption,
-    fontFamily: 'Inter-SemiBold',
-    marginTop:  2,
-  },
-});

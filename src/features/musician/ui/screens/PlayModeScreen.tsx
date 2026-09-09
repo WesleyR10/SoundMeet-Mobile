@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useKeepAwake } from 'expo-keep-awake';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { LineState } from '@/shared/components/ChordTokenLine';
 import { ChordDiagramSheet } from '@/shared/components/ChordDiagramSheet';
@@ -36,7 +37,30 @@ const SPEED_STEP = 0.25;
 // Teleprompter musical (Bloco 7, 7.8a-g) — fullscreen, sem distração. Motor
 // de auto-scroll em usePlayModeAutoScroll.ts (§1 do plano); esta tela só
 // orquestra fetch + navegação entre músicas do repertório + as duas barras.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  sectionBadgeSlot: {
+    height:         28,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  forkError: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.xs,
+  },
+  planLink: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color: colors.brand.primary,
+    textAlign: 'center',
+  },
+}));
+
 export function PlayModeScreen({ navigation, route }: Props) {
+  const s = useStyles();
   useKeepAwake();
   const { repertoireId, musicLibraryId } = route.params;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
@@ -152,7 +176,12 @@ export function PlayModeScreen({ navigation, route }: Props) {
       {!!forkError && (
         <View style={s.forkError}>
           <ErrorBanner message={forkError} />
-          <Pressable onPress={() => rootNavigation?.navigate('Plans')}>
+          <Pressable
+            onPress={() => rootNavigation?.navigate('Plans')}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Ver planos"
+          >
             <Text style={s.planLink}>Ver planos</Text>
           </Pressable>
         </View>
@@ -214,25 +243,3 @@ export function PlayModeScreen({ navigation, route }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  sectionBadgeSlot: {
-    height:         28,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  forkError: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.xs,
-  },
-  planLink: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color: colors.brand.primary,
-    textAlign: 'center',
-  },
-});

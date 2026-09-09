@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withSpring, withSequence } from 'react-native-reanimated';
 import { SkipBack, SkipForward, Play, Pause, Minus, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   isPlaying:      boolean;
@@ -31,6 +33,62 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 // cada mudança + escala no botão de play/pause ao pressionar — feedback
 // tátil pro músico que provavelmente não está olhando pra barra enquanto
 // toca.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.lg,
+    paddingTop:        spacing.sm,
+    gap:                spacing.sm,
+  },
+  speedRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.md,
+  },
+  speedBtn: {
+    width:          36,
+    height:         36,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  speedText: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+    width:  48,
+    textAlign: 'center',
+  },
+  controlsRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.xxl,
+  },
+  sideBtn: {
+    width:          56,
+    height:         56,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  sideBtnDisabled: {
+    opacity: 0.4,
+  },
+  playBtn: {
+    width:           72,
+    height:          72,
+    borderRadius:    radius.full,
+    backgroundColor: colors.brand.primary,
+    alignItems:      'center',
+    justifyContent:  'center',
+    ...shadows.brand,
+  },
+  playBtnDisabled: {
+    opacity:       0.5,
+    shadowOpacity:  0,
+    elevation:      0,
+  },
+}));
+
 export function PlayModeBottomBar({
   isPlaying,
   playDisabled,
@@ -43,6 +101,8 @@ export function PlayModeBottomBar({
   onDecreaseSpeed,
   onIncreaseSpeed,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const speedScale = useSharedValue(1);
   useEffect(() => {
     speedScale.value = withSequence(
@@ -122,59 +182,3 @@ export function PlayModeBottomBar({
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.lg,
-    paddingTop:        spacing.sm,
-    gap:                spacing.sm,
-  },
-  speedRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.md,
-  },
-  speedBtn: {
-    width:          36,
-    height:         36,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  speedText: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-    width:  48,
-    textAlign: 'center',
-  },
-  controlsRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.xxl,
-  },
-  sideBtn: {
-    width:          56,
-    height:         56,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  sideBtnDisabled: {
-    opacity: 0.4,
-  },
-  playBtn: {
-    width:           72,
-    height:          72,
-    borderRadius:    radius.full,
-    backgroundColor: colors.brand.primary,
-    alignItems:      'center',
-    justifyContent:  'center',
-    ...shadows.brand,
-  },
-  playBtnDisabled: {
-    opacity:       0.5,
-    shadowOpacity:  0,
-    elevation:      0,
-  },
-});

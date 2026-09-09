@@ -1,9 +1,11 @@
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { Lock, ImagePlus, X, AlertTriangle } from 'lucide-react-native';
 import { FormField } from '@/shared/components/FormField';
 import { QRFrame } from '@/shared/components/QRFrame';
 import { pickAvatarImage } from '@/shared/components/AvatarPicker';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   qrCodeValue:         string;
@@ -26,10 +28,76 @@ type Props = {
 // imediato antes de tocar em "Salvar". Estado bloqueado (não-PRO) não
 // renderiza nenhum input, só o texto informativo — decisão confirmada com o
 // usuário (sem CTA de upgrade, não existe checkout no app ainda).
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.md,
+  },
+  previewWrap: {
+    alignItems:    'center',
+    paddingVertical: spacing.md,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  logoBtn: {
+    flex:               1,
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:                spacing.sm,
+    height:             48,
+    borderRadius:       radius.md,
+    borderWidth:        1,
+    borderColor:       `${colors.accent.violet}40`,
+    backgroundColor:  `${colors.accent.violet}14`,
+  },
+  logoBtnText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.accent.violet,
+  },
+  removeLogoBtn: {
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
+    borderRadius:    radius.md,
+    borderWidth:      1,
+    borderColor:     colors.border.default,
+  },
+  warningRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  warningText: {
+    ...typography.caption,
+    color: colors.status.warning,
+    flex:   1,
+  },
+  lockedRoot: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    gap:               spacing.md,
+    padding:           spacing.md,
+    borderRadius:      radius.md,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+  },
+  lockedText: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+    flex:   1,
+  },
+}));
+
 export function EditQRCodeSection({
   qrCodeValue, foregroundColor, onChangeForeground, backgroundColor, onChangeBackground,
   label, onChangeLabel, logoUri, onChangeLogo, onRemoveLogo, isUploadingLogo, hasLowContrast, isLocked,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   if (isLocked) {
     return (
       <View style={s.lockedRoot}>
@@ -124,67 +192,3 @@ export function EditQRCodeSection({
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.md,
-  },
-  previewWrap: {
-    alignItems:    'center',
-    paddingVertical: spacing.md,
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  logoBtn: {
-    flex:               1,
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'center',
-    gap:                spacing.sm,
-    height:             48,
-    borderRadius:       radius.md,
-    borderWidth:        1,
-    borderColor:       `${colors.accent.violet}40`,
-    backgroundColor:  `${colors.accent.violet}14`,
-  },
-  logoBtnText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.accent.violet,
-  },
-  removeLogoBtn: {
-    width:           48,
-    height:          48,
-    alignItems:      'center',
-    justifyContent:  'center',
-    borderRadius:    radius.md,
-    borderWidth:      1,
-    borderColor:     colors.border.default,
-  },
-  warningRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  warningText: {
-    ...typography.caption,
-    color: colors.status.warning,
-    flex:   1,
-  },
-  lockedRoot: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    gap:               spacing.md,
-    padding:           spacing.md,
-    borderRadius:      radius.md,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  lockedText: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-    flex:   1,
-  },
-});

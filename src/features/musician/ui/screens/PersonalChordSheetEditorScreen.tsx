@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { SkeletonText } from '@/shared/components/Skeleton';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { ChordDiagramSheet } from '@/shared/components/ChordDiagramSheet';
@@ -35,7 +37,15 @@ import { ConflictsReviewSheet } from '../components/ConflictsReviewSheet';
 
 type Props = RepertoireScreenProps<'PersonalChordSheetEditor'>;
 
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.bg.primary },
+  state: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.bg.primary },
+  banner: { marginHorizontal: spacing.lg, marginBottom: spacing.xs },
+  retry: { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.brand.primary },
+}));
+
 export function PersonalChordSheetEditorScreen({ navigation, route }: Props) {
+  const s = useStyles();
   const id = route.params.personalChordSheetId;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const detail = usePersonalChordSheet(musicianId, id);
@@ -71,13 +81,19 @@ export function PersonalChordSheetEditorScreen({ navigation, route }: Props) {
   }
 
   if (detail.isPending || view.isPending) {
-    return <ScreenState><ActivityIndicator size="large" color={colors.brand.primary} /></ScreenState>;
+    return <ScreenState><SkeletonText lines={10} /></ScreenState>;
   }
   if (!detail.data || !view.data || !view.grid) {
     return (
       <ScreenState>
         <ErrorBanner message="Não conseguimos carregar esta cifra pessoal." />
-        <Pressable onPress={() => { detail.refetch(); view.refetch(); }}><Text style={s.retry}>Tentar novamente</Text></Pressable>
+        <Pressable
+          onPress={() => { detail.refetch(); view.refetch(); }}
+          accessibilityRole="button"
+          accessibilityLabel="Tentar novamente"
+        >
+          <Text style={s.retry}>Tentar novamente</Text>
+        </Pressable>
       </ScreenState>
     );
   }
@@ -125,12 +141,6 @@ export function PersonalChordSheetEditorScreen({ navigation, route }: Props) {
 }
 
 function ScreenState({ children }: { children: React.ReactNode }) {
+  const s = useStyles();
   return <SafeAreaView style={s.state} edges={['top', 'bottom']}>{children}</SafeAreaView>;
 }
-
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg.primary },
-  state: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.bg.primary },
-  banner: { marginHorizontal: spacing.lg, marginBottom: spacing.xs },
-  retry: { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.brand.primary },
-});

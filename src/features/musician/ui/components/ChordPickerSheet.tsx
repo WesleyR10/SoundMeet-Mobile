@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ChordDiagram } from '@/shared/components/ChordDiagram';
 import { PianoChordDiagram } from '@/shared/components/PianoChordDiagram';
@@ -41,7 +42,99 @@ const QUALITY_OPTIONS: { value: string; label: string }[] = [
 // de acorde (ver plano §5). O construtor "toque nota por nota" fica de fora
 // de propósito: exigiria reconhecimento reverso (notas → nome), que não
 // existe em lugar nenhum do projeto hoje.
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:     radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  content: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:      spacing.xxl,
+    gap:                 spacing.lg,
+    alignItems:          'center',
+  },
+  title: {
+    ...typography.title,
+    color:      colors.text.primary,
+    alignSelf: 'flex-start',
+  },
+  symbolPreview: {
+    ...typography.chordLive,
+    fontSize: 26,
+    color:    colors.brand.primary,
+  },
+  emptyPreview: {
+    ...typography.body,
+    color:           colors.text.secondary,
+    paddingVertical: spacing.lg,
+  },
+  previewFallback: {
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  previewHint: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    textAlign: 'center',
+  },
+  section: {
+    alignSelf: 'stretch',
+    gap:        spacing.sm,
+  },
+  sectionLabel: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.6,
+    textTransform: 'uppercase',
+    color:          colors.text.secondary,
+  },
+  qualityRow: {
+    flexDirection: 'row',
+    gap:            spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  qualityChip: {
+    height:            48,
+    borderRadius:      radius.full,
+    borderWidth:        1,
+    borderColor:       colors.border.default,
+    alignItems:        'center',
+    justifyContent:    'center',
+    paddingHorizontal: spacing.md,
+  },
+  qualityChipActive: {
+    borderColor:      colors.brand.primary,
+    backgroundColor: colors.brand.muted,
+  },
+  qualityLabel: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.secondary,
+  },
+  qualityLabelActive: {
+    color: colors.brand.primary,
+  },
+  bassHeader: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+  },
+  clearLabel: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  confirmBtn: {
+    alignSelf: 'stretch',
+    marginTop:  spacing.sm,
+  },
+}));
+
 export function ChordPickerSheet({ visible, initialSymbol, instrument, preferFlats = false, onConfirm, onClose }: Props) {
+  const s = useStyles();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [root, setRoot] = useState('C');
   const [quality, setQuality] = useState('');
@@ -159,94 +252,3 @@ export function ChordPickerSheet({ visible, initialSymbol, instrument, preferFla
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:     radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:      spacing.xxl,
-    gap:                 spacing.lg,
-    alignItems:          'center',
-  },
-  title: {
-    ...typography.title,
-    color:      colors.text.primary,
-    alignSelf: 'flex-start',
-  },
-  symbolPreview: {
-    ...typography.chordLive,
-    fontSize: 26,
-    color:    colors.brand.primary,
-  },
-  emptyPreview: {
-    ...typography.body,
-    color:           colors.text.secondary,
-    paddingVertical: spacing.lg,
-  },
-  previewFallback: {
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  previewHint: {
-    ...typography.caption,
-    color: colors.text.secondary,
-    textAlign: 'center',
-  },
-  section: {
-    alignSelf: 'stretch',
-    gap:        spacing.sm,
-  },
-  sectionLabel: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.6,
-    textTransform: 'uppercase',
-    color:          colors.text.secondary,
-  },
-  qualityRow: {
-    flexDirection: 'row',
-    gap:            spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  qualityChip: {
-    height:            48,
-    borderRadius:      radius.full,
-    borderWidth:        1,
-    borderColor:       colors.border.default,
-    alignItems:        'center',
-    justifyContent:    'center',
-    paddingHorizontal: spacing.md,
-  },
-  qualityChipActive: {
-    borderColor:      colors.brand.primary,
-    backgroundColor: colors.brand.muted,
-  },
-  qualityLabel: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.secondary,
-  },
-  qualityLabelActive: {
-    color: colors.brand.primary,
-  },
-  bassHeader: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-  },
-  clearLabel: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  confirmBtn: {
-    alignSelf: 'stretch',
-    marginTop:  spacing.sm,
-  },
-});

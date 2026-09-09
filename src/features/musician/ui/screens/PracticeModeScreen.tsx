@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useKeepAwake } from 'expo-keep-awake';
 import { ArrowLeft } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import type { LineState } from '@/shared/components/ChordTokenLine';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
@@ -45,7 +47,62 @@ type Props = RepertoireScreenProps<'PracticeMode'>;
  * gravação está tocando: `usePracticeScrollSync` usa a posição real como fonte
  * da rolagem — nada a calibrar, e a cifra não desanda ao longo da música.
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:                spacing.sm,
+    paddingHorizontal:  spacing.lg,
+    paddingVertical:    spacing.md,
+  },
+  headerBtn: {
+    width:           44,
+    height:          44,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  headerText: {
+    flex: 1,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  banner: {
+    marginHorizontal: spacing.lg,
+  },
+  prepareScroll: {
+    padding:        spacing.lg,
+    paddingBottom:  spacing.xxxl,
+  },
+  dock: {
+    gap:               spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.lg,
+    borderTopWidth:    1,
+    borderTopColor:    colors.border.default,
+    backgroundColor:   colors.bg.surface,
+  },
+  mixer: {
+    maxHeight: 200,
+  },
+  mixerContent: {
+    gap: spacing.sm,
+  },
+}));
+
 export function PracticeModeScreen({ navigation, route }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   useKeepAwake();
   const { repertoireId, musicLibraryId } = route.params;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
@@ -174,56 +231,3 @@ export function PracticeModeScreen({ navigation, route }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:                spacing.sm,
-    paddingHorizontal:  spacing.lg,
-    paddingVertical:    spacing.md,
-  },
-  headerBtn: {
-    width:           44,
-    height:          44,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  banner: {
-    marginHorizontal: spacing.lg,
-  },
-  prepareScroll: {
-    padding:        spacing.lg,
-    paddingBottom:  spacing.xxxl,
-  },
-  dock: {
-    gap:               spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.lg,
-    borderTopWidth:    1,
-    borderTopColor:    colors.border.default,
-    backgroundColor:   colors.bg.surface,
-  },
-  mixer: {
-    maxHeight: 200,
-  },
-  mixerContent: {
-    gap: spacing.sm,
-  },
-});

@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Coins } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   activeMemberCount: number;
@@ -13,27 +15,7 @@ type Props = {
 // o saldo agregado (inclui splits recebidos), mas sem discriminar a origem.
 // Um extrato dedicado por banda fica pra v2 (exigiria endpoint novo no
 // backend); aqui mostramos a regra, que já é 100% real e verificável.
-export function BandTipSplitCard({ activeMemberCount }: Props) {
-  const sharePct = activeMemberCount > 0 ? Math.round(100 / activeMemberCount) : 0;
-
-  return (
-    <View style={s.card}>
-      <View style={s.iconBox}>
-        <Coins size={18} color={colors.status.success} />
-      </View>
-      <View style={s.textCol}>
-        <Text style={s.title}>Divisão de gorjetas</Text>
-        <Text style={s.body}>
-          {activeMemberCount > 0
-            ? `Gorjetas enviadas para a banda são divididas igualmente entre os ${activeMemberCount} membros ativos — cerca de ${sharePct}% para cada um, creditado direto na carteira individual.`
-            : 'Sem membros ativos, gorjetas para a banda não podem ser processadas.'}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     flexDirection:   'row',
     gap:              spacing.md,
@@ -64,4 +46,26 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     color: colors.text.secondary,
   },
-});
+}));
+
+export function BandTipSplitCard({ activeMemberCount }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const sharePct = activeMemberCount > 0 ? Math.round(100 / activeMemberCount) : 0;
+
+  return (
+    <View style={s.card}>
+      <View style={s.iconBox}>
+        <Coins size={18} color={colors.status.success} />
+      </View>
+      <View style={s.textCol}>
+        <Text style={s.title}>Divisão de gorjetas</Text>
+        <Text style={s.body}>
+          {activeMemberCount > 0
+            ? `Gorjetas enviadas para a banda são divididas igualmente entre os ${activeMemberCount} membros ativos — cerca de ${sharePct}% para cada um, creditado direto na carteira individual.`
+            : 'Sem membros ativos, gorjetas para a banda não podem ser processadas.'}
+        </Text>
+      </View>
+    </View>
+  );
+}

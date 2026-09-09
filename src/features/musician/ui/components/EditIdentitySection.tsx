@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Controller, type Control } from 'react-hook-form';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { FormField } from '@/shared/components/FormField';
 import { formatCnpj } from '@/shared/utils/cnpj';
 import { AvatarPicker } from '@/shared/components/AvatarPicker';
@@ -12,7 +13,26 @@ type Props = {
   onChangeAvatarUri:  (uri: string) => void;
 };
 
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.lg,
+  },
+  field: {
+    gap: spacing.xs,
+  },
+  counter: {
+    ...typography.caption,
+    color:     colors.text.muted,
+    textAlign: 'right',
+  },
+  hint: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+}));
+
 export function EditIdentitySection({ control, avatarUri, onChangeAvatarUri }: Props) {
+  const s = useStyles();
   return (
     <View style={s.root}>
       <AvatarPicker uri={avatarUri} onChange={onChangeAvatarUri} />
@@ -87,21 +107,3 @@ export function EditIdentitySection({ control, avatarUri, onChangeAvatarUri }: P
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.lg,
-  },
-  field: {
-    gap: spacing.xs,
-  },
-  counter: {
-    ...typography.caption,
-    color:     colors.text.muted,
-    textAlign: 'right',
-  },
-  hint: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-});

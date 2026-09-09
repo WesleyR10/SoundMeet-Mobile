@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { Star, Clock, Wallet } from 'lucide-react-native';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { formatPriceRange } from '../../domain/musician.constants';
 import type { MusicianProfile } from '../../domain/musician.types';
 import { ProfileHeader } from './ProfileHeader';
@@ -37,6 +38,7 @@ function useReveal(delay: number) {
 // adicionou ProfileMenuGroups à tela; header/stats/tags não mudaram de
 // comportamento, só de arquivo.
 export function ProfileIdentityBlock({ musician }: Props) {
+  const { colors } = useTheme();
   const headerStyle = useReveal(60);
   const statsStyle  = useReveal(140);
   const tagsStyle   = useReveal(220);

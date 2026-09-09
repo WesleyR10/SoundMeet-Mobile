@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Pause, Play, RotateCcw, RotateCw } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 const SKIP_SECONDS = 10;
 const RATE_STEP = 0.25;
@@ -28,6 +30,93 @@ type Props = {
  * projeto não tem lib de slider. `shouldCorrectPitch` fica ligado no player:
  * meia-velocidade que abaixa o tom junto não serve para tirar de ouvido.
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.md,
+  },
+  timeRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  time: {
+    ...typography.caption,
+    color:     colors.text.secondary,
+    minWidth:  38,
+    textAlign: 'center',
+  },
+  track: {
+    flex:            1,
+    height:          4,
+    borderRadius:    radius.full,
+    backgroundColor: colors.border.default,
+    overflow:       'hidden',
+  },
+  trackFill: {
+    height:          '100%',
+    borderRadius:    radius.full,
+    backgroundColor: colors.brand.primary,
+  },
+  controls: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.xl,
+  },
+  secondaryBtn: {
+    width:           56,
+    height:          56,
+    alignItems:     'center',
+    justifyContent: 'center',
+    borderRadius:    radius.full,
+    borderWidth:     1.5,
+    borderColor:     colors.border.brand,
+  },
+  playBtn: {
+    width:           68,
+    height:          68,
+    alignItems:     'center',
+    justifyContent: 'center',
+    borderRadius:    radius.full,
+    backgroundColor: colors.brand.primary,
+  },
+  rateRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.md,
+  },
+  rateBtn: {
+    width:           48,
+    height:          48,
+    alignItems:     'center',
+    justifyContent: 'center',
+    borderRadius:    radius.md,
+    borderWidth:     1,
+    borderColor:     colors.border.default,
+  },
+  rateBtnDisabled: {
+    opacity: 0.35,
+  },
+  rateBtnLabel: {
+    ...typography.title,
+    color: colors.brand.primary,
+  },
+  rateValueBox: {
+    alignItems: 'center',
+    minWidth:   96,
+  },
+  rateValue: {
+    ...typography.liveBody,
+    fontFamily: 'SpaceGrotesk-SemiBold',
+    color:      colors.text.primary,
+  },
+  rateHint: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+}));
+
 export function PracticeTransport({
   isPlaying,
   position,
@@ -37,6 +126,8 @@ export function PracticeTransport({
   onSeek,
   onRate,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const canSlower = rate > MIN_RATE + 0.001;
   const canFaster = rate < MAX_RATE - 0.001;
 
@@ -133,90 +224,3 @@ function formatTime(seconds: number): string {
   const sec = total % 60;
   return `${m}:${String(sec).padStart(2, '0')}`;
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.md,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  time: {
-    ...typography.caption,
-    color:     colors.text.secondary,
-    minWidth:  38,
-    textAlign: 'center',
-  },
-  track: {
-    flex:            1,
-    height:          4,
-    borderRadius:    radius.full,
-    backgroundColor: colors.border.default,
-    overflow:       'hidden',
-  },
-  trackFill: {
-    height:          '100%',
-    borderRadius:    radius.full,
-    backgroundColor: colors.brand.primary,
-  },
-  controls: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.xl,
-  },
-  secondaryBtn: {
-    width:           56,
-    height:          56,
-    alignItems:     'center',
-    justifyContent: 'center',
-    borderRadius:    radius.full,
-    borderWidth:     1.5,
-    borderColor:     colors.border.brand,
-  },
-  playBtn: {
-    width:           68,
-    height:          68,
-    alignItems:     'center',
-    justifyContent: 'center',
-    borderRadius:    radius.full,
-    backgroundColor: colors.brand.primary,
-  },
-  rateRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.md,
-  },
-  rateBtn: {
-    width:           48,
-    height:          48,
-    alignItems:     'center',
-    justifyContent: 'center',
-    borderRadius:    radius.md,
-    borderWidth:     1,
-    borderColor:     colors.border.default,
-  },
-  rateBtnDisabled: {
-    opacity: 0.35,
-  },
-  rateBtnLabel: {
-    ...typography.title,
-    color: colors.brand.primary,
-  },
-  rateValueBox: {
-    alignItems: 'center',
-    minWidth:   96,
-  },
-  rateValue: {
-    ...typography.liveBody,
-    fontFamily: 'SpaceGrotesk-SemiBold',
-    color:      colors.text.primary,
-  },
-  rateHint: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-});

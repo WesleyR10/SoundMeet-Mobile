@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { CreditCard, Smartphone, Mail, KeyRound } from 'lucide-react-native';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
 import { FormField } from '@/shared/components/FormField';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { formatCpf } from '@/shared/utils/cpf';
 import { formatPhoneBr } from '@/shared/utils/phone';
 import type { PixKeyType } from '../../domain/musician.validation';
@@ -41,10 +43,31 @@ const PLACEHOLDER: Record<PixKeyType, string> = {
   random: 'Cole sua chave aleatória',
 };
 
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:            spacing.sm,
+  },
+}));
+
 export function StepFourPix({
   pixKeyType, pixKey, onChangeType, onChangeKey,
   prefillCpf, prefillPhone, prefillEmail, error,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const opacity = useSharedValue(0);
   const y       = useSharedValue(16);
 
@@ -113,22 +136,3 @@ export function StepFourPix({
     </Animated.View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  chipWrap: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:            spacing.sm,
-  },
-});

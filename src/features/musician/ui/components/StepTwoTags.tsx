@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { INSTRUMENT_OPTIONS, GENRE_OPTIONS } from '../../domain/musician.constants';
 
 type Props = {
@@ -12,7 +14,38 @@ type Props = {
   onToggleGenre:       (id: string) => void;
 };
 
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  group: {
+    gap: spacing.sm,
+  },
+  groupLabel: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.8,
+    color:          'rgba(255,255,255,0.55)',
+    textTransform:  'uppercase',
+  },
+  chipWrap: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:            spacing.sm,
+  },
+}));
+
 export function StepTwoTags({ instruments, genres, onToggleInstrument, onToggleGenre }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const opacity = useSharedValue(0);
   const y       = useSharedValue(16);
 
@@ -66,32 +99,3 @@ export function StepTwoTags({ instruments, genres, onToggleInstrument, onToggleG
     </Animated.View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  group: {
-    gap: spacing.sm,
-  },
-  groupLabel: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.8,
-    color:          'rgba(255,255,255,0.55)',
-    textTransform:  'uppercase',
-  },
-  chipWrap: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:            spacing.sm,
-  },
-});

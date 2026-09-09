@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   icon:         LucideIcon;
@@ -15,20 +16,7 @@ type Props = {
  * Célula do relatório pós-show. Duas por linha (48%), para caber "R$ 1.234,56"
  * sem quebrar — o valor de gorjeta é o texto mais largo da grade.
  */
-export function ReportStatCard({ icon: Icon, value, label, hint, accentColor }: Props) {
-  return (
-    <View style={s.root}>
-      <Icon size={17} color={accentColor} />
-      <Text style={[s.value, { color: accentColor }]} numberOfLines={1} adjustsFontSizeToFit>
-        {value}
-      </Text>
-      <Text style={s.label}>{label}</Text>
-      {!!hint && <Text style={s.hint}>{hint}</Text>}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     width:           '48%',
     gap:             2,
@@ -50,4 +38,18 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.muted,
   },
-});
+}));
+
+export function ReportStatCard({ icon: Icon, value, label, hint, accentColor }: Props) {
+  const s = useStyles();
+  return (
+    <View style={s.root}>
+      <Icon size={17} color={accentColor} />
+      <Text style={[s.value, { color: accentColor }]} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
+      <Text style={s.label}>{label}</Text>
+      {!!hint && <Text style={s.hint}>{hint}</Text>}
+    </View>
+  );
+}

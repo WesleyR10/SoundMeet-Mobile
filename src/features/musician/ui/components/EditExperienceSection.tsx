@@ -1,45 +1,14 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { Controller, type Control } from 'react-hook-form';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
 
 type Props = {
   control: Control<EditProfileFormValues>;
 };
 
-export function EditExperienceSection({ control }: Props) {
-  return (
-    <Controller
-      control={control}
-      name="experienceYears"
-      render={({ field }) => {
-        const years = Number(field.value) || 0;
-        const dec = () => field.onChange(Math.max(0, years - 1));
-        const inc = () => field.onChange(Math.min(100, years + 1));
-
-        return (
-          <View style={s.root}>
-            <Text style={s.label}>Anos de experiência</Text>
-            <View style={s.row}>
-              <Pressable onPress={dec} style={s.stepBtn} accessibilityRole="button" accessibilityLabel="Diminuir anos de experiência">
-                <Text style={s.stepBtnText}>−</Text>
-              </Pressable>
-              <View style={s.center}>
-                <Text style={s.years}>{years}</Text>
-                <Text style={s.yearsLabel}>{years === 1 ? 'ano de palco' : 'anos de palco'}</Text>
-              </View>
-              <Pressable onPress={inc} style={s.stepBtn} accessibilityRole="button" accessibilityLabel="Aumentar anos de experiência">
-                <Text style={s.stepBtnText}>＋</Text>
-              </Pressable>
-            </View>
-          </View>
-        );
-      }}
-    />
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap: spacing.md,
   },
@@ -85,4 +54,37 @@ const s = StyleSheet.create({
     color:     colors.text.secondary,
     marginTop: 1,
   },
-});
+}));
+
+export function EditExperienceSection({ control }: Props) {
+  const s = useStyles();
+  return (
+    <Controller
+      control={control}
+      name="experienceYears"
+      render={({ field }) => {
+        const years = Number(field.value) || 0;
+        const dec = () => field.onChange(Math.max(0, years - 1));
+        const inc = () => field.onChange(Math.min(100, years + 1));
+
+        return (
+          <View style={s.root}>
+            <Text style={s.label}>Anos de experiência</Text>
+            <View style={s.row}>
+              <Pressable onPress={dec} style={s.stepBtn} accessibilityRole="button" accessibilityLabel="Diminuir anos de experiência">
+                <Text style={s.stepBtnText}>−</Text>
+              </Pressable>
+              <View style={s.center}>
+                <Text style={s.years}>{years}</Text>
+                <Text style={s.yearsLabel}>{years === 1 ? 'ano de palco' : 'anos de palco'}</Text>
+              </View>
+              <Pressable onPress={inc} style={s.stepBtn} accessibilityRole="button" accessibilityLabel="Aumentar anos de experiência">
+                <Text style={s.stepBtnText}>＋</Text>
+              </Pressable>
+            </View>
+          </View>
+        );
+      }}
+    />
+  );
+}

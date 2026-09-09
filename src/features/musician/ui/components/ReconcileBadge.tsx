@@ -1,17 +1,10 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { RefreshCw } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
-export function ReconcileBadge() {
-  return (
-    <View style={s.badge} accessibilityLabel="A cifra base foi atualizada">
-      <RefreshCw size={12} color={colors.text.secondary} />
-      <Text style={s.label}>Base atualizada</Text>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   badge: {
     minHeight: 28,
     flexDirection: 'row',
@@ -27,4 +20,15 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
-});
+}));
+
+export function ReconcileBadge() {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={s.badge} accessibilityLabel="A cifra base foi atualizada">
+      <RefreshCw size={12} color={colors.text.secondary} />
+      <Text style={s.label}>Base atualizada</Text>
+    </View>
+  );
+}

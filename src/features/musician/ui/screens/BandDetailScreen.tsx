@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Users, UserPlus } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList, SkeletonProfileHeader, SkeletonText } from '@/shared/components/Skeleton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { Avatar } from '@/shared/components/Avatar';
@@ -13,6 +16,7 @@ import { BandMemberRow } from '../components/BandMemberRow';
 import { BandTipSplitCard } from '../components/BandTipSplitCard';
 import { BandAgendaSummary } from '../components/BandAgendaSummary';
 import { BandLeaderSettingsSection } from '../components/BandLeaderSettingsSection';
+import { BandDangerZone } from '../components/BandDangerZone';
 import { InviteMemberSheet } from '../components/InviteMemberSheet';
 import type { ProfileScreenProps } from '@/navigation/types';
 
@@ -24,139 +28,9 @@ type Props = ProfileScreenProps<'BandDetail'>;
 // Disponibilidade/Endereço só aparecem pra quem é líder (BandMember.role
 // === 'leader') — restrição só de UI, ver plano/CLAUDE.md sobre o guard do
 // backend não distinguir líder ainda.
-export function BandDetailScreen({ route, navigation }: Props) {
-  const { bandId } = route.params;
-  const myMusicianId = useAuthStore((s) => s.user?.musicianId ?? null);
-  const { data: band, isPending, isError, refetch } = useBand(bandId);
-  const [inviteSheetVisible, setInviteSheetVisible] = useState(false);
-
-  const isLeader = band?.members.some((m) => m.musician_id === myMusicianId && m.role === 'leader') ?? false;
-
-  function renderBody() {
-    if (isPending) {
-      return (
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
-        </View>
-      );
-    }
-
-    if (isError || !band) {
-      return (
-        <View style={s.centerRoot}>
-          <ErrorBanner message="Não conseguimos carregar esta banda." />
-          <Pressable onPress={() => refetch()} style={s.retryBtn} accessibilityRole="button" accessibilityLabel="Tentar novamente">
-            <Text style={s.retryText}>Tentar novamente</Text>
-          </Pressable>
-        </View>
-      );
-    }
-
-    return (
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <View style={s.heroRow}>
-          <Avatar
-            uri={band.avatar}
-            size={64}
-            fallbackIcon={Users}
-            ringColors={[colors.accent.violet, colors.brand.primary]}
-          />
-          <View style={s.heroText}>
-            <Text style={s.bandName}>{band.name}</Text>
-            {!!band.genres.length && (
-              <Text style={s.genres} numberOfLines={1}>{band.genres.join(' · ')}</Text>
-            )}
-          </View>
-        </View>
-
-        {!!band.description && <Text style={s.description}>{band.description}</Text>}
-
-        <View style={s.section}>
-          <View style={s.sectionHeaderRow}>
-            <Text style={s.sectionTitle}>Membros ({band.members.length})</Text>
-            {isLeader && (
-              <Pressable
-                onPress={() => setInviteSheetVisible(true)}
-                style={s.inviteBtn}
-                accessibilityRole="button"
-                accessibilityLabel="Convidar membro"
-                hitSlop={8}
-              >
-                <UserPlus size={16} color={colors.brand.primary} />
-                <Text style={s.inviteBtnLabel}>Convidar</Text>
-              </Pressable>
-            )}
-          </View>
-          <View style={s.card}>
-            {band.members.map((member) => (
-              <BandMemberRow
-                key={member.member_id}
-                member={member}
-                bandId={band.id}
-                canManage={isLeader}
-              />
-            ))}
-          </View>
-        </View>
-
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Gorjetas</Text>
-          {/* Só membros "accepted" recebem parte da gorjeta — pending/declined
-              não contam (regra de negócio, ver Docs do backend). */}
-          <BandTipSplitCard activeMemberCount={band.members.filter((m) => m.status === 'accepted').length} />
-        </View>
-
-        <View style={s.section}>
-          <Text style={s.sectionTitle}>Agenda</Text>
-          <View style={s.card}>
-            <BandAgendaSummary bandId={band.id} />
-          </View>
-        </View>
-
-        {isLeader && (
-          <View style={s.section}>
-            <BandLeaderSettingsSection band={band} musicianId={myMusicianId} />
-          </View>
-        )}
-      </ScrollView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
-      <AmbientGlowBackground />
-
-      <View style={s.header}>
-        <Pressable
-          onPress={() => navigation.goBack()}
-          style={s.iconBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          hitSlop={8}
-        >
-          <ArrowLeft size={22} color={colors.text.primary} />
-        </Pressable>
-        <Text style={s.title}>Banda</Text>
-        <View style={s.iconBtn} />
-      </View>
-
-      {renderBody()}
-
-      {isLeader && (
-        <InviteMemberSheet
-          visible={inviteSheetVisible}
-          onClose={() => setInviteSheetVisible(false)}
-          bandId={bandId}
-          musicianId={myMusicianId}
-          existingMemberIds={band?.members.filter((m) => m.status !== 'declined').map((m) => m.musician_id) ?? []}
-        />
-      )}
-    </SafeAreaView>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
   root: {
     flex:            1,
     backgroundColor: colors.bg.primary,
@@ -260,4 +134,151 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color:      colors.brand.primary,
   },
-});
+}));
+
+export function BandDetailScreen({ route, navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const { bandId } = route.params;
+  const myMusicianId = useAuthStore((s) => s.user?.musicianId ?? null);
+  const { data: band, isPending, isError, refetch } = useBand(bandId);
+  const [inviteSheetVisible, setInviteSheetVisible] = useState(false);
+
+  const isLeader = band?.members.some((m) => m.musician_id === myMusicianId && m.role === 'leader') ?? false;
+
+  function renderBody() {
+    if (isPending) {
+      return (
+        <View style={s.skeleton}>
+          <SkeletonProfileHeader avatarSize={64} centered={false} />
+          <SkeletonText lines={2} />
+          {/* Membros, gorjetas e agenda — três seções de card. */}
+          <SkeletonList count={3} itemHeight={88} withAvatar />
+        </View>
+      );
+    }
+
+    if (isError || !band) {
+      return (
+        <View style={s.centerRoot}>
+          <ErrorBanner message="Não conseguimos carregar esta banda." />
+          <Pressable onPress={() => refetch()} style={s.retryBtn} accessibilityRole="button" accessibilityLabel="Tentar novamente">
+            <Text style={s.retryText}>Tentar novamente</Text>
+          </Pressable>
+        </View>
+      );
+    }
+
+    return (
+      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+        <View style={s.heroRow}>
+          <Avatar
+            uri={band.avatar}
+            size={64}
+            fallbackIcon={Users}
+            ringColors={[colors.accent.violet, colors.brand.primary]}
+          />
+          <View style={s.heroText}>
+            <Text style={s.bandName}>{band.name}</Text>
+            {!!band.genres.length && (
+              <Text style={s.genres} numberOfLines={1}>{band.genres.join(' · ')}</Text>
+            )}
+          </View>
+        </View>
+
+        {!!band.description && <Text style={s.description}>{band.description}</Text>}
+
+        <View style={s.section}>
+          <View style={s.sectionHeaderRow}>
+            <Text style={s.sectionTitle}>Membros ({band.members.length})</Text>
+            {isLeader && (
+              <Pressable
+                onPress={() => setInviteSheetVisible(true)}
+                style={s.inviteBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Convidar membro"
+                hitSlop={8}
+              >
+                <UserPlus size={16} color={colors.brand.primary} />
+                <Text style={s.inviteBtnLabel}>Convidar</Text>
+              </Pressable>
+            )}
+          </View>
+          <View style={s.card}>
+            {band.members.map((member) => (
+              <BandMemberRow
+                key={member.member_id}
+                member={member}
+                bandId={band.id}
+                canManage={isLeader}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Gorjetas</Text>
+          {/* Só membros "accepted" recebem parte da gorjeta — pending/declined
+              não contam (regra de negócio, ver Docs do backend). */}
+          <BandTipSplitCard activeMemberCount={band.members.filter((m) => m.status === 'accepted').length} />
+        </View>
+
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Agenda</Text>
+          <View style={s.card}>
+            <BandAgendaSummary bandId={band.id} />
+          </View>
+        </View>
+
+        {isLeader && (
+          <View style={s.section}>
+            <BandLeaderSettingsSection band={band} musicianId={myMusicianId} />
+          </View>
+        )}
+
+        {isLeader && (
+          <View style={s.section}>
+            <BandDangerZone
+              band={band}
+              musicianId={myMusicianId}
+              onDissolved={() => navigation.goBack()}
+            />
+          </View>
+        )}
+      </ScrollView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={s.root} edges={['top']}>
+      <StatusBar style="light" />
+      <AmbientGlowBackground />
+
+      <View style={s.header}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          style={s.iconBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+          hitSlop={8}
+        >
+          <ArrowLeft size={22} color={colors.text.primary} />
+        </Pressable>
+        <Text style={s.title}>Banda</Text>
+        <View style={s.iconBtn} />
+      </View>
+
+      {renderBody()}
+
+      {isLeader && (
+        <InviteMemberSheet
+          visible={inviteSheetVisible}
+          onClose={() => setInviteSheetVisible(false)}
+          bandId={bandId}
+          musicianId={myMusicianId}
+          existingMemberIds={band?.members.filter((m) => m.status !== 'declined').map((m) => m.musician_id) ?? []}
+        />
+      )}
+    </SafeAreaView>
+  );
+}

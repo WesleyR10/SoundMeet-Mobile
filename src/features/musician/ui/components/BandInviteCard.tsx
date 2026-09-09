@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Check, X, Users } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { Avatar } from '@/shared/components/Avatar';
 import type { Band, BandMember } from '../../domain/band.types';
 
@@ -35,7 +37,83 @@ const ROLE_LABEL: Record<string, string> = {
 // design-system.md já usa violeta pra "comunidade/momento especial" (chat,
 // agenda), diferente do teal de pedido ao vivo — evita confundir os dois
 // tipos de card visualmente, mesmo tendo o mesmo gesto.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    marginBottom: spacing.md,
+  },
+  revealBg: {
+    position:       'absolute',
+    top:             0,
+    bottom:          0,
+    width:           '50%',
+    borderRadius:    radius.lg,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  revealAccept: { left: 0, backgroundColor: colors.accent.violet },
+  revealReject: { right: 0, backgroundColor: colors.accent.coral },
+  card: {
+    backgroundColor:   colors.bg.surface,
+    borderRadius:      radius.lg,
+    borderWidth:       1,
+    borderColor:       colors.border.brand,
+    padding:           spacing.lg,
+    gap:               spacing.md,
+    ...shadows.violet,
+  },
+  cardDisabled: {
+    opacity: 0.6,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.md,
+  },
+  headerText: {
+    flex: 1,
+    gap:   2,
+  },
+  bandName: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  inviteText: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  footer: {
+    flexDirection: 'row',
+    gap:            spacing.md,
+  },
+  rejectBtn: {
+    width:           48,
+    height:          48,
+    borderRadius:    radius.md,
+    borderWidth:     1.5,
+    borderColor:     colors.accent.coral,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  acceptBtn: {
+    flex:              1,
+    height:            48,
+    borderRadius:      radius.md,
+    backgroundColor:  colors.accent.violet,
+    flexDirection:    'row',
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:                spacing.sm,
+  },
+  acceptLabel: {
+    ...typography.body,
+    fontFamily: 'SpaceGrotesk-SemiBold',
+    color:      colors.text.inverse,
+  },
+}));
+
 export function BandInviteCard({ band, myMember, onAccept, onReject, disabled, failed }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const translateX = useSharedValue(0);
   const hapticFired = useSharedValue(false);
 
@@ -134,77 +212,3 @@ export function BandInviteCard({ band, myMember, onAccept, onReject, disabled, f
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    marginBottom: spacing.md,
-  },
-  revealBg: {
-    position:       'absolute',
-    top:             0,
-    bottom:          0,
-    width:           '50%',
-    borderRadius:    radius.lg,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  revealAccept: { left: 0, backgroundColor: colors.accent.violet },
-  revealReject: { right: 0, backgroundColor: colors.accent.coral },
-  card: {
-    backgroundColor:   colors.bg.surface,
-    borderRadius:      radius.lg,
-    borderWidth:       1,
-    borderColor:       colors.border.brand,
-    padding:           spacing.lg,
-    gap:               spacing.md,
-    ...shadows.violet,
-  },
-  cardDisabled: {
-    opacity: 0.6,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.md,
-  },
-  headerText: {
-    flex: 1,
-    gap:   2,
-  },
-  bandName: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  inviteText: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  footer: {
-    flexDirection: 'row',
-    gap:            spacing.md,
-  },
-  rejectBtn: {
-    width:           48,
-    height:          48,
-    borderRadius:    radius.md,
-    borderWidth:     1.5,
-    borderColor:     colors.accent.coral,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  acceptBtn: {
-    flex:              1,
-    height:            48,
-    borderRadius:      radius.md,
-    backgroundColor:  colors.accent.violet,
-    flexDirection:    'row',
-    alignItems:        'center',
-    justifyContent:    'center',
-    gap:                spacing.sm,
-  },
-  acceptLabel: {
-    ...typography.body,
-    fontFamily: 'SpaceGrotesk-SemiBold',
-    color:      colors.text.inverse,
-  },
-});

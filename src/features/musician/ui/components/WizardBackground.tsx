@@ -1,7 +1,8 @@
 import { View, StyleSheet, Dimensions } from 'react-native';
+import { useTheme } from '@/shared/hooks/useTheme';
 import Animated, { useAnimatedStyle, interpolateColor, type SharedValue } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
-import { colors } from '@/shared/design-system/tokens';
+
 import { Particle } from '@/shared/components/Particle';
 
 const SW = Dimensions.get('window').width;
@@ -19,6 +20,7 @@ type Props = {
 // premium do QR — e ganha uma grade holográfica sutil em SVG, algo que nenhuma
 // outra tela do fluxo de auth usa.
 export function WizardBackground({ progress, step }: Props) {
+  const { colors } = useTheme();
   const topGlowStyle = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       progress.value,

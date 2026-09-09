@@ -3,7 +3,8 @@ import {
   QrCode, Music, Gauge, ChartColumn, Wallet, Crown, Users,
   CalendarDays, MessagesSquare, Inbox, FileSignature, BadgeCheck, Disc3,
 } from 'lucide-react-native';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ProfileMenuSection } from './ProfileMenuSection';
 import { ProfileMenuRow } from './ProfileMenuRow';
 
@@ -39,6 +40,7 @@ export function ProfileMenuGroups({
   onPressBands, bandsBadgeCount, onPressAgenda, onPressConversations, onPressInquiries,
   onPressContracts, onPressResume, onPressShowHistory,
 }: Props) {
+  const { colors } = useTheme();
   return (
     <View style={s.root}>
       <ProfileMenuSection title="Ferramentas">

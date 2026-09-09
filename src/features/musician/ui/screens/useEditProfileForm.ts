@@ -10,6 +10,7 @@ import { resolveIds, INSTRUMENT_OPTIONS, GENRE_OPTIONS } from '../../domain/musi
 import { editProfileSchema, type EditProfileFormValues } from '../../domain/musician.validation';
 import { useEditProfileSectionSubmits } from './useEditProfileSectionSubmits';
 import { useEditLocationSection } from './useEditLocationSection';
+import { useEditTouringSection } from './useEditTouringSection';
 import { useEditWalletSection } from './useEditWalletSection';
 import { useEditQRCodeSection } from './useEditQRCodeSection';
 import { useEditAvailabilitySection } from './useEditAvailabilitySection';
@@ -84,6 +85,7 @@ export function useEditProfileForm(musician: MusicianProfile, musicianId: string
 
   const sections = useEditProfileSectionSubmits({ musicianId, getValues, trigger, instrumentIds, genreIds });
   const location = useEditLocationSection(musicianId, musician.profile?.location);
+  const touring  = useEditTouringSection(musicianId, musician.profile);
   const wallet    = useEditWalletSection(musicianId, musician.email, musician.phone);
   const qrCode    = useEditQRCodeSection(musicianId, musician);
   const availability = useEditAvailabilitySection(musicianId, musician.open_to_gigs);
@@ -108,6 +110,7 @@ export function useEditProfileForm(musician: MusicianProfile, musicianId: string
     bannerError,
     sections,
     location,
+    touring,
     wallet,
     qrCode,
     availability,

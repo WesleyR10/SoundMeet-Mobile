@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Music2, ListMusic } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 import type { TopRequestedSong } from '../../domain/analytics.types';
 
@@ -12,46 +14,7 @@ type Props = {
 // (features/payment), mas componente próprio: FSD proíbe features/musician
 // importar de features/payment (mesmo raciocínio já documentado pro par
 // wallet.api.ts/musician-wallet.api.ts no roadmap-mobile.md).
-export function TopSongsList({ songs }: Props) {
-  if (songs.length === 0) {
-    return (
-      <View style={s.centerBox}>
-        <ListMusic size={28} color={colors.text.muted} />
-        <Text style={s.emptyText}>Nenhum pedido ainda — as músicas mais pedidas aparecem aqui.</Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={s.list}>
-      {songs.map((song, index) => (
-        <GlowCard
-          key={`${song.song_title}-${song.artist ?? ''}`}
-          accentColor={colors.accent.amber}
-          riseDelay={index * 60}
-          style={s.card}
-        >
-          <View style={s.row}>
-            <View style={s.iconBox}>
-              <Music2 size={18} color={colors.accent.amber} />
-            </View>
-
-            <View style={s.info}>
-              <Text style={s.title} numberOfLines={1}>{song.song_title}</Text>
-              {song.artist ? (
-                <Text style={s.artist} numberOfLines={1}>{song.artist}</Text>
-              ) : null}
-            </View>
-
-            <Text style={s.count}>{song.count}×</Text>
-          </View>
-        </GlowCard>
-      ))}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   list: {
     gap: spacing.sm,
   },
@@ -99,4 +62,45 @@ const s = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
   },
-});
+}));
+
+export function TopSongsList({ songs }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  if (songs.length === 0) {
+    return (
+      <View style={s.centerBox}>
+        <ListMusic size={28} color={colors.text.muted} />
+        <Text style={s.emptyText}>Nenhum pedido ainda — as músicas mais pedidas aparecem aqui.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={s.list}>
+      {songs.map((song, index) => (
+        <GlowCard
+          key={`${song.song_title}-${song.artist ?? ''}`}
+          accentColor={colors.accent.amber}
+          riseDelay={index * 60}
+          style={s.card}
+        >
+          <View style={s.row}>
+            <View style={s.iconBox}>
+              <Music2 size={18} color={colors.accent.amber} />
+            </View>
+
+            <View style={s.info}>
+              <Text style={s.title} numberOfLines={1}>{song.song_title}</Text>
+              {song.artist ? (
+                <Text style={s.artist} numberOfLines={1}>{song.artist}</Text>
+              ) : null}
+            </View>
+
+            <Text style={s.count}>{song.count}×</Text>
+          </View>
+        </GlowCard>
+      ))}
+    </View>
+  );
+}

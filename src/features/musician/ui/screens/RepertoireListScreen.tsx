@@ -1,9 +1,13 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Plus, Mail, FileMusic } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { SkeletonList } from '@/shared/components/Skeleton';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { RepertoireScreenProps } from '@/navigation/types';
@@ -18,15 +22,78 @@ type Props = RepertoireScreenProps<'RepertoireList'>;
 // via o RepertoireStackNavigator (não é a própria tab-root que navega pra
 // essas telas via tab, é uma native-stack aninhada, mesmo padrão de
 // ProfileStackNavigator).
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    justifyContent:    'space-between',
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  iconBtn: {
+    width:          48,
+    height:         48,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  fab: {
+    width:           48,
+    height:          48,
+    borderRadius:    radius.full,
+    backgroundColor: colors.brand.primary,
+    alignItems:      'center',
+    justifyContent:  'center',
+    ...shadows.brand,
+  },
+  listContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+  },
+  centerRoot: {
+    flex:            1,
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:              spacing.md,
+    padding:          spacing.xl,
+  },
+  retryBtn: {
+    backgroundColor:   colors.brand.primary,
+    borderRadius:      radius.xl,
+    paddingVertical:   spacing.md,
+    paddingHorizontal: spacing.xxl,
+  },
+  retryText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.inverse,
+  },
+}));
+
 export function RepertoireListScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data, isPending, isError, refetch } = useRepertoires(musicianId, { sort: 'created_at', sort_dir: 'desc', per_page: 50 });
 
   function renderBody() {
     if (isPending) {
       return (
-        <View style={s.centerRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.listContent}>
+          <SkeletonList count={3} itemHeight={104} />
         </View>
       );
     }
@@ -46,10 +113,12 @@ export function RepertoireListScreen({ navigation }: Props) {
 
     if (repertoires.length === 0) {
       return (
-        <View style={s.centerRoot}>
-          <Text style={s.emptyTitle}>Nenhum repertório ainda</Text>
-          <Text style={s.emptySubtitle}>Crie seu primeiro repertório pra organizar as músicas do seu show.</Text>
-        </View>
+        <EmptyState
+          icon={FileMusic}
+          title="Nenhum repertório ainda"
+          subtitle="Crie seu primeiro repertório pra organizar as músicas do seu show."
+          action={{ label: 'Criar repertório', onPress: () => navigation.navigate('CreateRepertoire') }}
+        />
       );
     }
 
@@ -112,74 +181,3 @@ export function RepertoireListScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    justifyContent:    'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  iconBtn: {
-    width:          48,
-    height:         48,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  fab: {
-    width:           48,
-    height:          48,
-    borderRadius:    radius.full,
-    backgroundColor: colors.brand.primary,
-    alignItems:      'center',
-    justifyContent:  'center',
-    ...shadows.brand,
-  },
-  listContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-  },
-  centerRoot: {
-    flex:            1,
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              spacing.md,
-    padding:          spacing.xl,
-  },
-  emptyTitle: {
-    ...typography.title,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-  retryBtn: {
-    backgroundColor:   colors.brand.primary,
-    borderRadius:      radius.xl,
-    paddingVertical:   spacing.md,
-    paddingHorizontal: spacing.xxl,
-  },
-  retryText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.inverse,
-  },
-});

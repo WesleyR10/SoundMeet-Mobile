@@ -1,6 +1,8 @@
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View } from 'react-native';
 import { Check } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GUITAR_STANDARD_TUNING } from '../../domain/tuner.types';
 
 type Props = {
@@ -15,43 +17,7 @@ type Props = {
 const LEFT_COLUMN  = [2, 1, 0] as const;
 const RIGHT_COLUMN = [3, 4, 5] as const;
 
-export function TunerStringChips({ side, activeIndex, tunedStrings }: Props) {
-  const column = side === 'left' ? LEFT_COLUMN : RIGHT_COLUMN;
-
-  return (
-    <View style={s.column}>
-      {column.map((stringIndex) => {
-        const string  = GUITAR_STANDARD_TUNING[stringIndex];
-        const isActive = activeIndex === stringIndex;
-        const isTuned  = tunedStrings.has(stringIndex);
-
-        return (
-          <View
-            key={stringIndex}
-            style={[
-              s.chip,
-              isTuned && s.chipTuned,
-              isActive && s.chipActive,
-              isActive && shadows.brand,
-            ]}
-            accessibilityLabel={`Corda ${string.label}${string.octave}${isTuned ? ' afinada' : ''}${isActive ? ' — detectada' : ''}`}
-          >
-            <Text style={[s.chipText, isTuned && s.chipTextTuned, isActive && s.chipTextActive]}>
-              {string.label}
-            </Text>
-            {isTuned && (
-              <View style={s.tunedBadge}>
-                <Check size={10} color={colors.text.inverse} strokeWidth={3.5} />
-              </View>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   column: {
     justifyContent: 'space-between',
     // altura casa com os 3 tarraxais do TunerHeadstock (PEG_YS)
@@ -97,4 +63,42 @@ const s = StyleSheet.create({
     alignItems:      'center',
     justifyContent:  'center',
   },
-});
+}));
+
+export function TunerStringChips({ side, activeIndex, tunedStrings }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const column = side === 'left' ? LEFT_COLUMN : RIGHT_COLUMN;
+
+  return (
+    <View style={s.column}>
+      {column.map((stringIndex) => {
+        const string  = GUITAR_STANDARD_TUNING[stringIndex];
+        const isActive = activeIndex === stringIndex;
+        const isTuned  = tunedStrings.has(stringIndex);
+
+        return (
+          <View
+            key={stringIndex}
+            style={[
+              s.chip,
+              isTuned && s.chipTuned,
+              isActive && s.chipActive,
+              isActive && shadows.brand,
+            ]}
+            accessibilityLabel={`Corda ${string.label}${string.octave}${isTuned ? ' afinada' : ''}${isActive ? ' — detectada' : ''}`}
+          >
+            <Text style={[s.chipText, isTuned && s.chipTextTuned, isActive && s.chipTextActive]}>
+              {string.label}
+            </Text>
+            {isTuned && (
+              <View style={s.tunedBadge}>
+                <Check size={10} color={colors.text.inverse} strokeWidth={3.5} />
+              </View>
+            )}
+          </View>
+        );
+      })}
+    </View>
+  );
+}

@@ -26,6 +26,26 @@ export interface CreateBandMemberInvitePayload {
   instrument:  string;
 }
 
+/**
+ * Corpo de `POST /bands` — subconjunto DELIBERADO do `CreateBandDto`.
+ *
+ * O DTO do backend aceita mais (`avatar`, `members`, `priceRange`, `address`,
+ * `is_active`), mas a criação pelo app pede só o essencial: nome e gêneros. O
+ * resto tem tela própria depois — endereço e faixa de preço em
+ * `BandDetailScreen`, membros por convite (`POST /bands/:id/members`, que cria
+ * `pending` e exige aceite). Um formulário de criação que peça tudo de uma vez
+ * é onde o líder desiste antes de existir uma banda.
+ *
+ * ⚠️ `creator_musician_id` NÃO entra aqui: o controller o sobrescreve com o
+ * `sub` do JWT.
+ */
+export interface CreateBandPayload {
+  name:          string;
+  description?:  string | null;
+  genres:        string[];
+  open_to_gigs?: boolean | null;
+}
+
 export type PriceModel = 'per_event' | 'per_hour';
 
 export interface BandPriceRange {

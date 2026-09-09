@@ -1,9 +1,12 @@
 import { useCallback, useState } from 'react';
-import { ScrollView, RefreshControl, StyleSheet } from 'react-native';
+import { ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { RoleSwitchSheet } from '@/navigation/components/RoleSwitchSheet';
@@ -25,15 +28,33 @@ type Props = MusicianTabScreenProps<'Home'>;
 
 // Amber+violeta (combinação do mockup da Home, distinta do teal+violeta
 // default do resto do app — ver Docs/design-system.md, "usage by context").
-const HOME_GLOWS = [
+/*
+ * Função do tema, não constante de módulo: array avaliado no carregamento
+ * congelaria o glow do tema escuro sobre um fundo claro.
+ */
+const homeGlows = (colors: ThemeColors) => [
   { color: `${colors.accent.amber}24`, size: 300, top: -100, right: -90, duration: 8000 },
-  { color: 'rgba(124,58,237,0.16)', size: 320, top: 200, left: -110, duration: 9500 },
+  { color: `${colors.accent.violet}29`, size: 320, top: 200, left: -110, duration: 9500 },
 ];
 
 // Home do músico (Bloco 10.3) — orquestra os dados reais (perfil, saldo,
 // contagem de repertório, atividade recente, badges) e delega estados
 // vazios/placeholder (Próximo Show, Descoberta) aos próprios componentes.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+    gap:                spacing.lg,
+  },
+}));
+
 export function HomeScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const userId     = useAuthStore((s) => s.user?.userId ?? null);
   const [accountsVisible, setAccountsVisible] = useState(false);
@@ -78,7 +99,7 @@ export function HomeScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="light" />
-      <AmbientGlowBackground glows={HOME_GLOWS} />
+      <AmbientGlowBackground glows={homeGlows(colors)} />
 
       <ScrollView
         contentContainerStyle={s.scroll}
@@ -131,15 +152,3 @@ export function HomeScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-    gap:                spacing.lg,
-  },
-});

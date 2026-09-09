@@ -1,8 +1,11 @@
-import { ScrollView, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { ScrollView, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Coins, Music2, Send, Users } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList, SkeletonStatRow, SkeletonText } from '@/shared/components/Skeleton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import type { RootScreenProps } from '@/navigation/types';
@@ -21,7 +24,47 @@ type Props = RootScreenProps<'PerformanceReport'>;
  * seria trabalho sem retorno visível, e o músico pararia de fazer — levando
  * junto o currículo (F4), o setlist inteligente (F5) e o "tocando agora" do fã.
  */
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  center: {
+    flex:              1,
+    alignItems:        'center',
+    justifyContent:    'center',
+    paddingHorizontal: spacing.xl,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.xxxl,
+    gap:               spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color:        colors.text.secondary,
+    marginTop:    -spacing.sm,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:           spacing.md,
+  },
+  backBtn: {
+    marginTop: spacing.md,
+  },
+}));
+
 export function PerformanceReportScreen({ route, navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { performanceId } = route.params;
   const { data: report, isPending, isError } = usePerformanceReport(performanceId);
 
@@ -29,8 +72,11 @@ export function PerformanceReportScreen({ route, navigation }: Props) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
         <StatusBar style="light" />
-        <View style={s.center}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.skeleton}>
+          <SkeletonStatRow count={3} />
+          <SkeletonText lines={2} />
+          {/* Músicas tocadas na ordem em que subiram ao palco. */}
+          <SkeletonList count={4} itemHeight={68} />
         </View>
       </SafeAreaView>
     );
@@ -127,39 +173,3 @@ function formatBRL(value: number): string {
     currency: 'BRL',
   });
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  center: {
-    flex:              1,
-    alignItems:        'center',
-    justifyContent:    'center',
-    paddingHorizontal: spacing.xl,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.xxxl,
-    gap:               spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color:        colors.text.secondary,
-    marginTop:    -spacing.sm,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:           spacing.md,
-  },
-  backBtn: {
-    marginTop: spacing.md,
-  },
-});

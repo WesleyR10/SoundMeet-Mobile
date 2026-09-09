@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 const SUCCESS_PULSE_MS = 1800;
 const SUCCESS_CHECK = require('../../../../../assets/lottie/success-check.json');
@@ -21,7 +22,34 @@ type Props = {
 // flip dispara feedback one-shot" de QRActionRow/ConfettiBurst, mas usando
 // Lottie em vez de ícone estático — animação autoral em assets/lottie/, sem
 // dependência externa).
+const useStyles = makeStyles((colors) => ({
+  btn: {
+    height: 48,
+  },
+  successRow: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    justifyContent:   'center',
+    gap:               spacing.sm,
+    height:            48,
+    borderRadius:      radius.xl,
+    backgroundColor:  `${colors.status.success}14`,
+    borderWidth:       1,
+    borderColor:      `${colors.status.success}40`,
+  },
+  successAnim: {
+    width:  28,
+    height: 28,
+  },
+  successText: {
+    ...typography.body,
+    fontFamily: 'SpaceGrotesk-SemiBold',
+    color:      colors.status.success,
+  },
+}));
+
 export function AccordionSaveFooter({ onSave, isSaving, error, label = 'Salvar' }: Props) {
+  const s = useStyles();
   const [justSaved, setJustSaved] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -51,29 +79,3 @@ export function AccordionSaveFooter({ onSave, isSaving, error, label = 'Salvar' 
     </>
   );
 }
-
-const s = StyleSheet.create({
-  btn: {
-    height: 48,
-  },
-  successRow: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    justifyContent:   'center',
-    gap:               spacing.sm,
-    height:            48,
-    borderRadius:      radius.xl,
-    backgroundColor:  `${colors.status.success}14`,
-    borderWidth:       1,
-    borderColor:      `${colors.status.success}40`,
-  },
-  successAnim: {
-    width:  28,
-    height: 28,
-  },
-  successText: {
-    ...typography.body,
-    fontFamily: 'SpaceGrotesk-SemiBold',
-    color:      colors.status.success,
-  },
-});

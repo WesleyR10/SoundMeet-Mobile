@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
-import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Pressable } from 'react-native';
+import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react-native';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useMusicianWizardGate } from '../../application/useMusicianWizardGate';
 import { useMusicianWizardState } from './useMusicianWizardState';
@@ -25,7 +27,38 @@ import { StepFiveQrReveal } from '../components/StepFiveQrReveal';
 // única saída controlada do Step 2 é a seta "Voltar" em tela; do Step 3 em diante a
 // conta já foi persistida, então não existe "voltar". Handlers assíncronos vivem em
 // useMusicianWizardHandlers.ts (limite de ~200 linhas por screen — CLAUDE.md).
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  flex: { flex: 1 },
+  progressWrap: {
+    alignItems: 'center',
+    paddingTop: spacing.lg,
+  },
+  backBtn: {
+    position:       'absolute',
+    top:             spacing.lg,
+    left:            spacing.lg,
+    width:           48,
+    height:          48,
+    alignItems:     'center',
+    justifyContent: 'center',
+    zIndex:          10,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.xxl,
+    paddingBottom:     spacing.xxxl,
+    flexGrow:           1,
+    justifyContent:     'center',
+  },
+}));
+
 export function MusicianSetupWizardScreen() {
+  const s = useStyles();
+  const { colors } = useTheme();
   const authUser = useAuthStore((s) => s.user);
   const musicianId = authUser?.musicianId ?? null;
   const queryClient = useQueryClient();
@@ -164,32 +197,3 @@ export function MusicianSetupWizardScreen() {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  flex: { flex: 1 },
-  progressWrap: {
-    alignItems: 'center',
-    paddingTop: spacing.lg,
-  },
-  backBtn: {
-    position:       'absolute',
-    top:             spacing.lg,
-    left:            spacing.lg,
-    width:           48,
-    height:          48,
-    alignItems:     'center',
-    justifyContent: 'center',
-    zIndex:          10,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.xxl,
-    paddingBottom:     spacing.xxxl,
-    flexGrow:           1,
-    justifyContent:     'center',
-  },
-});

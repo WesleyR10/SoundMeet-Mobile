@@ -1,6 +1,7 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, gradients, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { gradients, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { BillingCycle, MusicianPlan } from '../../../domain/plans.config';
 
 type Props = {
@@ -16,7 +17,40 @@ function formatBRL(value: number): string {
 
 // CTA fixo do paywall — gradiente premium (violeta) com label que acompanha o
 // tier selecionado + fine print de cancelamento.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap:               spacing.sm,
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    backgroundColor:  colors.bg.primary,
+  },
+  cta: {
+    height:          60,
+    borderRadius:    radius.xl,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  pressed: {
+    transform: [{ scale: 0.98 }],
+  },
+  disabled: {
+    opacity: 0.45,
+  },
+  ctaLabel: {
+    ...typography.bodyLg,
+    fontFamily:    'SpaceGrotesk-Bold',
+    letterSpacing:  0.5,
+    color:          colors.text.primary,
+  },
+  finePrint: {
+    ...typography.caption,
+    color:     colors.text.muted,
+    textAlign: 'center',
+  },
+}));
+
 export function PaywallFooter({ plan, cycle, isCurrent, onPress }: Props) {
+  const s = useStyles();
   const isFree   = plan.monthlyPriceBrl === 0;
   const disabled = isCurrent || isFree;
 
@@ -52,35 +86,3 @@ export function PaywallFooter({ plan, cycle, isCurrent, onPress }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap:               spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    backgroundColor:  colors.bg.primary,
-  },
-  cta: {
-    height:          60,
-    borderRadius:    radius.xl,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  pressed: {
-    transform: [{ scale: 0.98 }],
-  },
-  disabled: {
-    opacity: 0.45,
-  },
-  ctaLabel: {
-    ...typography.bodyLg,
-    fontFamily:    'SpaceGrotesk-Bold',
-    letterSpacing:  0.5,
-    color:          colors.text.primary,
-  },
-  finePrint: {
-    ...typography.caption,
-    color:     colors.text.muted,
-    textAlign: 'center',
-  },
-});

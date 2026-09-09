@@ -1,7 +1,9 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { FileX } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ChordTokenLine, type LineState } from '@/shared/components/ChordTokenLine';
 import type { PlayModeFlatLine } from '../../domain/play-mode.types';
 import type { ChordSheetScrollBinding } from '../../application/usePracticeScrollSync';
@@ -22,7 +24,36 @@ type Props = {
 // de instrumento/tom/capotraste) — só o corpo rolável da tela: loading,
 // vazio, ou a lista de linhas com auto-scroll. Sem lógica própria, só
 // orquestra o que a tela já calculou.
+const useStyles = makeStyles((colors) => ({
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop:    spacing.md,
+    paddingBottom: spacing.xxxl * 2,
+  },
+  centerRoot: {
+    flex:            1,
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:              spacing.sm,
+    padding:          spacing.xl,
+  },
+  emptyTitle: {
+    ...typography.title,
+    color:     colors.text.primary,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+}));
+
 export function PlayModeChordSheetView({ isPending, flatLines, scroll, lineState, onPressChord }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   if (isPending) {
     return (
       <View style={s.centerRoot}>
@@ -69,30 +100,3 @@ export function PlayModeChordSheetView({ isPending, flatLines, scroll, lineState
     </Animated.ScrollView>
   );
 }
-
-const s = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop:    spacing.md,
-    paddingBottom: spacing.xxxl * 2,
-  },
-  centerRoot: {
-    flex:            1,
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              spacing.sm,
-    padding:          spacing.xl,
-  },
-  emptyTitle: {
-    ...typography.title,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-});

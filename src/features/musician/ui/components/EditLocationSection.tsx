@@ -1,6 +1,8 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { FormField } from '@/shared/components/FormField';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   cep:                 string;
@@ -25,6 +27,37 @@ type Props = {
 // Endereço com CEP (item 9, jul/2026): digitar o CEP consulta o ViaCEP e
 // preenche rua/bairro/cidade/UF — validação de endereço real de graça.
 // Todos os campos continuam editáveis; número/complemento são manuais.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.md,
+  },
+  cepRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.md,
+  },
+  cepField: {
+    flex: 1,
+  },
+  cepSpinner: {
+    marginTop: spacing.lg,
+  },
+  row: {
+    flexDirection: 'row',
+    gap:            spacing.md,
+  },
+  rowField: {
+    flex: 2,
+  },
+  rowFieldSm: {
+    flex: 1,
+  },
+  helper: {
+    ...typography.bodySm,
+    color: colors.text.muted,
+  },
+}));
+
 export function EditLocationSection({
   cep, onChangeCep, cepLoading, cepError,
   street, onChangeStreet,
@@ -35,6 +68,8 @@ export function EditLocationSection({
   state, onChangeState,
   stateError,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={s.root}>
       <View style={s.cepRow}>
@@ -117,34 +152,3 @@ export function EditLocationSection({
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.md,
-  },
-  cepRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.md,
-  },
-  cepField: {
-    flex: 1,
-  },
-  cepSpinner: {
-    marginTop: spacing.lg,
-  },
-  row: {
-    flexDirection: 'row',
-    gap:            spacing.md,
-  },
-  rowField: {
-    flex: 2,
-  },
-  rowFieldSm: {
-    flex: 1,
-  },
-  helper: {
-    ...typography.bodySm,
-    color: colors.text.muted,
-  },
-});

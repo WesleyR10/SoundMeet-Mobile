@@ -1,7 +1,9 @@
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Star, BadgeCheck, User } from 'lucide-react-native';
-import { colors, spacing, gradients, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, gradients, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { MusicianProfile } from '../../domain/musician.types';
 
 type Props = {
@@ -13,37 +15,7 @@ const AVATAR_SIZE = 108;
 // Extraído de ViewProfileScreen.tsx (limite de ~200 linhas/screen) — hero da
 // tela: avatar com ring gradiente (mesma técnica de bezel do QRFrame), nome,
 // badge verificado, rating e bio.
-export function ProfileHeader({ musician }: Props) {
-  return (
-    <View style={s.root}>
-      <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
-        <View style={s.avatarInner}>
-          {musician.avatar ? (
-            <Image source={{ uri: musician.avatar }} style={s.avatarImg} />
-          ) : (
-            <User size={40} color={colors.text.muted} />
-          )}
-        </View>
-      </LinearGradient>
-
-      <View style={s.nameRow}>
-        <Text style={s.name}>{musician.display_name || musician.stage_name || musician.name}</Text>
-        {musician.is_verified && <BadgeCheck size={20} color={colors.brand.primary} />}
-      </View>
-
-      <View style={s.ratingRow}>
-        <Star size={15} color={colors.accent.amber} fill={colors.accent.amber} />
-        <Text style={s.ratingText}>
-          {musician.rating.toFixed(1)} · {musician.total_ratings} avaliaç{musician.total_ratings === 1 ? 'ão' : 'ões'}
-        </Text>
-      </View>
-
-      {!!musician.bio && <Text style={s.bio}>{musician.bio}</Text>}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     alignItems: 'center',
     gap:         spacing.sm,
@@ -95,4 +67,36 @@ const s = StyleSheet.create({
     textAlign:  'center',
     marginTop:  spacing.sm,
   },
-});
+}));
+
+export function ProfileHeader({ musician }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={s.root}>
+      <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
+        <View style={s.avatarInner}>
+          {musician.avatar ? (
+            <Image source={{ uri: musician.avatar }} style={s.avatarImg} />
+          ) : (
+            <User size={40} color={colors.text.muted} />
+          )}
+        </View>
+      </LinearGradient>
+
+      <View style={s.nameRow}>
+        <Text style={s.name}>{musician.display_name || musician.stage_name || musician.name}</Text>
+        {musician.is_verified && <BadgeCheck size={20} color={colors.brand.primary} />}
+      </View>
+
+      <View style={s.ratingRow}>
+        <Star size={15} color={colors.accent.amber} fill={colors.accent.amber} />
+        <Text style={s.ratingText}>
+          {musician.rating.toFixed(1)} · {musician.total_ratings} avaliaç{musician.total_ratings === 1 ? 'ão' : 'ões'}
+        </Text>
+      </View>
+
+      {!!musician.bio && <Text style={s.bio}>{musician.bio}</Text>}
+    </View>
+  );
+}

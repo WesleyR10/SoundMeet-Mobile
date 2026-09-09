@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
 import { INSTRUMENT_OPTIONS, GENRE_OPTIONS } from '../../domain/musician.constants';
 
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export function EditTagsSection({ selectedInstrumentIds, onToggleInstrument, selectedGenreIds, onToggleGenre }: Props) {
+  const { colors } = useTheme();
   return (
     <View style={s.root}>
       <View style={s.group}>

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { Text } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 
 type Props = {
@@ -11,7 +12,16 @@ type Props = {
   onClose: () => void;
 };
 
+const useStyles = makeStyles((colors) => ({
+  bg: { backgroundColor: colors.bg.elevated, borderRadius: radius.xl },
+  handle: { backgroundColor: colors.border.strong },
+  content: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl, gap: spacing.md },
+  title: { ...typography.title, color: colors.text.primary },
+  text: { ...typography.body, color: colors.text.secondary },
+}));
+
 export function ForkChordSheetConfirmSheet({ visible, loading, onConfirm, onClose }: Props) {
+  const s = useStyles();
   const sheetRef = useRef<BottomSheetModal>(null);
   useEffect(() => {
     if (visible) sheetRef.current?.present();
@@ -31,11 +41,3 @@ export function ForkChordSheetConfirmSheet({ visible, loading, onConfirm, onClos
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  bg: { backgroundColor: colors.bg.elevated, borderRadius: radius.xl },
-  handle: { backgroundColor: colors.border.strong },
-  content: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl, gap: spacing.md },
-  title: { ...typography.title, color: colors.text.primary },
-  text: { ...typography.body, color: colors.text.secondary },
-});

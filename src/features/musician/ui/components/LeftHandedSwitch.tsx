@@ -1,5 +1,7 @@
-import { View, Text, Switch, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text, Switch } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   value:    boolean;
@@ -10,26 +12,7 @@ type Props = {
 // (trackColor/thumbColor via tokens.ts) — espelha reflow de diagrama pra
 // canhoto quando ChordDiagram/PianoChordDiagram suportarem espelhamento
 // (ver plano, riscos — persistência funciona já, efeito visual é dívida).
-export function LeftHandedSwitch({ value, onChange }: Props) {
-  return (
-    <View style={s.row}>
-      <View style={s.textCol}>
-        <Text style={s.title}>Canhoto</Text>
-        <Text style={s.subtitle}>Espelha os diagramas de acorde pro braço invertido.</Text>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        trackColor={{ false: colors.border.default, true: colors.brand.muted }}
-        thumbColor={value ? colors.brand.primary : colors.text.muted}
-        accessibilityLabel="Canhoto"
-        accessibilityRole="switch"
-      />
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection:  'row',
     alignItems:     'center',
@@ -52,4 +35,25 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     color: colors.text.secondary,
   },
-});
+}));
+
+export function LeftHandedSwitch({ value, onChange }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <View style={s.row}>
+      <View style={s.textCol}>
+        <Text style={s.title}>Canhoto</Text>
+        <Text style={s.subtitle}>Espelha os diagramas de acorde pro braço invertido.</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        trackColor={{ false: colors.border.default, true: colors.brand.muted }}
+        thumbColor={value ? colors.brand.primary : colors.text.muted}
+        accessibilityLabel="Canhoto"
+        accessibilityRole="switch"
+      />
+    </View>
+  );
+}

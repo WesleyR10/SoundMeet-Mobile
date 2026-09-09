@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, Switch, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text, Switch } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { useCardShare } from '@/shared/hooks/useCardShare';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
@@ -37,7 +39,47 @@ type Props = {
  * O preview mostra exatamente o que será postado, então a decisão é tomada
  * vendo o resultado — não lendo um rótulo de checkbox.
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap:       spacing.md,
+    marginTop: spacing.md,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  tipsRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.md,
+    padding:        spacing.md,
+    borderRadius:   radius.lg,
+    borderWidth:    1,
+    borderColor:    colors.border.default,
+    backgroundColor: colors.bg.elevated,
+  },
+  tipsText: {
+    flex: 1,
+    gap:   2,
+  },
+  tipsTitle: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  tipsHint: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap:            spacing.md,
+  },
+}));
+
 export function ShowRecapSection({ report }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const cardRef = useRef<ShowRecapCardHandle>(null);
   const [showTips, setShowTips] = useState(false);
 
@@ -126,41 +168,3 @@ export function ShowRecapSection({ report }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap:       spacing.md,
-    marginTop: spacing.md,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  tipsRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.md,
-    padding:        spacing.md,
-    borderRadius:   radius.lg,
-    borderWidth:    1,
-    borderColor:    colors.border.default,
-    backgroundColor: colors.bg.elevated,
-  },
-  tipsText: {
-    flex: 1,
-    gap:   2,
-  },
-  tipsTitle: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  tipsHint: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap:            spacing.md,
-  },
-});

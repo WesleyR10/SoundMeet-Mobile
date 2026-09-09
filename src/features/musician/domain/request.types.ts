@@ -14,6 +14,32 @@ export interface PointsValue {
   earnedAt:     string;
 }
 
+// Destaque pago, como o MÚSICO o vê na fila.
+//
+// 🔴 `awaiting_payment` NÃO é dinheiro recebido: a cobrança existe, o fã ainda
+// não pagou. A UI diz "a confirmar" — mesma disciplina que mantém `held_balance`
+// fora de `balance` na carteira. `dedication` chega crua porque o músico
+// precisa lê-la para decidir se aceita; quem redige para o público é o backend.
+export type RequestBoostStatus =
+  | 'promised'
+  | 'awaiting_payment'
+  | 'paid'
+  | 'expired'
+  | 'cancelled';
+
+export interface RequestBoost {
+  amount:      number;
+  dedication:  string | null;
+  status:      RequestBoostStatus;
+  tip_id:      string | null;
+  promised_at: string;
+  charged_at:  string | null;
+  paid_at:     string | null;
+  cancellation_reason: string | null;
+  is_boosting: boolean;
+  is_public:   boolean;
+}
+
 export interface MusicRequest {
   id:          string;
   event_id:    string;
@@ -42,6 +68,8 @@ export interface MusicRequest {
   is_old:    boolean;
   is_urgent: boolean;
   priority:  RequestPriority;
+  boost:      RequestBoost | null;
+  is_boosted: boolean;
   points_value: PointsValue;
   is_special_request: boolean;
   can_be_accepted: boolean;
@@ -57,3 +85,27 @@ export interface MusicianRequestsResult {
 }
 
 export type RespondToRequestAction = 'accept' | 'reject';
+
+// POST /requests/batch-respond — teto espelhado de BATCH_RESPOND_MAX_ITEMS
+// (batch-respond-to-requests.use-case.ts). Duplicado aqui de propósito: o
+// cliente precisa bloquear a seleção ANTES de gastar a chamada, e o backend
+// continua sendo quem decide (422 se passar).
+export const BATCH_RESPOND_MAX_ITEMS = 50;
+
+// Espelha o @MaxLength(500) de BatchRespondRequestsDto.rejection_reason.
+// Truncar no cliente evita gastar a chamada inteira do lote — e o throttle
+// dedicado da rota é de 6/min, então cada 422 evitado conta.
+export const REJECTION_REASON_MAX_LENGTH = 500;
+
+// A rota é BEST-EFFORT: um item que falha não anula os demais. Por isso o
+// relatório vem particionado, e `failed` traz o motivo POR pedido — é o que
+// permite à tela devolver só os que falharam para a fila, em vez de somem.
+export interface BatchRespondFailure {
+  request_id: string;
+  reason:     string;
+}
+
+export interface BatchRespondResult {
+  succeeded: MusicRequest[];
+  failed:    BatchRespondFailure[];
+}

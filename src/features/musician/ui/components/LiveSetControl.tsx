@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { CircleStop, Disc3, Lightbulb, Radio } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { extractApiMessage } from '@/shared/services/http/types';
 import { useLiveSetStore } from '../../application/liveSet.store';
@@ -31,7 +33,112 @@ type Props = {
  * - **show disponível** → botão de iniciar por evento;
  * - **set aberto** → o que está tocando, contador de músicas e encerrar.
  */
+const useStyles = makeStyles((colors) => ({
+  card: {
+    gap:               spacing.sm,
+    marginHorizontal:  spacing.xl,
+    marginBottom:      spacing.lg,
+    padding:           spacing.lg,
+    borderRadius:      radius.xl,
+    borderWidth:       1,
+    borderColor:       colors.border.default,
+    backgroundColor:   colors.bg.elevated,
+  },
+  cardLive: {
+    borderColor: colors.border.brand,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.xs,
+  },
+  dot: {
+    width:           7,
+    height:          7,
+    borderRadius:    4,
+    backgroundColor: colors.status.live,
+  },
+  badgeText: {
+    ...typography.caption,
+    fontFamily:    'Inter-SemiBold',
+    letterSpacing: 1,
+    color:         colors.status.live,
+  },
+  readyText: {
+    ...typography.caption,
+    fontFamily:    'Inter-SemiBold',
+    letterSpacing: 1,
+    color:         colors.brand.primary,
+  },
+  counter: {
+    ...typography.caption,
+    color:      colors.text.muted,
+    marginLeft: 'auto',
+  },
+  songTitle: {
+    ...typography.liveBody,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  songArtist: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  idle: {
+    ...typography.bodySm,
+    color: colors.text.muted,
+  },
+  startBtn: {
+    flexDirection:   'row',
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:              spacing.sm,
+    minHeight:        48,
+    paddingHorizontal: spacing.lg,
+    borderRadius:     radius.full,
+    backgroundColor:  colors.brand.primary,
+  },
+  startText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.bg.primary,
+    flexShrink: 1,
+  },
+  suggestBtn: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.sm,
+    minHeight:       48,
+    borderRadius:    radius.full,
+    borderWidth:     1,
+    borderColor:     colors.border.brand,
+  },
+  suggestText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.brand.primary,
+  },
+  endBtn: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.sm,
+    minHeight:       48,
+    borderRadius:    radius.full,
+    borderWidth:     1,
+    borderColor:     colors.border.strong,
+  },
+  endText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.secondary,
+  },
+}));
+
 export function LiveSetControl({ onEnded, onPressSuggestions }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const activeSet = useLiveSetStore((s) => s.activeSet);
   const clearActiveSet = useLiveSetStore((s) => s.clearActiveSet);
   const [error, setError] = useState<string | null>(null);
@@ -177,106 +284,3 @@ export function LiveSetControl({ onEnded, onPressSuggestions }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  card: {
-    gap:               spacing.sm,
-    marginHorizontal:  spacing.xl,
-    marginBottom:      spacing.lg,
-    padding:           spacing.lg,
-    borderRadius:      radius.xl,
-    borderWidth:       1,
-    borderColor:       colors.border.default,
-    backgroundColor:   colors.bg.elevated,
-  },
-  cardLive: {
-    borderColor: colors.border.brand,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.xs,
-  },
-  dot: {
-    width:           7,
-    height:          7,
-    borderRadius:    4,
-    backgroundColor: colors.status.live,
-  },
-  badgeText: {
-    ...typography.caption,
-    fontFamily:    'Inter-SemiBold',
-    letterSpacing: 1,
-    color:         colors.status.live,
-  },
-  readyText: {
-    ...typography.caption,
-    fontFamily:    'Inter-SemiBold',
-    letterSpacing: 1,
-    color:         colors.brand.primary,
-  },
-  counter: {
-    ...typography.caption,
-    color:      colors.text.muted,
-    marginLeft: 'auto',
-  },
-  songTitle: {
-    ...typography.liveBody,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  songArtist: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  idle: {
-    ...typography.bodySm,
-    color: colors.text.muted,
-  },
-  startBtn: {
-    flexDirection:   'row',
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              spacing.sm,
-    minHeight:        48,
-    paddingHorizontal: spacing.lg,
-    borderRadius:     radius.full,
-    backgroundColor:  colors.brand.primary,
-  },
-  startText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.bg.primary,
-    flexShrink: 1,
-  },
-  suggestBtn: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.sm,
-    minHeight:       48,
-    borderRadius:    radius.full,
-    borderWidth:     1,
-    borderColor:     colors.border.brand,
-  },
-  suggestText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.brand.primary,
-  },
-  endBtn: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.sm,
-    minHeight:       48,
-    borderRadius:    radius.full,
-    borderWidth:     1,
-    borderColor:     colors.border.strong,
-  },
-  endText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.secondary,
-  },
-});

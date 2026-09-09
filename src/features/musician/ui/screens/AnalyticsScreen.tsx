@@ -1,10 +1,14 @@
 import { useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
+import { Skeleton, SkeletonList, SkeletonStatRow } from '@/shared/components/Skeleton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { GlowCard } from '@/shared/components/GlowCard';
@@ -41,7 +45,11 @@ function useReveal(delay: number) {
 
 // Teal+âmbar (paleta "Analytics" do design-system.md), distinto do
 // coral/rosa da WalletScreen e do teal+violeta default do resto do app.
-const ANALYTICS_GLOWS = [
+/*
+ * Função do tema, não constante de módulo: array avaliado no carregamento
+ * congelaria o glow do tema escuro sobre um fundo claro.
+ */
+const analyticsGlows = (colors: ThemeColors) => [
   { color: colors.brand.glow, size: 300, top: -100, left: -90, duration: 8000 },
   { color: `${colors.accent.amber}28`, size: 280, bottom: -100, right: -80, duration: 9500 },
 ];
@@ -50,7 +58,81 @@ const ANALYTICS_GLOWS = [
 // padrão de back button de QRCodeScreen. Dado é all-time/global (sem escopo
 // por evento — nenhum endpoint de requests/tips filtra por event_id hoje),
 // por isso o texto evita "gorjetas do evento" e usa "total em gorjetas".
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex: 1,
+    backgroundColor: colors.bg.primary,
+  },
+  backBtn: {
+    position: 'absolute',
+    top: spacing.lg,
+    left: spacing.lg,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  loaderRoot: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    padding: spacing.xl,
+  },
+  retryBtn: {
+    backgroundColor: colors.brand.primary,
+    borderRadius: radius.xl,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xxl,
+  },
+  retryText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color: colors.text.inverse,
+  },
+  gateTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+    textAlign: 'center',
+  },
+  gateBody: {
+    ...typography.body,
+    color: colors.text.secondary,
+    textAlign: 'center',
+  },
+  scroll: {
+    padding: spacing.xl,
+    paddingTop: spacing.xxxl + spacing.lg,
+    paddingBottom: spacing.xxxl,
+  },
+  content: {
+    gap: spacing.xl,
+  },
+  screenTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+  },
+  tipsCard: {
+    gap: spacing.xs,
+  },
+  tipsLabel: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  sectionTitle: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color: colors.text.primary,
+  },
+}));
+
 export function AnalyticsScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data: analytics, isPending, isError, error, refetch } = useAnalytics(musicianId);
   const tabs = navigation.getParent<BottomTabNavigationProp<MusicianTabParamList>>();
@@ -65,8 +147,11 @@ export function AnalyticsScreen({ navigation }: Props) {
   function renderBody() {
     if (isPending) {
       return (
-        <View style={s.loaderRoot}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.skeleton}>
+          <SkeletonStatRow count={3} />
+          {/* O gráfico é o bloco alto; não é lista, é uma área só. */}
+          <Skeleton height={220} borderRadius={radius.lg} />
+          <SkeletonList count={3} itemHeight={64} />
         </View>
       );
     }
@@ -141,7 +226,7 @@ export function AnalyticsScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={s.root} edges={['top']}>
       <StatusBar style="light" />
-      <AmbientGlowBackground glows={ANALYTICS_GLOWS} />
+      <AmbientGlowBackground glows={analyticsGlows(colors)} />
 
       <Pressable
         onPress={() => navigation.goBack()}
@@ -157,73 +242,3 @@ export function AnalyticsScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.bg.primary,
-  },
-  backBtn: {
-    position: 'absolute',
-    top: spacing.lg,
-    left: spacing.lg,
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  loaderRoot: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-    padding: spacing.xl,
-  },
-  retryBtn: {
-    backgroundColor: colors.brand.primary,
-    borderRadius: radius.xl,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xxl,
-  },
-  retryText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color: colors.text.inverse,
-  },
-  gateTitle: {
-    ...typography.title,
-    color: colors.text.primary,
-    textAlign: 'center',
-  },
-  gateBody: {
-    ...typography.body,
-    color: colors.text.secondary,
-    textAlign: 'center',
-  },
-  scroll: {
-    padding: spacing.xl,
-    paddingTop: spacing.xxxl + spacing.lg,
-    paddingBottom: spacing.xxxl,
-  },
-  content: {
-    gap: spacing.xl,
-  },
-  screenTitle: {
-    ...typography.title,
-    color: colors.text.primary,
-    marginBottom: spacing.md,
-  },
-  tipsCard: {
-    gap: spacing.xs,
-  },
-  tipsLabel: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  sectionTitle: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color: colors.text.primary,
-  },
-});

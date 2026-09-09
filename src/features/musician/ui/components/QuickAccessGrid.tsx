@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { QrCode, Music, FileText, CalendarDays, ChartColumn, Gauge, Inbox, FileSignature, type LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Tile = {
   key:          string;
@@ -28,10 +30,52 @@ type Props = {
 // redundante com a tab Repertório; agora aponta pro ChordSheetsHub, que reúne
 // cifras pessoais, comunidade e criação — coisas que a tab de repertório
 // (organizada por show) não expõe.
+const useStyles = makeStyles((colors) => ({
+  grid: {
+    flexDirection: 'row',
+    flexWrap:       'wrap',
+    gap:             spacing.md,
+  },
+  tile: {
+    flexBasis:        '47%',
+    flexGrow:          1,
+    borderRadius:      radius.lg,
+    borderWidth:        1,
+    backgroundColor:  'rgba(255,255,255,0.03)',
+    padding:            spacing.md,
+    gap:                spacing.xs,
+    minHeight:          92,
+  },
+  tileDisabled: {
+    opacity: 0.45,
+  },
+  tilePressed: {
+    opacity: 0.8,
+  },
+  iconBox: {
+    width:            34,
+    height:           34,
+    borderRadius:     radius.md,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  label: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  sub: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+}));
+
 export function QuickAccessGrid({
   repertoireCount, onPressQrCode, onPressRepertoire, onPressAnalytics, onPressTuner, onPressCifras, onPressAgenda,
   onPressInquiries, onPressContracts,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const tiles: Tile[] = [
     {
       key:         'repertoire',
@@ -153,43 +197,3 @@ export function QuickAccessGrid({
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap:       'wrap',
-    gap:             spacing.md,
-  },
-  tile: {
-    flexBasis:        '47%',
-    flexGrow:          1,
-    borderRadius:      radius.lg,
-    borderWidth:        1,
-    backgroundColor:  'rgba(255,255,255,0.03)',
-    padding:            spacing.md,
-    gap:                spacing.xs,
-    minHeight:          92,
-  },
-  tileDisabled: {
-    opacity: 0.45,
-  },
-  tilePressed: {
-    opacity: 0.8,
-  },
-  iconBox: {
-    width:            34,
-    height:           34,
-    borderRadius:     radius.md,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  label: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  sub: {
-    ...typography.caption,
-    color: colors.text.secondary,
-  },
-});

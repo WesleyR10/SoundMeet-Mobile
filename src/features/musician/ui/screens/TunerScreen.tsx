@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useKeepAwake } from 'expo-keep-awake';
 import { ArrowLeft, Mic } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
@@ -29,7 +31,68 @@ type Props = ProfileScreenProps<'Tuner'>;
 // Dois modos: guitarra (headstock + chips de corda + pílula de cents, layout
 // da referência Pinterest 654781233368977952) e cromático (arco + nota,
 // comportamento original) — detecção MPM idêntica nos dois.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  backBtn: {
+    position:       'absolute',
+    top:             spacing.lg,
+    left:            spacing.lg,
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
+    zIndex:          10,
+  },
+  centerRoot: {
+    flex:           1,
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.xxl,
+  },
+  toggleWrap: {
+    marginTop: spacing.lg,
+    // deixa espaço pro BackButton absoluto à esquerda
+    alignItems: 'center',
+  },
+  headstockRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'center',
+    gap:             spacing.lg,
+  },
+  guitarHint: {
+    ...typography.body,
+    fontFamily: 'JetBrainsMono-Regular',
+    color:      colors.text.secondary,
+  },
+  permissionRoot: {
+    flex:              1,
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:                spacing.md,
+    paddingHorizontal: spacing.xl,
+  },
+  permissionTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  permissionSubtitle: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+  permissionBtn: {
+    marginTop: spacing.md,
+    width:     '100%',
+  },
+}));
+
 export function TunerScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   useKeepAwake();
 
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
@@ -120,68 +183,11 @@ export function TunerScreen({ navigation }: Props) {
 // Mesmo estilo de QRCodeScreen.tsx/EditProfileScreen.tsx — ícone puro sobre o
 // AmbientGlowBackground, sem chip/fundo.
 function BackButton({ onPress }: { onPress: () => void }) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <Pressable onPress={onPress} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8}>
       <ArrowLeft size={22} color={colors.text.primary} />
     </Pressable>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  backBtn: {
-    position:       'absolute',
-    top:             spacing.lg,
-    left:            spacing.lg,
-    width:           48,
-    height:          48,
-    alignItems:      'center',
-    justifyContent:  'center',
-    zIndex:          10,
-  },
-  centerRoot: {
-    flex:           1,
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.xxl,
-  },
-  toggleWrap: {
-    marginTop: spacing.lg,
-    // deixa espaço pro BackButton absoluto à esquerda
-    alignItems: 'center',
-  },
-  headstockRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'center',
-    gap:             spacing.lg,
-  },
-  guitarHint: {
-    ...typography.body,
-    fontFamily: 'JetBrainsMono-Regular',
-    color:      colors.text.secondary,
-  },
-  permissionRoot: {
-    flex:              1,
-    alignItems:        'center',
-    justifyContent:    'center',
-    gap:                spacing.md,
-    paddingHorizontal: spacing.xl,
-  },
-  permissionTitle: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  permissionSubtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-  permissionBtn: {
-    marginTop: spacing.md,
-    width:     '100%',
-  },
-});

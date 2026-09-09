@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, withSequence, Easing } from 'react-native-reanimated';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   label: string;
@@ -12,7 +13,27 @@ type Props = {
 // (PlayModeScreen) remonta este componente via `key` a cada troca de seção
 // — remount já reinicia a animação sozinho, sem precisar de trigger
 // imperativo nem de estado externo pra saber "já mostrei esse".
+const useStyles = makeStyles((colors) => ({
+  root: {
+    alignSelf:          'center',
+    paddingHorizontal:  spacing.md,
+    paddingVertical:    spacing.xs,
+    borderRadius:       radius.full,
+    backgroundColor:    colors.bg.elevated,
+    borderWidth:         1,
+    borderColor:        colors.border.brand,
+    ...shadows.brand,
+  },
+  label: {
+    ...typography.caption,
+    color:          colors.brand.primary,
+    letterSpacing:   1,
+    textTransform:  'uppercase',
+  },
+}));
+
 export function SectionTransitionBadge({ label }: Props) {
+  const s = useStyles();
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -33,22 +54,3 @@ export function SectionTransitionBadge({ label }: Props) {
     </Animated.View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    alignSelf:          'center',
-    paddingHorizontal:  spacing.md,
-    paddingVertical:    spacing.xs,
-    borderRadius:       radius.full,
-    backgroundColor:    colors.bg.elevated,
-    borderWidth:         1,
-    borderColor:        colors.border.brand,
-    ...shadows.brand,
-  },
-  label: {
-    ...typography.caption,
-    color:          colors.brand.primary,
-    letterSpacing:   1,
-    textTransform:  'uppercase',
-  },
-});

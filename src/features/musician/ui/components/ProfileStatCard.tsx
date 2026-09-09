@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   icon:         LucideIcon;
@@ -9,19 +11,7 @@ type Props = {
   accentColor?: string;
 };
 
-export function ProfileStatCard({ icon: Icon, value, label, accentColor = colors.brand.primary }: Props) {
-  return (
-    <View style={[s.card, { borderColor: `${accentColor}40` }]}>
-      <View style={[s.iconBox, { backgroundColor: `${accentColor}24` }]}>
-        <Icon size={18} color={accentColor} strokeWidth={2.2} />
-      </View>
-      <Text style={s.value} numberOfLines={1}>{value}</Text>
-      <Text style={s.label} numberOfLines={1}>{label}</Text>
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     flex:               1,
     borderRadius:       radius.lg,
@@ -46,4 +36,20 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
-});
+}));
+
+export function ProfileStatCard({ icon: Icon, value, label, accentColor }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  // Default no CORPO: na assinatura ele é avaliado fora do escopo do hook.
+  const accent = accentColor ?? colors.brand.primary;
+  return (
+    <View style={[s.card, { borderColor: `${accent}40` }]}>
+      <View style={[s.iconBox, { backgroundColor: `${accent}24` }]}>
+        <Icon size={18} color={accent} strokeWidth={2.2} />
+      </View>
+      <Text style={s.value} numberOfLines={1}>{value}</Text>
+      <Text style={s.label} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+}

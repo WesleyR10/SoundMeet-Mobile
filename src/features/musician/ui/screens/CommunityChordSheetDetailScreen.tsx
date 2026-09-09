@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonText } from '@/shared/components/Skeleton';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { ChordDiagramSheet } from '@/shared/components/ChordDiagramSheet';
@@ -19,7 +22,33 @@ import { PersonalChordSheetReadOnlyBody } from '../components/PersonalChordSheet
 
 type Props = RepertoireScreenProps<'CommunityChordSheetDetail'>;
 
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.bg.primary },
+  state: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl, backgroundColor: colors.bg.primary },
+  stateTitle: { ...typography.title, color: colors.text.primary, textAlign: 'center' },
+  stateText: { ...typography.body, color: colors.text.secondary, textAlign: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  titleWrap: { flex: 1, gap: 1 },
+  title: { ...typography.title, color: colors.text.primary },
+  artist: { ...typography.caption, color: colors.text.secondary },
+  cta: {
+    minHeight: 58, marginHorizontal: spacing.xl, marginBottom: spacing.md, borderRadius: radius.xl,
+    backgroundColor: colors.accent.violet, alignItems: 'center', justifyContent: 'center', ...shadows.violet,
+  },
+  ctaText: { ...typography.body, fontFamily: 'SpaceGrotesk-Bold', color: colors.text.primary },
+  bandNotice: {
+    minHeight: 48, marginHorizontal: spacing.xl, marginBottom: spacing.md,
+    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border.brand,
+    backgroundColor: colors.brand.muted, alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  bandNoticeText: { ...typography.bodySm, color: colors.brand.primary, textAlign: 'center' },
+}));
+
 export function CommunityChordSheetDetailScreen({ navigation, route }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const id = route.params.personalChordSheetId;
   const detail = useCommunityChordSheet(id);
   const view = useCommunityChordSheetView(id);
@@ -36,7 +65,7 @@ export function CommunityChordSheetDetailScreen({ navigation, route }: Props) {
     || (view.isError && isApiError(view.error) && view.error.response?.status === 403);
 
   if (detail.isPending || view.isPending) {
-    return <ScreenState><ActivityIndicator size="large" color={colors.accent.violetLight} /></ScreenState>;
+    return <ScreenState><SkeletonText lines={10} /></ScreenState>;
   }
   if (forbidden) {
     return <ScreenState><Text style={s.stateTitle}>Acesso restrito</Text><Text style={s.stateText}>Esta cifra está disponível apenas para músicos da banda do autor.</Text></ScreenState>;
@@ -87,29 +116,6 @@ export function CommunityChordSheetDetailScreen({ navigation, route }: Props) {
 }
 
 function ScreenState({ children }: { children: React.ReactNode }) {
+  const s = useStyles();
   return <SafeAreaView style={s.state} edges={['top', 'bottom']}>{children}</SafeAreaView>;
 }
-
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg.primary },
-  state: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl, backgroundColor: colors.bg.primary },
-  stateTitle: { ...typography.title, color: colors.text.primary, textAlign: 'center' },
-  stateText: { ...typography.body, color: colors.text.secondary, textAlign: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  titleWrap: { flex: 1, gap: 1 },
-  title: { ...typography.title, color: colors.text.primary },
-  artist: { ...typography.caption, color: colors.text.secondary },
-  cta: {
-    minHeight: 58, marginHorizontal: spacing.xl, marginBottom: spacing.md, borderRadius: radius.xl,
-    backgroundColor: colors.accent.violet, alignItems: 'center', justifyContent: 'center', ...shadows.violet,
-  },
-  ctaText: { ...typography.body, fontFamily: 'SpaceGrotesk-Bold', color: colors.text.primary },
-  bandNotice: {
-    minHeight: 48, marginHorizontal: spacing.xl, marginBottom: spacing.md,
-    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border.brand,
-    backgroundColor: colors.brand.muted, alignItems: 'center', justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  bandNoticeText: { ...typography.bodySm, color: colors.brand.primary, textAlign: 'center' },
-});

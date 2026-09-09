@@ -1,8 +1,10 @@
 import { View, StyleSheet } from 'react-native';
 import { Pencil, ArrowLeftRight, LogOut } from 'lucide-react-native';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ProfileMenuSection } from './ProfileMenuSection';
 import { ProfileMenuRow } from './ProfileMenuRow';
+import { ThemeMenuRow } from '@/shared/components/ThemeMenuRow';
 
 type Props = {
   onPressEditProfile:   () => void;
@@ -20,8 +22,15 @@ type Props = {
 export function ProfileAccountSection({
   onPressEditProfile, onPressSwitchAccount, onPressLogout,
 }: Props) {
+  const { colors } = useTheme();
   return (
     <View style={s.root}>
+      {/*
+        Aparência fica ACIMA de "Conta": é preferência, não ação de conta — e
+        "Sair da conta" tem de continuar sendo a última linha da tela.
+      */}
+      <ThemeMenuRow />
+
       <ProfileMenuSection title="Conta">
         <ProfileMenuRow icon={Pencil} label="Editar perfil" onPress={onPressEditProfile} />
         <ProfileMenuRow icon={ArrowLeftRight} label="Trocar de conta" accentColor={colors.accent.coral} onPress={onPressSwitchAccount} />

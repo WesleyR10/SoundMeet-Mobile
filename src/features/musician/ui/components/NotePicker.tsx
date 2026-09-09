@@ -1,5 +1,6 @@
-import { ScrollView, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { ScrollView, Text, Pressable } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_NAMES  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -16,32 +17,7 @@ type Props = {
 // Fileira horizontal de 12 notas — mesma técnica de CapoPicker.tsx (chips
 // roláveis compactos). Reusado pelo ChordPickerSheet tanto pra escolher a
 // raiz do acorde quanto o baixo opcional (slash chord).
-export function NotePicker({ value, onChange, preferFlats = false, clearable = false }: Props) {
-  const names = preferFlats ? FLAT_NAMES : SHARP_NAMES;
-  const options: (string | null)[] = clearable ? [null, ...names] : names;
-
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.row}>
-      {options.map((note) => {
-        const active = note === value;
-        return (
-          <Pressable
-            key={note ?? 'none'}
-            onPress={() => onChange(note)}
-            style={[s.chip, active && s.chipActive]}
-            accessibilityRole="button"
-            accessibilityLabel={note ?? 'Sem baixo'}
-            accessibilityState={{ selected: active }}
-          >
-            <Text style={[s.chipLabel, active && s.chipLabelActive]}>{note ?? 'Nenhuma'}</Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection:  'row',
     gap:             spacing.sm,
@@ -69,4 +45,30 @@ const s = StyleSheet.create({
   chipLabelActive: {
     color: colors.brand.primary,
   },
-});
+}));
+
+export function NotePicker({ value, onChange, preferFlats = false, clearable = false }: Props) {
+  const s = useStyles();
+  const names = preferFlats ? FLAT_NAMES : SHARP_NAMES;
+  const options: (string | null)[] = clearable ? [null, ...names] : names;
+
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.row}>
+      {options.map((note) => {
+        const active = note === value;
+        return (
+          <Pressable
+            key={note ?? 'none'}
+            onPress={() => onChange(note)}
+            style={[s.chip, active && s.chipActive]}
+            accessibilityRole="button"
+            accessibilityLabel={note ?? 'Sem baixo'}
+            accessibilityState={{ selected: active }}
+          >
+            <Text style={[s.chipLabel, active && s.chipLabelActive]}>{note ?? 'Nenhuma'}</Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+}

@@ -1,6 +1,8 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { CheckCircle2, XCircle } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import type { CifraSearchResult, AiCifraAnalysisJob } from '../../domain/cifra-search.types';
@@ -15,7 +17,47 @@ type Props = {
 };
 
 // Extraído de CifraSearchScreen.tsx (limite ~200 linhas/arquivo).
+const useStyles = makeStyles((colors) => ({
+  card: {
+    marginHorizontal: spacing.xl,
+    borderRadius:     radius.lg,
+    borderWidth:       1,
+    borderColor:      colors.border.default,
+    backgroundColor: colors.bg.surface,
+    padding:          spacing.lg,
+    gap:               spacing.sm,
+    ...shadows.sm,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  artist: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+    marginTop:      spacing.sm,
+  },
+  statusText: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+    flex:   1,
+  },
+  banner: {
+    marginTop: spacing.sm,
+  },
+  actions: {
+    marginTop: spacing.md,
+  },
+}));
+
 export function CifraAnalysisProgressCard({ result, job, flowError, isAdding, onAddToRepertoire, onRetry }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const status = job?.status ?? 'queued';
 
   return (
@@ -57,41 +99,3 @@ export function CifraAnalysisProgressCard({ result, job, flowError, isAdding, on
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  card: {
-    marginHorizontal: spacing.xl,
-    borderRadius:     radius.lg,
-    borderWidth:       1,
-    borderColor:      colors.border.default,
-    backgroundColor: colors.bg.surface,
-    padding:          spacing.lg,
-    gap:               spacing.sm,
-    ...shadows.sm,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  artist: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-    marginTop:      spacing.sm,
-  },
-  statusText: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-    flex:   1,
-  },
-  banner: {
-    marginTop: spacing.sm,
-  },
-  actions: {
-    marginTop: spacing.md,
-  },
-});

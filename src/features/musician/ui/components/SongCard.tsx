@@ -1,9 +1,11 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { AudioLines, GripVertical, Trash2, StickyNote, PlayCircle, FileX } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { RepertoireSong } from '../../domain/repertoire.types';
 
 type Props = {
@@ -39,7 +41,107 @@ function triggerHaptic() {
 // pra não conflitar com o swipe horizontal de remover — onLongPress no handle
 // aciona `drag()` do DraggableFlatList; Gesture.Pan cobre só o corpo do card.
 // Mesmo idioma de swipe de RequestCard.tsx, mas 1 direção só (remover).
+const useStyles = makeStyles((colors) => ({
+  root: {
+    marginBottom: spacing.sm,
+  },
+  removeBg: {
+    position:       'absolute',
+    top:             0,
+    bottom:          0,
+    right:           0,
+    width:          '30%',
+    borderRadius:    radius.lg,
+    backgroundColor: colors.accent.coral,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  card: {
+    flexDirection:    'row',
+    alignItems:       'center',
+    gap:               spacing.sm,
+    backgroundColor: colors.bg.surface,
+    borderRadius:     radius.lg,
+    borderWidth:       1,
+    borderColor:      colors.border.default,
+    paddingVertical:   spacing.md,
+    paddingHorizontal: spacing.md,
+    ...shadows.sm,
+  },
+  cardActive: {
+    borderColor: colors.border.brand,
+    ...shadows.brand,
+  },
+  position: {
+    ...typography.bodySm,
+    color:    colors.text.muted,
+    width:    20,
+    textAlign: 'center',
+  },
+  body: {
+    flex: 1,
+    gap:   2,
+  },
+  title: {
+    ...typography.liveBody,
+    color: colors.text.primary,
+  },
+  metaRow: {
+    flexDirection: 'row',
+  },
+  artist: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  duration: {
+    ...typography.bodySm,
+    color: colors.text.muted,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:            spacing.xs,
+    marginTop:      4,
+  },
+  customBadge: {
+    flexDirection:      'row',
+    alignItems:         'center',
+    gap:                 4,
+    alignSelf:          'flex-start',
+    borderRadius:       radius.sm,
+    paddingHorizontal:  spacing.xs,
+    paddingVertical:    2,
+    backgroundColor:   `${colors.accent.amber}1F`,
+  },
+  customBadgeText: {
+    ...typography.caption,
+    color: colors.accent.amber,
+  },
+  noSheetBadge: {
+    flexDirection:      'row',
+    alignItems:         'center',
+    gap:                 4,
+    alignSelf:          'flex-start',
+    borderRadius:       radius.sm,
+    paddingHorizontal:  spacing.xs,
+    paddingVertical:    2,
+    backgroundColor:   'rgba(255,255,255,0.06)',
+  },
+  noSheetBadgeText: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+  handle: {
+    width:           44,
+    height:          44,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+}));
+
 export function SongCard({ song, index, onPress, onPractice, onRemove, drag, isActive }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const translateX = useSharedValue(0);
   const hapticFired = useSharedValue(false);
 
@@ -145,101 +247,3 @@ export function SongCard({ song, index, onPress, onPractice, onRemove, drag, isA
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    marginBottom: spacing.sm,
-  },
-  removeBg: {
-    position:       'absolute',
-    top:             0,
-    bottom:          0,
-    right:           0,
-    width:          '30%',
-    borderRadius:    radius.lg,
-    backgroundColor: colors.accent.coral,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  card: {
-    flexDirection:    'row',
-    alignItems:       'center',
-    gap:               spacing.sm,
-    backgroundColor: colors.bg.surface,
-    borderRadius:     radius.lg,
-    borderWidth:       1,
-    borderColor:      colors.border.default,
-    paddingVertical:   spacing.md,
-    paddingHorizontal: spacing.md,
-    ...shadows.sm,
-  },
-  cardActive: {
-    borderColor: colors.border.brand,
-    ...shadows.brand,
-  },
-  position: {
-    ...typography.bodySm,
-    color:    colors.text.muted,
-    width:    20,
-    textAlign: 'center',
-  },
-  body: {
-    flex: 1,
-    gap:   2,
-  },
-  title: {
-    ...typography.liveBody,
-    color: colors.text.primary,
-  },
-  metaRow: {
-    flexDirection: 'row',
-  },
-  artist: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  duration: {
-    ...typography.bodySm,
-    color: colors.text.muted,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:            spacing.xs,
-    marginTop:      4,
-  },
-  customBadge: {
-    flexDirection:      'row',
-    alignItems:         'center',
-    gap:                 4,
-    alignSelf:          'flex-start',
-    borderRadius:       radius.sm,
-    paddingHorizontal:  spacing.xs,
-    paddingVertical:    2,
-    backgroundColor:   `${colors.accent.amber}1F`,
-  },
-  customBadgeText: {
-    ...typography.caption,
-    color: colors.accent.amber,
-  },
-  noSheetBadge: {
-    flexDirection:      'row',
-    alignItems:         'center',
-    gap:                 4,
-    alignSelf:          'flex-start',
-    borderRadius:       radius.sm,
-    paddingHorizontal:  spacing.xs,
-    paddingVertical:    2,
-    backgroundColor:   'rgba(255,255,255,0.06)',
-  },
-  noSheetBadgeText: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-  handle: {
-    width:           44,
-    height:          44,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-});

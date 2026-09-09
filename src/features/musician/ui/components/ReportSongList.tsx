@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Coins } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { PerformanceReportSong } from '@/shared/services/performance/performance.types';
 
 type Props = {
@@ -17,59 +19,7 @@ type Props = {
  * indicação do público. A nota viaja com o dado justamente para que a UI não
  * precise lembrar de escrevê-la.
  */
-export function ReportSongList({ songs, attributionNote }: Props) {
-  if (songs.length === 0) {
-    return (
-      <View style={s.empty}>
-        <Text style={s.emptyText}>
-          Nenhuma música registrada neste show. Abrir uma música no Repertório
-          durante o set é o que alimenta esta lista.
-        </Text>
-      </View>
-    );
-  }
-
-  const hasAnyTip = songs.some((song) => song.tips_during_song > 0);
-
-  return (
-    <View style={s.root}>
-      <Text style={s.heading}>Setlist</Text>
-
-      {songs.map((song) => (
-        <View key={song.id} style={s.row}>
-          <Text style={s.position}>{String(song.position).padStart(2, '0')}</Text>
-
-          <View style={s.info}>
-            <Text style={s.title} numberOfLines={1}>{song.title}</Text>
-            <Text style={s.artist} numberOfLines={1}>{song.artist}</Text>
-          </View>
-
-          <View style={s.meta}>
-            {song.tips_during_song > 0 && (
-              <View style={s.tipRow}>
-                <Coins size={12} color={colors.accent.coral} />
-                <Text style={s.tipText}>{song.tips_during_song}</Text>
-              </View>
-            )}
-            <Text style={s.duration}>{formatDuration(song.duration_seconds)}</Text>
-          </View>
-        </View>
-      ))}
-
-      {hasAnyTip && <Text style={s.note}>{attributionNote}</Text>}
-    </View>
-  );
-}
-
-/** `null` = música nunca fechada. Um traço é honesto; "0:00" seria mentira. */
-function formatDuration(seconds: number | null): string {
-  if (seconds === null) return '—';
-  const min = Math.floor(seconds / 60);
-  const sec = seconds % 60;
-  return `${min}:${String(sec).padStart(2, '0')}`;
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap:             spacing.sm,
     padding:         spacing.lg,
@@ -138,4 +88,58 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     color: colors.text.muted,
   },
-});
+}));
+
+export function ReportSongList({ songs, attributionNote }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  if (songs.length === 0) {
+    return (
+      <View style={s.empty}>
+        <Text style={s.emptyText}>
+          Nenhuma música registrada neste show. Abrir uma música no Repertório
+          durante o set é o que alimenta esta lista.
+        </Text>
+      </View>
+    );
+  }
+
+  const hasAnyTip = songs.some((song) => song.tips_during_song > 0);
+
+  return (
+    <View style={s.root}>
+      <Text style={s.heading}>Setlist</Text>
+
+      {songs.map((song) => (
+        <View key={song.id} style={s.row}>
+          <Text style={s.position}>{String(song.position).padStart(2, '0')}</Text>
+
+          <View style={s.info}>
+            <Text style={s.title} numberOfLines={1}>{song.title}</Text>
+            <Text style={s.artist} numberOfLines={1}>{song.artist}</Text>
+          </View>
+
+          <View style={s.meta}>
+            {song.tips_during_song > 0 && (
+              <View style={s.tipRow}>
+                <Coins size={12} color={colors.accent.coral} />
+                <Text style={s.tipText}>{song.tips_during_song}</Text>
+              </View>
+            )}
+            <Text style={s.duration}>{formatDuration(song.duration_seconds)}</Text>
+          </View>
+        </View>
+      ))}
+
+      {hasAnyTip && <Text style={s.note}>{attributionNote}</Text>}
+    </View>
+  );
+}
+
+/** `null` = música nunca fechada. Um traço é honesto; "0:00" seria mentira. */
+function formatDuration(seconds: number | null): string {
+  if (seconds === null) return '—';
+  const min = Math.floor(seconds / 60);
+  const sec = seconds % 60;
+  return `${min}:${String(sec).padStart(2, '0')}`;
+}

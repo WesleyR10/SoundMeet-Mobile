@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,7 +8,9 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { QrCode as QrCodeIcon } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { useQRCardShare } from '../../application/useQRCardShare';
 import { QRShareCard, type QRShareCardHandle } from './QRShareCard';
@@ -22,7 +24,50 @@ type Props = {
 // Extraído de QRCodeScreen.tsx (limite de ~200 linhas/screen) — o "conteúdo
 // carregado": choreography de entrada + card + ações. Fica isolado do gate de
 // loading/erro/back button, que mora na screen.
+const useStyles = makeStyles((colors) => ({
+  content: {
+    flex:              1,
+    alignItems:        'center',
+    justifyContent:    'center',
+    gap:                spacing.xxl,
+    paddingHorizontal: spacing.xl,
+  },
+  title: {
+    ...typography.displayMd,
+    color:     colors.text.primary,
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...typography.body,
+    color:             colors.text.secondary,
+    textAlign:         'center',
+    marginTop:         spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  errorBanner: {
+    alignSelf: 'stretch',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap:            spacing.md,
+    alignSelf:      'stretch',
+  },
+  emptyState: {
+    alignItems: 'center',
+    gap:         spacing.md,
+    padding:     spacing.xxl,
+  },
+  emptyText: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+    maxWidth:  260,
+  },
+}));
+
 export function QRCodeContent({ musician }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const cardRef = useRef<QRShareCardHandle>(null);
   const { shareCard, isSharing, justShared, saveCard, isSaving, justSaved, bannerError } = useQRCardShare(cardRef);
 
@@ -90,44 +135,3 @@ export function QRCodeContent({ musician }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  content: {
-    flex:              1,
-    alignItems:        'center',
-    justifyContent:    'center',
-    gap:                spacing.xxl,
-    paddingHorizontal: spacing.xl,
-  },
-  title: {
-    ...typography.displayMd,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...typography.body,
-    color:             colors.text.secondary,
-    textAlign:         'center',
-    marginTop:         spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  errorBanner: {
-    alignSelf: 'stretch',
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    gap:            spacing.md,
-    alignSelf:      'stretch',
-  },
-  emptyState: {
-    alignItems: 'center',
-    gap:         spacing.md,
-    padding:     spacing.xxl,
-  },
-  emptyText: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-    maxWidth:  260,
-  },
-});

@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Music2, Share2, Users } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import type { Repertoire } from '../../domain/repertoire.types';
@@ -11,47 +13,7 @@ type Props = {
   riseDelay?: number;
 };
 
-export function RepertoireCard({ repertoire, onPress, riseDelay = 0 }: Props) {
-  return (
-    <Pressable3DCard onPress={onPress} accessibilityLabel={`Abrir repertório ${repertoire.name}`}>
-      <GlowCard riseDelay={riseDelay} style={s.card}>
-        <View style={s.header}>
-          <View style={s.iconWrap}>
-            <Music2 size={20} color={colors.brand.primary} />
-          </View>
-          <View style={s.headerText}>
-            <Text style={s.name} numberOfLines={1}>{repertoire.name}</Text>
-            <Text style={s.subtitle}>
-              {repertoire.song_count} {repertoire.song_count === 1 ? 'música' : 'músicas'}
-              {repertoire.estimated_show_duration_minutes != null
-                ? ` · ~${Math.round(repertoire.estimated_show_duration_minutes)} min`
-                : ''}
-            </Text>
-          </View>
-        </View>
-
-        {(repertoire.is_shared || repertoire.invitees.length > 0) && (
-          <View style={s.badgeRow}>
-            {repertoire.is_shared && (
-              <View style={s.badge}>
-                <Share2 size={12} color={colors.brand.primary} />
-                <Text style={s.badgeText}>Compartilhado</Text>
-              </View>
-            )}
-            {repertoire.invitees.length > 0 && (
-              <View style={s.badge}>
-                <Users size={12} color={colors.accent.violet} />
-                <Text style={s.badgeText}>{repertoire.invitees.length} convidado{repertoire.invitees.length > 1 ? 's' : ''}</Text>
-              </View>
-            )}
-          </View>
-        )}
-      </GlowCard>
-    </Pressable3DCard>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     ...shadows.sm,
   },
@@ -98,4 +60,46 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
-});
+}));
+
+export function RepertoireCard({ repertoire, onPress, riseDelay = 0 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <Pressable3DCard onPress={onPress} accessibilityLabel={`Abrir repertório ${repertoire.name}`}>
+      <GlowCard riseDelay={riseDelay} style={s.card}>
+        <View style={s.header}>
+          <View style={s.iconWrap}>
+            <Music2 size={20} color={colors.brand.primary} />
+          </View>
+          <View style={s.headerText}>
+            <Text style={s.name} numberOfLines={1}>{repertoire.name}</Text>
+            <Text style={s.subtitle}>
+              {repertoire.song_count} {repertoire.song_count === 1 ? 'música' : 'músicas'}
+              {repertoire.estimated_show_duration_minutes != null
+                ? ` · ~${Math.round(repertoire.estimated_show_duration_minutes)} min`
+                : ''}
+            </Text>
+          </View>
+        </View>
+
+        {(repertoire.is_shared || repertoire.invitees.length > 0) && (
+          <View style={s.badgeRow}>
+            {repertoire.is_shared && (
+              <View style={s.badge}>
+                <Share2 size={12} color={colors.brand.primary} />
+                <Text style={s.badgeText}>Compartilhado</Text>
+              </View>
+            )}
+            {repertoire.invitees.length > 0 && (
+              <View style={s.badge}>
+                <Users size={12} color={colors.accent.violet} />
+                <Text style={s.badgeText}>{repertoire.invitees.length} convidado{repertoire.invitees.length > 1 ? 's' : ''}</Text>
+              </View>
+            )}
+          </View>
+        )}
+      </GlowCard>
+    </Pressable3DCard>
+  );
+}

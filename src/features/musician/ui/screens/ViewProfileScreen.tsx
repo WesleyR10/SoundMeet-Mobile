@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { QrCode } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList, SkeletonProfileHeader, SkeletonStatRow, SkeletonText } from '@/shared/components/Skeleton';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
@@ -55,7 +58,70 @@ function useReveal(delay: number) {
   }));
 }
 
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  loaderRoot: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+    alignItems:      'center',
+    justifyContent:  'center',
+    gap:              spacing.md,
+    padding:          spacing.xl,
+  },
+  errorBanner: {
+    marginBottom: spacing.sm,
+  },
+  retryBtn: {
+    backgroundColor:   colors.brand.primary,
+    borderRadius:      radius.xl,
+    paddingVertical:   spacing.md,
+    paddingHorizontal: spacing.xxl,
+  },
+  retryText: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.inverse,
+  },
+  scroll: {
+    padding:       spacing.xl,
+    paddingBottom: 140,
+  },
+  content: {
+    gap: spacing.xxl,
+  },
+  footer: {
+    position:      'absolute',
+    left:           0,
+    right:          0,
+    bottom:         0,
+    flexDirection: 'row',
+    gap:            spacing.md,
+    padding:        spacing.xl,
+    paddingTop:     spacing.xxxl,
+  },
+  qrBtn: {
+    width:           48,
+    height:          48,
+    borderRadius:    24,
+    alignItems:      'center',
+    justifyContent:  'center',
+    backgroundColor: colors.brand.muted,
+    borderWidth:     1,
+    borderColor:     colors.border.brand,
+  },
+  editBtn: {
+    flex: 1,
+  },
+}));
+
 export function ViewProfileScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data: musician, isPending, isError, refetch } = useMusician(musicianId);
   // Mesma query de MyBandsScreen (cache compartilhado, sem fetch extra) — só
@@ -83,7 +149,12 @@ export function ViewProfileScreen({ navigation }: Props) {
     return (
       <SafeAreaView style={s.loaderRoot} edges={['top']}>
         <StatusBar style="light" />
-        <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.skeleton}>
+          <SkeletonProfileHeader />
+          <SkeletonStatRow count={3} />
+          <SkeletonText lines={3} />
+          <SkeletonList count={2} itemHeight={72} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -168,62 +239,3 @@ export function ViewProfileScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  loaderRoot: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-    alignItems:      'center',
-    justifyContent:  'center',
-    gap:              spacing.md,
-    padding:          spacing.xl,
-  },
-  errorBanner: {
-    marginBottom: spacing.sm,
-  },
-  retryBtn: {
-    backgroundColor:   colors.brand.primary,
-    borderRadius:      radius.xl,
-    paddingVertical:   spacing.md,
-    paddingHorizontal: spacing.xxl,
-  },
-  retryText: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.inverse,
-  },
-  scroll: {
-    padding:       spacing.xl,
-    paddingBottom: 140,
-  },
-  content: {
-    gap: spacing.xxl,
-  },
-  footer: {
-    position:      'absolute',
-    left:           0,
-    right:          0,
-    bottom:         0,
-    flexDirection: 'row',
-    gap:            spacing.md,
-    padding:        spacing.xl,
-    paddingTop:     spacing.xxxl,
-  },
-  qrBtn: {
-    width:           48,
-    height:          48,
-    borderRadius:    24,
-    alignItems:      'center',
-    justifyContent:  'center',
-    backgroundColor: colors.brand.muted,
-    borderWidth:     1,
-    borderColor:     colors.border.brand,
-  },
-  editBtn: {
-    flex: 1,
-  },
-});

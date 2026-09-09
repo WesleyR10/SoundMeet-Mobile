@@ -1,6 +1,6 @@
 import { Dimensions, View, StyleSheet } from 'react-native';
+import { useTheme } from '@/shared/hooks/useTheme';
 import Svg, { Path, Circle, Line } from 'react-native-svg';
-import { colors } from '@/shared/design-system/tokens';
 
 const SW = Dimensions.get('window').width;
 const WIDTH  = Math.min(SW * 0.44, 190);
@@ -16,6 +16,7 @@ export const PEG_YS = [70, 130, 190] as const;
 // "glow" com segunda passada de stroke translúcido, mesma técnica dos
 // arcos de WizardProgress/TunerCentsMeter.
 export function TunerHeadstock() {
+  const { colors } = useTheme();
   const outline = 'M68 14 Q100 4 132 14 L150 262 Q100 278 50 262 Z';
 
   return (

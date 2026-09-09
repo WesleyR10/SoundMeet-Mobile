@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
-import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react-native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList, SkeletonText } from '@/shared/components/Skeleton';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
@@ -30,7 +33,34 @@ import { ConflictsReviewSheet } from '../components/ConflictsReviewSheet';
 
 type Props = RepertoireScreenProps<'ImportCommunityChordSheet'>;
 
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.bg.primary },
+  state: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.bg.primary },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
+  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  headerText: { flex: 1, gap: 1 },
+  title: { ...typography.title, color: colors.text.primary },
+  subtitle: { ...typography.caption, color: colors.text.secondary },
+  error: { marginHorizontal: spacing.xl, gap: spacing.xs },
+  planLink: { ...typography.bodySm, fontFamily: 'Inter-SemiBold', color: colors.brand.primary, textAlign: 'center' },
+  instructions: { ...typography.body, color: colors.text.secondary, paddingHorizontal: spacing.xl, marginBottom: spacing.md },
+  list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl },
+  ready: { margin: spacing.xl, padding: spacing.lg, gap: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border.brand, backgroundColor: colors.bg.surface },
+  readyTitle: { ...typography.title, color: colors.text.primary, textAlign: 'center' },
+  successTitle: { ...typography.title, color: colors.text.primary },
+  centerText: { ...typography.body, color: colors.text.secondary, textAlign: 'center' },
+  warning: { ...typography.bodySm, color: colors.status.warning, textAlign: 'center' },
+  reviewButton: {
+    minHeight: 48, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center',
+    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border.brand,
+  },
+  reviewText: { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.brand.primary },
+  fullButton: { alignSelf: 'stretch' },
+}));
+
 export function ImportCommunityChordSheetScreen({ navigation, route }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const sourceId = route.params.sourcePersonalChordSheetId;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const source = useCommunityChordSheet(sourceId);
@@ -83,7 +113,7 @@ export function ImportCommunityChordSheetScreen({ navigation, route }: Props) {
   }
 
   if (source.isPending || item.isPending || mine.isPending) {
-    return <ScreenState><ActivityIndicator size="large" color={colors.accent.violetLight} /></ScreenState>;
+    return <ScreenState><SkeletonText lines={8} /></ScreenState>;
   }
   if (!source.data || !item.data) {
     return <ScreenState><ErrorBanner message="Não conseguimos preparar esta importação." /></ScreenState>;
@@ -101,7 +131,7 @@ export function ImportCommunityChordSheetScreen({ navigation, route }: Props) {
         </Text>
         {imported.base_differs && <Text style={s.warning}>A análise da sua biblioteca difere da análise do autor.</Text>}
         {imported.conflict_count > 0 && (
-          <Pressable onPress={() => setConflictsVisible(true)} style={s.reviewButton}>
+          <Pressable onPress={() => setConflictsVisible(true)} style={s.reviewButton} accessibilityRole="button" accessibilityLabel="Revisar conflitos">
             <Text style={s.reviewText}>Revisar conflitos</Text>
           </Pressable>
         )}
@@ -123,7 +153,7 @@ export function ImportCommunityChordSheetScreen({ navigation, route }: Props) {
           <Text style={s.subtitle} numberOfLines={1}>{item.data.title} · {item.data.artist}</Text>
         </View>
       </View>
-      {!!error && <View style={s.error}><ErrorBanner message={error} /><Pressable onPress={() => root?.navigate('Plans')}><Text style={s.planLink}>Ver planos</Text></Pressable></View>}
+      {!!error && <View style={s.error}><ErrorBanner message={error} /><Pressable onPress={() => root?.navigate('Plans')} accessibilityRole="button" accessibilityLabel="Ver planos"><Text style={s.planLink}>Ver planos</Text></Pressable></View>}
 
       {targetReady ? (
         <View style={s.ready}>
@@ -140,7 +170,7 @@ export function ImportCommunityChordSheetScreen({ navigation, route }: Props) {
             data={catalog.data ?? []}
             keyExtractor={(result) => result.youtube_video_id}
             contentContainerStyle={s.list}
-            ListEmptyComponent={catalog.isPending ? <ActivityIndicator color={colors.brand.primary} /> : <Text style={s.centerText}>Nenhuma gravação encontrada.</Text>}
+            ListEmptyComponent={catalog.isPending ? <SkeletonList count={3} itemHeight={88} /> : <Text style={s.centerText}>Nenhuma gravação encontrada.</Text>}
             renderItem={({ item: result }) => <CifraSearchResultCard result={result} onPress={() => selectCatalogResult(result)} />}
           />
         </>
@@ -150,30 +180,6 @@ export function ImportCommunityChordSheetScreen({ navigation, route }: Props) {
 }
 
 function ScreenState({ children }: { children: React.ReactNode }) {
+  const s = useStyles();
   return <SafeAreaView style={s.state} edges={['top', 'bottom']}>{children}</SafeAreaView>;
 }
-
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg.primary },
-  state: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.bg.primary },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
-  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  headerText: { flex: 1, gap: 1 },
-  title: { ...typography.title, color: colors.text.primary },
-  subtitle: { ...typography.caption, color: colors.text.secondary },
-  error: { marginHorizontal: spacing.xl, gap: spacing.xs },
-  planLink: { ...typography.bodySm, fontFamily: 'Inter-SemiBold', color: colors.brand.primary, textAlign: 'center' },
-  instructions: { ...typography.body, color: colors.text.secondary, paddingHorizontal: spacing.xl, marginBottom: spacing.md },
-  list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl },
-  ready: { margin: spacing.xl, padding: spacing.lg, gap: spacing.md, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border.brand, backgroundColor: colors.bg.surface },
-  readyTitle: { ...typography.title, color: colors.text.primary, textAlign: 'center' },
-  successTitle: { ...typography.title, color: colors.text.primary },
-  centerText: { ...typography.body, color: colors.text.secondary, textAlign: 'center' },
-  warning: { ...typography.bodySm, color: colors.status.warning, textAlign: 'center' },
-  reviewButton: {
-    minHeight: 48, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center',
-    borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border.brand,
-  },
-  reviewText: { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.brand.primary },
-  fullButton: { alignSelf: 'stretch' },
-});

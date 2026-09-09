@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { ArrowLeft, Search } from 'lucide-react-native';
+import { ArrowLeft, FileMusic, Search } from 'lucide-react-native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { EmptyState } from '@/shared/components/EmptyState';
+import { SkeletonList } from '@/shared/components/Skeleton';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { MusicianTabParamList, RepertoireScreenProps, RootStackParamList } from '@/navigation/types';
 import { useMyMusicLibraryItems } from '../../application/useMyMusicLibraryItems';
@@ -18,7 +22,26 @@ import { MusicLibraryItemPickerCard } from '../components/MusicLibraryItemPicker
 
 type Props = RepertoireScreenProps<'AddPersonalChordSheet'>;
 
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1, backgroundColor: colors.bg.primary },
+  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
+  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  title: { ...typography.title, color: colors.text.primary },
+  search: {
+    height: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    marginHorizontal: spacing.xl, marginBottom: spacing.md, paddingHorizontal: spacing.md,
+    borderRadius: radius.md, borderWidth: 1, borderColor: colors.border.default, backgroundColor: colors.bg.surface,
+  },
+  input: { flex: 1, ...typography.body, color: colors.text.primary },
+  error: { marginHorizontal: spacing.xl, marginBottom: spacing.md, gap: spacing.xs },
+  planLink: { ...typography.bodySm, fontFamily: 'Inter-SemiBold', color: colors.brand.primary, textAlign: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl },
+  list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl },
+}));
+
 export function AddPersonalChordSheetScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const [search, setSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -70,18 +93,19 @@ export function AddPersonalChordSheetScreen({ navigation }: Props) {
       {!!error && (
         <View style={s.error}>
           <ErrorBanner message={error} />
-          <Pressable onPress={() => root?.navigate('Plans')}><Text style={s.planLink}>Ver planos</Text></Pressable>
+          <Pressable onPress={() => root?.navigate('Plans')} accessibilityRole="button" accessibilityLabel="Ver planos"><Text style={s.planLink}>Ver planos</Text></Pressable>
         </View>
       )}
       {pending ? (
-        <View style={s.center}><ActivityIndicator size="large" color={colors.brand.primary} /></View>
+        <View style={s.list}><SkeletonList count={6} itemHeight={72} /></View>
       ) : library.isError || personal.isError ? (
         <View style={s.center}><ErrorBanner message="Não conseguimos carregar sua biblioteca." /></View>
       ) : items.length === 0 ? (
-        <View style={s.center}>
-          <Text style={s.emptyTitle}>Nenhuma música disponível</Text>
-          <Text style={s.emptyText}>As músicas com fork já criado foram ocultadas. Gere uma cifra no repertório para ela aparecer aqui.</Text>
-        </View>
+        <EmptyState
+          icon={FileMusic}
+          title="Nenhuma música disponível"
+          subtitle="As músicas com fork já criado foram ocultadas. Gere uma cifra no repertório para ela aparecer aqui."
+        />
       ) : (
         <FlatList<MusicLibraryItem>
           data={items}
@@ -93,22 +117,3 @@ export function AddPersonalChordSheetScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg.primary },
-  header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
-  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
-  title: { ...typography.title, color: colors.text.primary },
-  search: {
-    height: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    marginHorizontal: spacing.xl, marginBottom: spacing.md, paddingHorizontal: spacing.md,
-    borderRadius: radius.md, borderWidth: 1, borderColor: colors.border.default, backgroundColor: colors.bg.surface,
-  },
-  input: { flex: 1, ...typography.body, color: colors.text.primary },
-  error: { marginHorizontal: spacing.xl, marginBottom: spacing.md, gap: spacing.xs },
-  planLink: { ...typography.bodySm, fontFamily: 'Inter-SemiBold', color: colors.brand.primary, textAlign: 'center' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm, padding: spacing.xl },
-  emptyTitle: { ...typography.title, color: colors.text.primary, textAlign: 'center' },
-  emptyText: { ...typography.body, color: colors.text.secondary, textAlign: 'center' },
-  list: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl },
-});

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Lock } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
@@ -20,7 +22,40 @@ type Props = {
 // aparece pra terceiros, nem se o fork for compartilhado com banda/comunidade
 // (o backend garante isso — este componente só existe pra ficar visualmente
 // distinto de AnnotationSheet, não pra reforçar a regra de negócio).
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:     radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  content: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:      spacing.xxl,
+    gap:                 spacing.md,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  hint: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  confirmBtn: {
+    marginTop: spacing.sm,
+  },
+}));
+
 export function PersonalNotesSheet({ visible, initialNotes, loading, onConfirm, onClose }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const sheetRef = useRef<BottomSheetModal>(null);
   const [notes, setNotes] = useState(initialNotes ?? '');
   const [error, setError] = useState<string | null>(null);
@@ -87,34 +122,3 @@ export function PersonalNotesSheet({ visible, initialNotes, loading, onConfirm, 
     </BottomSheetModal>
   );
 }
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:     radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:      spacing.xxl,
-    gap:                 spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  hint: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  confirmBtn: {
-    marginTop: spacing.sm,
-  },
-});

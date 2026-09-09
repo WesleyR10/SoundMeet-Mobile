@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 
 type Props = {
   title: string;

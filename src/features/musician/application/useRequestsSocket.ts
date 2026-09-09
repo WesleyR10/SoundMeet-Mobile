@@ -20,10 +20,20 @@ export function useRequestsSocket(musicianId: string | null): void {
       queryClient.invalidateQueries({ queryKey: musicianRequestsKey(musicianId, 'pending') });
     };
 
+    // O destaque saiu de "a confirmar" para "confirmado": o card na fila
+    // precisa refletir isso ao vivo, senão o músico decide olhando um selo
+    // desatualizado no meio do show.
+    const onBoostConfirmed = () => {
+      queryClient.invalidateQueries({ queryKey: musicianRequestsKey(musicianId, 'pending') });
+      queryClient.invalidateQueries({ queryKey: musicianRequestsKey(musicianId, 'accepted') });
+    };
+
     socket.on('request.new', onNewRequest);
+    socket.on('request.boost.confirmed', onBoostConfirmed);
 
     return () => {
       socket.off('request.new', onNewRequest);
+      socket.off('request.boost.confirmed', onBoostConfirmed);
       disconnectSocket();
     };
   }, [musicianId, queryClient]);

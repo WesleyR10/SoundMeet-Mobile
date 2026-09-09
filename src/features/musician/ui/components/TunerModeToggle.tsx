@@ -1,5 +1,6 @@
-import { Pressable, Text, View, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { Pressable, Text, View } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { TunerMode } from '../../domain/tuner.types';
 
 type Props = {
@@ -14,29 +15,7 @@ const OPTIONS: { value: TunerMode; label: string }[] = [
 
 // Segmented control do afinador — modo guitarra (headstock + cordas, padrão)
 // vs cromático (arco + nota, comportamento original do Bloco 8).
-export function TunerModeToggle({ mode, onChange }: Props) {
-  return (
-    <View style={s.root}>
-      {OPTIONS.map((option) => {
-        const selected = mode === option.value;
-        return (
-          <Pressable
-            key={option.value}
-            onPress={() => onChange(option.value)}
-            style={[s.segment, selected && s.segmentSelected]}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            accessibilityLabel={`Modo ${option.label}`}
-          >
-            <Text style={[s.label, selected && s.labelSelected]}>{option.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flexDirection:   'row',
     alignSelf:       'center',
@@ -64,4 +43,27 @@ const s = StyleSheet.create({
   labelSelected: {
     color: colors.brand.primary,
   },
-});
+}));
+
+export function TunerModeToggle({ mode, onChange }: Props) {
+  const s = useStyles();
+  return (
+    <View style={s.root}>
+      {OPTIONS.map((option) => {
+        const selected = mode === option.value;
+        return (
+          <Pressable
+            key={option.value}
+            onPress={() => onChange(option.value)}
+            style={[s.segment, selected && s.segmentSelected]}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            accessibilityLabel={`Modo ${option.label}`}
+          >
+            <Text style={[s.label, selected && s.labelSelected]}>{option.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}

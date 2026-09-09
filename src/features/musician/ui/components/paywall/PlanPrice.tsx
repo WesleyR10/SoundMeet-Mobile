@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { BillingCycle, MusicianPlan } from '../../../domain/plans.config';
 
 type Props = {
@@ -15,7 +16,45 @@ function formatBRL(value: number): string {
 
 // Bloco de preço do card — crossfade sutil a cada troca de ciclo (o valor
 // muda de conteúdo, então re-anima opacity/translateY em vez de layout).
+const useStyles = makeStyles((colors) => ({
+  priceRow: {
+    flexDirection: 'row',
+    alignItems:    'baseline',
+    gap:            spacing.xs,
+  },
+  price: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  per: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  annualRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    flexWrap:      'wrap',
+    gap:            spacing.sm,
+    marginTop:      spacing.xs,
+  },
+  annualNote: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  savingsBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical:    2,
+    borderRadius:       radius.sm,
+    backgroundColor:   colors.brand.muted,
+  },
+  savingsText: {
+    ...typography.caption,
+    color: colors.brand.primary,
+  },
+}));
+
 export function PlanPrice({ plan, cycle }: Props) {
+  const s = useStyles();
   const progress = useSharedValue(1);
 
   useEffect(() => {
@@ -59,40 +98,3 @@ export function PlanPrice({ plan, cycle }: Props) {
     </Animated.View>
   );
 }
-
-const s = StyleSheet.create({
-  priceRow: {
-    flexDirection: 'row',
-    alignItems:    'baseline',
-    gap:            spacing.xs,
-  },
-  price: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  per: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  annualRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    flexWrap:      'wrap',
-    gap:            spacing.sm,
-    marginTop:      spacing.xs,
-  },
-  annualNote: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  savingsBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical:    2,
-    borderRadius:       radius.sm,
-    backgroundColor:   colors.brand.muted,
-  },
-  savingsText: {
-    ...typography.caption,
-    color: colors.brand.primary,
-  },
-});

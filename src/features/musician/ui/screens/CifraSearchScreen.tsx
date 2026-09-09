@@ -1,9 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Search } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList } from '@/shared/components/Skeleton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
@@ -21,7 +24,72 @@ type Props = RepertoireScreenProps<'CifraSearch'>;
 // MusicLibrary + dispara análise → poll até completed/failed → "adicionar ao
 // repertório". Ver plano Bloco 7 pro porquê da ordem create-then-analyze
 // (from-provider/analyses não cria o item sozinho fora do fluxo de preload).
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  header: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:                spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.lg,
+  },
+  headerBtn: {
+    width:          44,
+    height:         44,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  searchWrap: {
+    flexDirection:      'row',
+    alignItems:         'center',
+    gap:                 spacing.sm,
+    marginHorizontal:    spacing.xl,
+    height:              48,
+    borderRadius:        radius.md,
+    borderWidth:          1,
+    borderColor:         colors.border.default,
+    backgroundColor:    'rgba(255,255,255,0.04)',
+    paddingHorizontal:   spacing.md,
+    marginBottom:        spacing.lg,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.body,
+    fontFamily: 'Inter-Medium',
+    color:      colors.text.primary,
+  },
+  banner: {
+    marginHorizontal: spacing.xl,
+    marginBottom:      spacing.md,
+  },
+  listContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxxl,
+  },
+  centerRoot: {
+    flex:            1,
+    alignItems:      'center',
+    justifyContent:  'center',
+    padding:          spacing.xl,
+  },
+  hintText: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    textAlign: 'center',
+  },
+}));
+
 export function CifraSearchScreen({ navigation, route }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { repertoireId } = route.params;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
 
@@ -105,8 +173,8 @@ export function CifraSearchScreen({ navigation, route }: Props) {
               <Text style={s.hintText}>Digite pelo menos 2 letras pra buscar.</Text>
             </View>
           ) : isSearching ? (
-            <View style={s.centerRoot}>
-              <ActivityIndicator color={colors.brand.primary} />
+            <View style={s.listContent}>
+              <SkeletonList count={4} itemHeight={96} />
             </View>
           ) : searchFailed ? (
             // Sem este ramo, uma busca que falha cai no "Nenhum resultado
@@ -134,66 +202,3 @@ export function CifraSearchScreen({ navigation, route }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  header: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:                spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.lg,
-  },
-  headerBtn: {
-    width:          44,
-    height:         44,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  searchWrap: {
-    flexDirection:      'row',
-    alignItems:         'center',
-    gap:                 spacing.sm,
-    marginHorizontal:    spacing.xl,
-    height:              48,
-    borderRadius:        radius.md,
-    borderWidth:          1,
-    borderColor:         colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.04)',
-    paddingHorizontal:   spacing.md,
-    marginBottom:        spacing.lg,
-  },
-  searchInput: {
-    flex: 1,
-    ...typography.body,
-    fontFamily: 'Inter-Medium',
-    color:      colors.text.primary,
-  },
-  banner: {
-    marginHorizontal: spacing.xl,
-    marginBottom:      spacing.md,
-  },
-  listContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxxl,
-  },
-  centerRoot: {
-    flex:            1,
-    alignItems:      'center',
-    justifyContent:  'center',
-    padding:          spacing.xl,
-  },
-  hintText: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    textAlign: 'center',
-  },
-});

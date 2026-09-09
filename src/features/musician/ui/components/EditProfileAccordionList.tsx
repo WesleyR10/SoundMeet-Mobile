@@ -1,5 +1,5 @@
 import type { Control } from 'react-hook-form';
-import { UserRound, Music, Clock, Wallet, AtSign, MapPin, Landmark, QrCode, Radar } from 'lucide-react-native';
+import { UserRound, Music, Clock, Wallet, AtSign, MapPin, Landmark, QrCode, Radar, Plane } from 'lucide-react-native';
 import { colors } from '@/shared/design-system/tokens';
 import { AccordionSection } from '@/shared/components/AccordionSection';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
@@ -9,6 +9,8 @@ import { EditExperienceSection } from './EditExperienceSection';
 import { EditPriceRangeSection } from './EditPriceRangeSection';
 import { EditSocialLinksSection } from './EditSocialLinksSection';
 import { EditLocationSection } from './EditLocationSection';
+import { EditTouringSection } from './EditTouringSection';
+import { touringSubtitle } from '../../domain/touring.rules';
 import { EditWalletSection } from './EditWalletSection';
 import { EditQRCodeSection } from './EditQRCodeSection';
 import { EditAvailabilitySection } from './EditAvailabilitySection';
@@ -17,7 +19,7 @@ import type { EditProfileFormValues } from '../../domain/musician.validation';
 import type { MusicianProfile } from '../../domain/musician.types';
 import type { useEditProfileForm } from '../screens/useEditProfileForm';
 
-export type SectionId = 'identity' | 'availability' | 'tags' | 'experience' | 'price' | 'social' | 'location' | 'wallet' | 'qrcode';
+export type SectionId = 'identity' | 'availability' | 'tags' | 'experience' | 'price' | 'social' | 'location' | 'touring' | 'wallet' | 'qrcode';
 
 type EditProfileFormResult = ReturnType<typeof useEditProfileForm>;
 
@@ -32,6 +34,7 @@ type Props = {
   toggleGenre:         EditProfileFormResult['toggleGenre'];
   sections:            EditProfileFormResult['sections'];
   location:            EditProfileFormResult['location'];
+  touring:             EditProfileFormResult['touring'];
   wallet:              EditProfileFormResult['wallet'];
   qrCode:              EditProfileFormResult['qrCode'];
   availability:        EditProfileFormResult['availability'];
@@ -45,7 +48,7 @@ type Props = {
 export function EditProfileAccordionList({
   musician, control, avatarUri, handleChangeAvatar,
   instrumentIds, toggleInstrument, genreIds, toggleGenre,
-  sections, location, wallet, qrCode, availability, openId, onToggle,
+  sections, location, touring, wallet, qrCode, availability, openId, onToggle,
 }: Props) {
   return (
     <>
@@ -161,6 +164,53 @@ export function EditProfileAccordionList({
           stateError={location.fieldError}
         />
         <AccordionSaveFooter onSave={location.onSave} isSaving={location.isSaving} error={location.error} />
+      </AccordionSection>
+
+      {/*
+        Modo turnê logo depois de Localização, de propósito: é o mesmo assunto —
+        onde o público te encontra — e a proximidade das duas seções é o que
+        deixa claro que a turnê SOMA à base, em vez de trocá-la.
+      */}
+      <AccordionSection
+        title="Modo turnê"
+        subtitle={touringSubtitle(musician.profile)}
+        icon={Plane}
+        accentColor={colors.text.secondary}
+        isComplete={touring.isActive}
+        isOpen={openId === 'touring'}
+        onToggle={() => onToggle('touring')}
+      >
+        <EditTouringSection
+          isActive={touring.isActive}
+          expiresAtLabel={touring.expiresAtLabel}
+          cep={touring.cep}
+          onChangeCep={touring.onChangeCep}
+          cepLoading={touring.cepLoading}
+          cepError={touring.cepError}
+          street={touring.street}
+          onChangeStreet={touring.setStreet}
+          number={touring.number}
+          onChangeNumber={touring.setNumber}
+          complement={touring.complement}
+          onChangeComplement={touring.setComplement}
+          neighborhood={touring.neighborhood}
+          onChangeNeighborhood={touring.setNeighborhood}
+          city={touring.city}
+          onChangeCity={touring.setCity}
+          state={touring.state}
+          onChangeState={touring.setState}
+          stateError={touring.fieldError}
+          durationDays={touring.durationDays}
+          onChangeDuration={touring.onChangeDuration}
+          onDeactivate={touring.onDeactivate}
+          isDeactivating={touring.isDeactivating}
+        />
+        <AccordionSaveFooter
+          onSave={touring.onSave}
+          isSaving={touring.isSaving}
+          error={touring.error}
+          label={touring.isActive ? 'Atualizar turnê' : 'Ativar modo turnê'}
+        />
       </AccordionSection>
 
       <AccordionSection

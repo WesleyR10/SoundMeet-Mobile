@@ -1,22 +1,21 @@
-import { View, Text, Pressable, Linking, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { openExternalUrl } from '@/shared/services/external-link/openExternalUrl';
+import { buildSocialUrl, type SocialPlatform } from '@/shared/utils/external-url';
 import type { SocialLinks } from '../../domain/musician.types';
 
 type Props = {
   socialLinks: SocialLinks | null;
 };
 
-const BADGES: { key: keyof SocialLinks; label: string; color: string }[] = [
+// SM-025 — `key` é a plataforma, e a plataforma é o que define a allowlist do
+// link. O `normalizeSocialUrl` local que existia aqui aceitava `http://` e
+// qualquer host, incluindo `https://instagram.com@evil.example/`.
+const BADGES: { key: SocialPlatform; label: string; color: string }[] = [
   { key: 'instagram', label: 'IG', color: colors.accent.coral },
   { key: 'youtube',   label: 'YT', color: colors.accent.violetLight },
   { key: 'spotify',   label: 'SP', color: colors.brand.primary },
 ];
-
-function normalizeSocialUrl(key: keyof SocialLinks, value: string): string {
-  if (/^https?:\/\//i.test(value)) return value;
-  if (key === 'instagram') return `https://instagram.com/${value.replace(/^@/, '')}`;
-  return `https://${value}`;
-}
 
 export function ProfileSocialLinks({ socialLinks }: Props) {
   const active = BADGES.filter((b) => !!socialLinks?.[b.key]);
@@ -31,7 +30,7 @@ export function ProfileSocialLinks({ socialLinks }: Props) {
           return (
             <Pressable
               key={b.key}
-              onPress={() => Linking.openURL(normalizeSocialUrl(b.key, value))}
+              onPress={() => void openExternalUrl(buildSocialUrl(b.key, value))}
               style={s.item}
               accessibilityRole="link"
               accessibilityLabel={b.key}

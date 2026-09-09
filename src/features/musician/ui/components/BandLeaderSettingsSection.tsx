@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { Text } from 'react-native';
 import { Radar, MapPin } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { AccordionSection } from '@/shared/components/AccordionSection';
 import { AccordionSaveFooter } from './AccordionSaveFooter';
 import { AvailabilityToggleRow } from '@/shared/components/AvailabilityToggleRow';
@@ -22,7 +24,19 @@ type LeaderSectionId = 'availability' | 'address';
 // montar). Disponibilidade (open_to_gigs) e Endereço da banda — mesmo idioma
 // visual do accordion de EditProfileScreen, mas os dois únicos tópicos que a
 // banda tem hoje (v2, jul/2026).
+const useStyles = makeStyles((colors) => ({
+  sectionTitle: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  0.8,
+    textTransform: 'uppercase',
+    color:          colors.text.secondary,
+  },
+}));
+
 export function BandLeaderSettingsSection({ band, musicianId }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [openId, setOpenId] = useState<LeaderSectionId | null>(null);
   const toggle = (id: LeaderSectionId) => setOpenId((prev) => (prev === id ? null : id));
 
@@ -95,13 +109,3 @@ export function BandLeaderSettingsSection({ band, musicianId }: Props) {
     </>
   );
 }
-
-const s = StyleSheet.create({
-  sectionTitle: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  0.8,
-    textTransform: 'uppercase',
-    color:          colors.text.secondary,
-  },
-});

@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, withSpring } from 'react-native-reanimated';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { QRFrame } from '@/shared/components/QRFrame';
 import { ConfettiBurst } from '@/shared/components/ConfettiBurst';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   qrCode:   string | null;
@@ -15,7 +16,40 @@ type Props = {
 // seguida (spring), e assim que ele se assenta o confete dispara — só então o CTA
 // aparece. Entrada só toca depois que o PATCH final já confirmou sucesso (ver
 // MusicianSetupWizardScreen), então o reveal nunca é "prometido" antes da hora.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    alignItems: 'center',
+    gap:         spacing.xxl,
+  },
+  title: {
+    ...typography.displayMd,
+    color:     colors.text.primary,
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...typography.body,
+    color:        colors.text.secondary,
+    textAlign:    'center',
+    marginTop:    spacing.sm,
+    paddingHorizontal: spacing.md,
+  },
+  qrArea: {
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  fallback: {
+    ...typography.body,
+    color:     colors.status.error,
+    textAlign: 'center',
+    maxWidth:  240,
+  },
+  ctaWrap: {
+    alignSelf: 'stretch',
+  },
+}));
+
 export function StepFiveQrReveal({ qrCode, onGoHome }: Props) {
+  const s = useStyles();
   const [burstOn, setBurstOn] = useState(false);
 
   const titleOpacity = useSharedValue(0);
@@ -76,35 +110,3 @@ export function StepFiveQrReveal({ qrCode, onGoHome }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    alignItems: 'center',
-    gap:         spacing.xxl,
-  },
-  title: {
-    ...typography.displayMd,
-    color:     colors.text.primary,
-    textAlign: 'center',
-  },
-  subtitle: {
-    ...typography.body,
-    color:        colors.text.secondary,
-    textAlign:    'center',
-    marginTop:    spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  qrArea: {
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  fallback: {
-    ...typography.body,
-    color:     colors.status.error,
-    textAlign: 'center',
-    maxWidth:  240,
-  },
-  ctaWrap: {
-    alignSelf: 'stretch',
-  },
-});

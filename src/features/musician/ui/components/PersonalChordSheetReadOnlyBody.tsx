@@ -1,6 +1,8 @@
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
+import { ScrollView, View, Text } from 'react-native';
 import { MessageSquare } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ChordTokenLine } from '@/shared/components/ChordTokenLine';
 import type { ChordSheetTokenGrid } from '@/shared/utils/chord-sheet';
 import type { ChordEdit } from '../../domain/personal-chord-sheet.types';
@@ -11,7 +13,25 @@ type Props = {
   onPressChord: (symbol: string) => void;
 };
 
+const useStyles = makeStyles((colors) => ({
+  root: { flex: 1 },
+  content: { paddingHorizontal: spacing.sm, paddingTop: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.lg },
+  section: { gap: spacing.xs },
+  emptySection: {
+    ...typography.caption, color: colors.brand.primary, textTransform: 'uppercase',
+    letterSpacing: 1.2, paddingHorizontal: spacing.lg,
+  },
+  annotation: {
+    marginHorizontal: spacing.lg, marginTop: spacing.xs, borderRadius: radius.lg, borderWidth: 1,
+    borderColor: colors.border.brand, backgroundColor: colors.brand.muted,
+    padding: spacing.sm, gap: spacing.sm, flexDirection: 'row', alignItems: 'flex-start',
+  },
+  annotationText: { ...typography.bodySm, color: colors.text.primary, flex: 1 },
+}));
+
 export function PersonalChordSheetReadOnlyBody({ grid, annotations = [], onPressChord }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   let lineIndex = 0;
   const publicNotes = annotations.filter((edit) => edit.type === 'annotate' && edit.text);
   const annotationsByTime = new Map<number, ChordEdit[]>();
@@ -54,19 +74,3 @@ export function PersonalChordSheetReadOnlyBody({ grid, annotations = [], onPress
     </ScrollView>
   );
 }
-
-const s = StyleSheet.create({
-  root: { flex: 1 },
-  content: { paddingHorizontal: spacing.sm, paddingTop: spacing.md, paddingBottom: spacing.xxxl, gap: spacing.lg },
-  section: { gap: spacing.xs },
-  emptySection: {
-    ...typography.caption, color: colors.brand.primary, textTransform: 'uppercase',
-    letterSpacing: 1.2, paddingHorizontal: spacing.lg,
-  },
-  annotation: {
-    marginHorizontal: spacing.lg, marginTop: spacing.xs, borderRadius: radius.lg, borderWidth: 1,
-    borderColor: colors.border.brand, backgroundColor: colors.brand.muted,
-    padding: spacing.sm, gap: spacing.sm, flexDirection: 'row', alignItems: 'flex-start',
-  },
-  annotationText: { ...typography.bodySm, color: colors.text.primary, flex: 1 },
-});

@@ -1,6 +1,6 @@
 import { httpClient } from '@/shared/services/http/client';
 import type { ApiEnvelope } from '@/shared/services/http/types';
-import type { Band, BandFreeBusy, CreateBandMemberInvitePayload } from '../domain/band.types';
+import type { Band, BandFreeBusy, CreateBandMemberInvitePayload, CreateBandPayload } from '../domain/band.types';
 import type { MusicianLocation } from '../domain/musician.types';
 
 interface BandCollectionResponse {
@@ -83,4 +83,58 @@ export async function declineBandInvite(bandId: string): Promise<void> {
 // pra "cancelar convite pendente" (não existe endpoint separado de cancelar).
 export async function removeBandMember(bandId: string, musicianId: string): Promise<void> {
   await httpClient.delete(`/bands/${bandId}/members/${musicianId}`);
+}
+
+/**
+ * POST /bands — cria a banda com o músico autenticado já como **líder**.
+ *
+ * ⚠️ **Só os campos do `CreateBandDto` podem viajar.** Desde o INP-1 o backend
+ * roda `forbidNonWhitelisted`, então um campo a mais no corpo deixou de ser
+ * descartado em silêncio e virou **422** — o payload aqui é montado por
+ * desestruturação explícita, nunca com spread de estado de formulário.
+ *
+ * `creator_musician_id` **não** é enviado de propósito: o controller o
+ * sobrescreve com o `sub` do JWT. Mandá-lo daria a impressão de que o cliente
+ * escolhe quem lidera.
+ */
+export async function createBand(payload: CreateBandPayload): Promise<Band> {
+  const { data } = await httpClient.post<ApiEnvelope<Band>>('/bands', {
+    name: payload.name,
+    description: payload.description ?? null,
+    genres: payload.genres,
+    // Omitido = o líder ainda não decidiu (tri-state do backend: nunca nasce
+    // `true`). Quem liga o radar é `PATCH /bands/:id/open-to-gigs`, com
+    // consentimento explícito.
+    ...(payload.open_to_gigs == null ? {} : { open_to_gigs: payload.open_to_gigs }),
+  });
+  return data.data;
+}
+
+/**
+ * DELETE /bands/:id — dissolve a banda. 204, sem corpo.
+ *
+ * 🔴 Ação destrutiva e irreversível: a UI exige confirmação por digitação do
+ * nome antes de chegar aqui. O backend só checa liderança (`BandOwnershipGuard`)
+ * — nada impede o líder de apagar por engano uma banda com histórico de shows.
+ */
+export async function deleteBand(bandId: string): Promise<void> {
+  await httpClient.delete(`/bands/${bandId}`);
+}
+
+/**
+ * PATCH /bands/:id/leadership — passa a liderança para outro membro **aceito**.
+ *
+ * É o único caminho para trocar quem decide pela banda: remover ou rebaixar o
+ * líder é bloqueado no backend justamente para não deixar a banda sem ninguém
+ * que possa aceitar um show. Membro `pending` é recusado com 422.
+ */
+export async function transferBandLeadership(
+  bandId: string,
+  newLeaderMusicianId: string,
+): Promise<Band> {
+  const { data } = await httpClient.patch<ApiEnvelope<Band>>(
+    `/bands/${bandId}/leadership`,
+    { new_leader_musician_id: newLeaderMusicianId },
+  );
+  return data.data;
 }

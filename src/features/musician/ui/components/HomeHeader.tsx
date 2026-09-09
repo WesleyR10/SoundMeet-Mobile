@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronDown, Eye, EyeOff, MessageCircle, User } from 'lucide-react-native';
-import { colors, spacing, radius, typography, gradients } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, gradients } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { HomeAvatarMenu } from './HomeAvatarMenu';
 import type { MusicianProfile } from '../../domain/musician.types';
 
@@ -33,76 +35,7 @@ function formatBRL(value: number): string {
 // toggle de visibilidade). Identidade à ESQUERDA e ações/valores à DIREITA
 // de propósito (padrão consolidado de UX — leitura em F começa na identidade;
 // zona direita concentra ações). Avatar é tappable → HomeAvatarMenu.
-export function HomeHeader({ musician, balance, onNavigateProfile, onNavigatePlans, onOpenAccounts, onPressMessages }: Props) {
-  const [hidden, setHidden]           = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const name = musician?.stage_name || musician?.name || '';
-
-  return (
-    <View style={s.root}>
-      <Pressable
-        style={s.identity}
-        onPress={() => setMenuVisible(true)}
-        accessibilityRole="button"
-        accessibilityLabel="Abrir menu do perfil"
-        hitSlop={4}
-      >
-        <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
-          <View style={s.avatarInner}>
-            {musician?.avatar ? (
-              <Image source={{ uri: musician.avatar }} style={s.avatarImg} />
-            ) : (
-              <User size={22} color={colors.text.muted} />
-            )}
-          </View>
-        </LinearGradient>
-        <View style={s.textCol}>
-          <Text style={s.greeting}>{greeting()}</Text>
-          <View style={s.nameRow}>
-            <Text style={s.name} numberOfLines={1}>{name}</Text>
-            <ChevronDown size={14} color={colors.text.secondary} />
-          </View>
-        </View>
-      </Pressable>
-
-      <View style={s.actions}>
-        <Pressable
-          onPress={onPressMessages}
-          style={s.messagesBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Mensagens com estabelecimentos"
-          hitSlop={8}
-        >
-          <MessageCircle size={20} color={colors.text.secondary} />
-        </Pressable>
-
-        <Pressable
-          onPress={() => setHidden((v) => !v)}
-          style={s.balanceWrap}
-          accessibilityRole="button"
-          accessibilityLabel={hidden ? 'Mostrar saldo' : 'Ocultar saldo'}
-          hitSlop={8}
-        >
-          <Text style={s.balance}>
-            {balance === null ? '—' : hidden ? 'R$ •••' : formatBRL(balance)}
-          </Text>
-          {hidden ? <EyeOff size={16} color={colors.text.secondary} /> : <Eye size={16} color={colors.text.secondary} />}
-        </Pressable>
-      </View>
-
-      <HomeAvatarMenu
-        visible={menuVisible}
-        onClose={() => setMenuVisible(false)}
-        planTier={musician?.plan_tier ?? null}
-        onNavigateProfile={onNavigateProfile}
-        onNavigatePlans={onNavigatePlans}
-        onOpenAccounts={onOpenAccounts}
-      />
-    </View>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flexDirection:  'row',
     alignItems:     'center',
@@ -179,4 +112,75 @@ const s = StyleSheet.create({
     fontFamily: 'SpaceGrotesk-SemiBold',
     color:      colors.text.primary,
   },
-});
+}));
+
+export function HomeHeader({ musician, balance, onNavigateProfile, onNavigatePlans, onOpenAccounts, onPressMessages }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const [hidden, setHidden]           = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const name = musician?.stage_name || musician?.name || '';
+
+  return (
+    <View style={s.root}>
+      <Pressable
+        style={s.identity}
+        onPress={() => setMenuVisible(true)}
+        accessibilityRole="button"
+        accessibilityLabel="Abrir menu do perfil"
+        hitSlop={4}
+      >
+        <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
+          <View style={s.avatarInner}>
+            {musician?.avatar ? (
+              <Image source={{ uri: musician.avatar }} style={s.avatarImg} />
+            ) : (
+              <User size={22} color={colors.text.muted} />
+            )}
+          </View>
+        </LinearGradient>
+        <View style={s.textCol}>
+          <Text style={s.greeting}>{greeting()}</Text>
+          <View style={s.nameRow}>
+            <Text style={s.name} numberOfLines={1}>{name}</Text>
+            <ChevronDown size={14} color={colors.text.secondary} />
+          </View>
+        </View>
+      </Pressable>
+
+      <View style={s.actions}>
+        <Pressable
+          onPress={onPressMessages}
+          style={s.messagesBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Mensagens com estabelecimentos"
+          hitSlop={8}
+        >
+          <MessageCircle size={20} color={colors.text.secondary} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => setHidden((v) => !v)}
+          style={s.balanceWrap}
+          accessibilityRole="button"
+          accessibilityLabel={hidden ? 'Mostrar saldo' : 'Ocultar saldo'}
+          hitSlop={8}
+        >
+          <Text style={s.balance}>
+            {balance === null ? '—' : hidden ? 'R$ •••' : formatBRL(balance)}
+          </Text>
+          {hidden ? <EyeOff size={16} color={colors.text.secondary} /> : <Eye size={16} color={colors.text.secondary} />}
+        </Pressable>
+      </View>
+
+      <HomeAvatarMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        planTier={musician?.plan_tier ?? null}
+        onNavigateProfile={onNavigateProfile}
+        onNavigatePlans={onNavigatePlans}
+        onOpenAccounts={onOpenAccounts}
+      />
+    </View>
+  );
+}

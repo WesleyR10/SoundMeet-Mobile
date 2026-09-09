@@ -1,6 +1,12 @@
 import { httpClient } from '@/shared/services/http/client';
 import type { ApiEnvelope } from '@/shared/services/http/types';
-import type { MusicianProfile, QRCustomizationPatch, UpdateMusicianProfilePayload, WizardMusicianPayload } from '../domain/musician.types';
+import type {
+  MusicianProfile,
+  QRCustomizationPatch,
+  SetTouringLocationPayload,
+  UpdateMusicianProfilePayload,
+  WizardMusicianPayload,
+} from '../domain/musician.types';
 
 export async function getMusician(id: string): Promise<MusicianProfile> {
   const { data } = await httpClient.get<ApiEnvelope<MusicianProfile>>(`/musicians/${id}`);
@@ -40,6 +46,33 @@ export async function registerPushToken(
     push_token: pushToken,
     push_token_platform: platform,
   });
+}
+
+// PATCH /musicians/:id/touring-location — ativa/renova o modo turnê.
+//
+// 🔴 Aqui a geocodificação BLOQUEIA o save, ao contrário do PATCH de perfil,
+// que é best-effort: sem coordenadas o modo turnê não tem função nenhuma (o
+// ponto extra existe só para a busca por raio). Um endereço que o geocoder não
+// resolve devolve erro — e a UI precisa mostrá-lo, não salvar em silêncio.
+export async function setTouringLocation(
+  id: string,
+  payload: SetTouringLocationPayload,
+): Promise<MusicianProfile> {
+  const { data } = await httpClient.patch<ApiEnvelope<MusicianProfile>>(
+    `/musicians/${id}/touring-location`,
+    payload,
+  );
+  return data.data;
+}
+
+// DELETE /musicians/:id/touring-location — encerra antes do prazo. Sem isto o
+// músico depende da expiração automática para sair da busca da cidade visitada.
+//
+// ⚠️ Responde **204 sem corpo** (`@HttpCode(204)` no controller), ao contrário
+// do PATCH irmão que devolve o `MusicianPresenter`. Quem chama precisa
+// invalidar a query do perfil para reler — não há payload a aproveitar.
+export async function clearTouringLocation(id: string): Promise<void> {
+  await httpClient.delete(`/musicians/${id}/touring-location`);
 }
 
 export type MusicianAvatarFile = {

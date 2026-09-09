@@ -1,4 +1,4 @@
-import { ScrollView, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { ScrollView, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -10,7 +10,10 @@ import {
   Star,
   Users,
 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { SkeletonList, SkeletonStatRow } from '@/shared/components/Skeleton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { RootScreenProps } from '@/navigation/types';
@@ -30,7 +33,97 @@ type Props = RootScreenProps<'MyResume'>;
  * Nenhum valor de cachê aparece, nem nesta tela em que só ele se vê: o dado não
  * existe no output do backend, e é o mesmo endpoint que serve o perfil público.
  */
+const useStyles = makeStyles((colors) => ({
+  // Mesmo respiro do conteúdo real — é o que evita o salto na troca.
+  skeleton: { flex: 1, gap: spacing.xl, paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  center: {
+    flex:              1,
+    alignItems:        'center',
+    justifyContent:    'center',
+    paddingHorizontal: spacing.xl,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.xxxl,
+    gap:               spacing.lg,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    marginTop: -spacing.sm,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap:      'wrap',
+    gap:           spacing.md,
+  },
+  emptyCard: {
+    gap:             spacing.sm,
+    padding:         spacing.lg,
+    borderRadius:    radius.xl,
+    borderWidth:     1,
+    borderColor:     colors.border.default,
+    backgroundColor: colors.bg.elevated,
+  },
+  emptyTitle: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  emptyText: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  venuesCard: {
+    gap:             spacing.sm,
+    padding:         spacing.lg,
+    borderRadius:    radius.xl,
+    borderWidth:     1,
+    borderColor:     colors.border.default,
+    backgroundColor: colors.bg.elevated,
+  },
+  venuesHeading: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  venueRow: {
+    flexDirection:  'row',
+    alignItems:     'center',
+    justifyContent: 'space-between',
+    gap:             spacing.md,
+  },
+  venueName: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+    flex:  1,
+  },
+  venueCount: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+  footnote: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+}));
+
 export function MyResumeScreen(_props: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data: resume, isPending, isError } = useMyResume(musicianId);
 
@@ -38,8 +131,10 @@ export function MyResumeScreen(_props: Props) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
         <StatusBar style="light" />
-        <View style={s.center}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
+        <View style={s.skeleton}>
+          {/* Números verificados no topo, depois a lista de shows. */}
+          <SkeletonStatRow count={3} />
+          <SkeletonList count={3} itemHeight={96} />
         </View>
       </SafeAreaView>
     );
@@ -148,89 +243,3 @@ export function MyResumeScreen(_props: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  center: {
-    flex:              1,
-    alignItems:        'center',
-    justifyContent:    'center',
-    paddingHorizontal: spacing.xl,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.xxxl,
-    gap:               spacing.lg,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    marginTop: -spacing.sm,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap:      'wrap',
-    gap:           spacing.md,
-  },
-  emptyCard: {
-    gap:             spacing.sm,
-    padding:         spacing.lg,
-    borderRadius:    radius.xl,
-    borderWidth:     1,
-    borderColor:     colors.border.default,
-    backgroundColor: colors.bg.elevated,
-  },
-  emptyTitle: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  emptyText: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  venuesCard: {
-    gap:             spacing.sm,
-    padding:         spacing.lg,
-    borderRadius:    radius.xl,
-    borderWidth:     1,
-    borderColor:     colors.border.default,
-    backgroundColor: colors.bg.elevated,
-  },
-  venuesHeading: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  venueRow: {
-    flexDirection:  'row',
-    alignItems:     'center',
-    justifyContent: 'space-between',
-    gap:             spacing.md,
-  },
-  venueName: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-    flex:  1,
-  },
-  venueCount: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-  footnote: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-});

@@ -1,7 +1,9 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { useController, type Control } from 'react-hook-form';
 import { Check } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { FormField } from '@/shared/components/FormField';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
 
@@ -20,9 +22,64 @@ type Props = {
 // Bloco de UMA faixa de preço (modelo de cobrança) — toggle + min/max/notas.
 // Cada modelo tem campos independentes no form (priceHour*/priceEvent*);
 // desativar o toggle limpa os campos daquele modelo, sem afetar o outro.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    gap: spacing.md,
+  },
+  toggleChip: {
+    flexDirection:     'row',
+    alignItems:        'center',
+    gap:                spacing.sm,
+    minHeight:          48,
+    paddingVertical:    spacing.md,
+    paddingHorizontal:  spacing.lg,
+    borderRadius:       radius.md,
+    borderWidth:         1,
+    borderColor:        colors.border.default,
+    backgroundColor:    'rgba(255,255,255,0.03)',
+  },
+  toggleChipSelected: {
+    borderColor:     colors.accent.amber,
+    backgroundColor: 'rgba(245,158,11,0.12)',
+  },
+  checkBox: {
+    width:           18,
+    height:          18,
+    borderRadius:    radius.sm / 2,
+    borderWidth:      1.5,
+    borderColor:     colors.border.strong,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  checkBoxSelected: {
+    borderColor:     colors.accent.amber,
+    backgroundColor: colors.accent.amber,
+  },
+  toggleText: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.secondary,
+  },
+  toggleTextSelected: {
+    color: colors.accent.amber,
+  },
+  fields: {
+    gap: spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    gap:            spacing.md,
+  },
+  rowField: {
+    flex: 1,
+  },
+}));
+
 export function EditPriceRangeModelFields({
   control, label, unitSuffix, enabledName, minName, maxName, notesName,
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { field: enabledField }                       = useController({ control, name: enabledName });
   const { field: minField,   fieldState: minState }   = useController({ control, name: minName });
   const { field: maxField,   fieldState: maxState }   = useController({ control, name: maxName });
@@ -96,56 +153,3 @@ export function EditPriceRangeModelFields({
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    gap: spacing.md,
-  },
-  toggleChip: {
-    flexDirection:     'row',
-    alignItems:        'center',
-    gap:                spacing.sm,
-    minHeight:          48,
-    paddingVertical:    spacing.md,
-    paddingHorizontal:  spacing.lg,
-    borderRadius:       radius.md,
-    borderWidth:         1,
-    borderColor:        colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.03)',
-  },
-  toggleChipSelected: {
-    borderColor:     colors.accent.amber,
-    backgroundColor: 'rgba(245,158,11,0.12)',
-  },
-  checkBox: {
-    width:           18,
-    height:          18,
-    borderRadius:    radius.sm / 2,
-    borderWidth:      1.5,
-    borderColor:     colors.border.strong,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  checkBoxSelected: {
-    borderColor:     colors.accent.amber,
-    backgroundColor: colors.accent.amber,
-  },
-  toggleText: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.secondary,
-  },
-  toggleTextSelected: {
-    color: colors.accent.amber,
-  },
-  fields: {
-    gap: spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    gap:            spacing.md,
-  },
-  rowField: {
-    flex: 1,
-  },
-});

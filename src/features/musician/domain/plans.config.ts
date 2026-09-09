@@ -113,3 +113,43 @@ export function suggestedUpgrade(current: MusicianPlanTier | null): MusicianPlan
   if (current === 'essential' || current === 'pro') return 'pro';
   return 'essential';
 }
+
+/**
+ * Substitui os preços locais pelos do backend quando `GET /plans` responde.
+ *
+ * 🔴 **Resolve a divergência silenciosa do item 11.14e.** Enquanto o preço
+ * vivia só neste arquivo, mudá-lo no backend não quebrava nada aqui: o paywall
+ * seguia anunciando o valor antigo, o músico assinava acreditando nele e a
+ * fatura do Asaas vinha com outro — sem erro, sem log, sem teste falhando.
+ *
+ * O catálogo local continua sendo a fonte de **copy e features** (o backend não
+ * devolve `tagline` nem `keyStats`) e o fallback da primeira pintura e do
+ * offline. O que ele deixa de decidir é dinheiro.
+ *
+ * Tier que o backend não conhece fica com o preço local em vez de sumir: uma
+ * resposta parcial não deve apagar um plano da tela.
+ */
+export function hydratePlanPricing(
+  plans: readonly MusicianPlan[],
+  catalog: { tier: string; pricing: {
+    monthly_price_brl: number;
+    annual_price_brl: number;
+    annual_savings_brl: number;
+    annual_discount_percent: number;
+  } }[] | undefined,
+): readonly MusicianPlan[] {
+  if (!catalog?.length) return plans;
+
+  return plans.map((plan) => {
+    const remote = catalog.find((entry) => entry.tier === plan.tier);
+    if (!remote) return plan;
+
+    return {
+      ...plan,
+      monthlyPriceBrl:       remote.pricing.monthly_price_brl,
+      annualPriceBrl:        remote.pricing.annual_price_brl,
+      annualSavingsBrl:      remote.pricing.annual_savings_brl,
+      annualDiscountPercent: remote.pricing.annual_discount_percent,
+    };
+  });
+}

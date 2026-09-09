@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { ChevronRight, Music2 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import type { MusicLibraryItem } from '../../domain/music-library.types';
 
@@ -10,25 +12,7 @@ type Props = {
   disabled?: boolean;
 };
 
-export function MusicLibraryItemPickerCard({ item, onPress, disabled = false }: Props) {
-  return (
-    <Pressable3DCard onPress={onPress} disabled={disabled} accessibilityLabel={`Criar cifra pessoal de ${item.title}`}>
-      <View style={[s.card, disabled && s.disabled]}>
-        <View style={s.icon}>
-          <Music2 size={18} color={item.has_chord_sheet ? colors.brand.primary : colors.text.muted} />
-        </View>
-        <View style={s.text}>
-          <Text style={s.title} numberOfLines={1}>{item.title}</Text>
-          <Text style={s.artist} numberOfLines={1}>{item.artist}</Text>
-          {!item.has_chord_sheet && <Text style={s.unavailable}>A cifra da IA ainda não está pronta</Text>}
-        </View>
-        <ChevronRight size={18} color={colors.text.muted} />
-      </View>
-    </Pressable3DCard>
-  );
-}
-
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     minHeight: 72,
     flexDirection: 'row',
@@ -50,4 +34,24 @@ const s = StyleSheet.create({
   title: { ...typography.body, fontFamily: 'Inter-SemiBold', color: colors.text.primary },
   artist: { ...typography.bodySm, color: colors.text.secondary },
   unavailable: { ...typography.caption, color: colors.status.warning },
-});
+}));
+
+export function MusicLibraryItemPickerCard({ item, onPress, disabled = false }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  return (
+    <Pressable3DCard onPress={onPress} disabled={disabled} accessibilityLabel={`Criar cifra pessoal de ${item.title}`}>
+      <View style={[s.card, disabled && s.disabled]}>
+        <View style={s.icon}>
+          <Music2 size={18} color={item.has_chord_sheet ? colors.brand.primary : colors.text.muted} />
+        </View>
+        <View style={s.text}>
+          <Text style={s.title} numberOfLines={1}>{item.title}</Text>
+          <Text style={s.artist} numberOfLines={1}>{item.artist}</Text>
+          {!item.has_chord_sheet && <Text style={s.unavailable}>A cifra da IA ainda não está pronta</Text>}
+        </View>
+        <ChevronRight size={18} color={colors.text.muted} />
+      </View>
+    </Pressable3DCard>
+  );
+}

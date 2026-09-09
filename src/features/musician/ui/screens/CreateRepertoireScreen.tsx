@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { View, Text, Pressable, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { View, Text, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
@@ -21,7 +23,47 @@ type Props = RepertoireScreenProps<'CreateRepertoire'>;
 // (CLAUDE.md "Formulários — Zod + React Hook Form"). Gate de plano
 // (max_repertoires) retorna 402 — extractApiMessage já extrai a mensagem do
 // PlanLimitExceededError do backend, exibida no ErrorBanner.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  backBtn: {
+    position:       'absolute',
+    top:             spacing.lg,
+    left:            spacing.lg,
+    width:           48,
+    height:          48,
+    alignItems:      'center',
+    justifyContent:  'center',
+    zIndex:          10,
+  },
+  body: {
+    flex:              1,
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.xxxl + spacing.lg,
+    gap:                spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color:      colors.text.secondary,
+    marginTop: -spacing.sm,
+  },
+  banner: {
+    marginTop: spacing.sm,
+  },
+  submitBtn: {
+    marginTop: spacing.md,
+  },
+}));
+
 export function CreateRepertoireScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const createMutation = useCreateRepertoire(musicianId);
   const [bannerError, setBannerError] = useState<string | null>(null);
@@ -88,41 +130,3 @@ export function CreateRepertoireScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  backBtn: {
-    position:       'absolute',
-    top:             spacing.lg,
-    left:            spacing.lg,
-    width:           48,
-    height:          48,
-    alignItems:      'center',
-    justifyContent:  'center',
-    zIndex:          10,
-  },
-  body: {
-    flex:              1,
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.xxxl + spacing.lg,
-    gap:                spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color:      colors.text.secondary,
-    marginTop: -spacing.sm,
-  },
-  banner: {
-    marginTop: spacing.sm,
-  },
-  submitBtn: {
-    marginTop: spacing.md,
-  },
-});

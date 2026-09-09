@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Users } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import { Avatar } from '@/shared/components/Avatar';
@@ -15,7 +17,31 @@ type Props = {
 // Linha da MyBandsScreen — mesmo idioma visual de ConversationListItem
 // (GlowCard + Pressable3DCard + Avatar com anel), accent violeta (mesma
 // escolha de "momento especial" do design-system.md usada no chat).
+const useStyles = makeStyles((colors) => ({
+  card: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.md,
+    padding:        spacing.md,
+  },
+  info: {
+    flex: 1,
+    gap:  2,
+  },
+  name: {
+    ...typography.body,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  meta: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+}));
+
 export function BandListItem({ band, onPress, riseDelay = 0 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const memberCount = band.members.length;
   const memberLabel = memberCount === 1 ? '1 membro' : `${memberCount} membros`;
 
@@ -37,25 +63,3 @@ export function BandListItem({ band, onPress, riseDelay = 0 }: Props) {
     </Pressable3DCard>
   );
 }
-
-const s = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.md,
-    padding:        spacing.md,
-  },
-  info: {
-    flex: 1,
-    gap:  2,
-  },
-  name: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  meta: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-});

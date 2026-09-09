@@ -79,11 +79,41 @@ export interface MusicianProfileDetails {
   musician_id:  string;
   price_ranges: PriceRange[];
   location:     MusicianLocation;
+  // Modo turnê (7.13d) — SEGUNDO ponto de busca, somado à base; nunca a
+  // substitui. `is_touring` já vem com a expiração aplicada (o backend a
+  // computa na leitura, sem cron), então a UI não deve recalcular a partir de
+  // `touring_expires_at`: são a mesma verdade, e só uma é autoritativa.
+  touring_location:   MusicianLocation | null;
+  touring_expires_at: string | null;
+  is_touring:         boolean;
   social_links: SocialLinks | null;
   experience:   number;
   instruments:  string[];
   genres:       string[];
 }
+
+// PATCH /musicians/:id/touring-location — `SetMusicianTouringLocationInput`
+// estende `LocationInput`, que é snake_case.
+//
+// ⚠️ Diferente de `UpdateMusicianProfilePayload`, que é camelCase. Com
+// `forbidNonWhitelisted` ligado no ValidationPipe global, mandar `zipCode`
+// aqui não é ignorado: é 422 no lote inteiro.
+export interface SetTouringLocationPayload {
+  city?:         string | null;
+  state?:        string | null;
+  latitude?:     number | null;
+  longitude?:    number | null;
+  street?:       string | null;
+  number?:       string | null;
+  complement?:   string | null;
+  neighborhood?: string | null;
+  zip_code?:     string | null;
+  duration_days: number;
+}
+
+// Espelha `@Min(1) @Max(30)` do DTO e `MAX_TOURING_DAYS` do agregado.
+export const MAX_TOURING_DAYS = 30;
+export const MIN_TOURING_DAYS = 1;
 
 // MusicianPresenter completo (GET /musicians/:id) — usado pelo wizard/gate
 // (campos do topo) e pelas telas de Bloco 2 (campos estendidos + profile).

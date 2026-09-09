@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
-import { Dimensions, Text, View, StyleSheet } from 'react-native';
+import { Dimensions, Text, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   interpolateColor,
 } from 'react-native-reanimated';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   cents:     number | null;
@@ -22,7 +24,33 @@ const CLAMP_CENTS = 50;
 // em cents e desliza horizontalmente proporcional ao desvio, com a linha
 // vertical descendo até o headstock. Verde→âmbar→coral com os mesmos
 // limiares do arco cromático (TunerCentsMeter) — 120ms de timing, idem.
+const useStyles = makeStyles((colors) => ({
+  root: {
+    alignItems: 'center',
+  },
+  pill: {
+    minWidth:          52,
+    paddingVertical:    spacing.xs,
+    paddingHorizontal:  spacing.md,
+    borderRadius:       radius.full,
+    alignItems:        'center',
+  },
+  pillText: {
+    ...typography.body,
+    fontFamily: 'SpaceGrotesk-SemiBold',
+    color:      colors.text.inverse,
+  },
+  line: {
+    width:      2,
+    height:     36,
+    marginTop:  spacing.xs,
+    borderRadius: 1,
+  },
+}));
+
 export function TunerCentsPill({ cents, hasSignal }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const shift    = useSharedValue(0);
   const absCents = useSharedValue(0);
   const active   = useSharedValue(0);
@@ -66,27 +94,3 @@ export function TunerCentsPill({ cents, hasSignal }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    alignItems: 'center',
-  },
-  pill: {
-    minWidth:          52,
-    paddingVertical:    spacing.xs,
-    paddingHorizontal:  spacing.md,
-    borderRadius:       radius.full,
-    alignItems:        'center',
-  },
-  pillText: {
-    ...typography.body,
-    fontFamily: 'SpaceGrotesk-SemiBold',
-    color:      colors.text.inverse,
-  },
-  line: {
-    width:      2,
-    height:     36,
-    marginTop:  spacing.xs,
-    borderRadius: 1,
-  },
-});

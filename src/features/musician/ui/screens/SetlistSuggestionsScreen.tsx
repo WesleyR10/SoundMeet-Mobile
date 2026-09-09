@@ -1,9 +1,12 @@
-import { ScrollView, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { ScrollView, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Lightbulb } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { SkeletonList } from '@/shared/components/Skeleton';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { RootScreenProps } from '@/navigation/types';
 import { useSetlistSuggestions } from '../../application/usePerformance';
@@ -23,7 +26,68 @@ type Props = RootScreenProps<'SetlistSuggestions'>;
  * isso — apresentar um chute com cara de recomendação queima a confiança na
  * feature inteira no primeiro uso.
  */
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  center: {
+    flex:              1,
+    alignItems:        'center',
+    justifyContent:    'center',
+    paddingHorizontal: spacing.xl,
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.xxxl,
+    gap:               spacing.md,
+  },
+  title: {
+    ...typography.displayMd,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color:     colors.text.secondary,
+    marginTop: -spacing.sm,
+  },
+  notice: {
+    flexDirection: 'row',
+    gap:            spacing.sm,
+    padding:        spacing.md,
+    borderRadius:   radius.lg,
+    borderWidth:    1,
+  },
+  noticeInfo: {
+    borderColor:     colors.border.brand,
+    backgroundColor: colors.bg.elevated,
+  },
+  noticeWarn: {
+    borderColor:     colors.accent.amber,
+    backgroundColor: colors.bg.elevated,
+  },
+  noticeText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+    flex:  1,
+  },
+  list: {
+    padding:         spacing.lg,
+    borderRadius:    radius.xl,
+    borderWidth:     1,
+    borderColor:     colors.border.default,
+    backgroundColor: colors.bg.elevated,
+  },
+  empty: {
+    ...typography.bodySm,
+    color: colors.text.muted,
+  },
+}));
+
 export function SetlistSuggestionsScreen({ route }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { establishmentId, establishmentName } = route.params;
   const musicianId = useAuthStore((s) => s.user?.musicianId ?? null);
   const { data, isPending, isError } = useSetlistSuggestions(
@@ -35,9 +99,7 @@ export function SetlistSuggestionsScreen({ route }: Props) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
         <StatusBar style="light" />
-        <View style={s.center}>
-          <ActivityIndicator color={colors.brand.primary} size="large" />
-        </View>
+        <View style={s.list}><SkeletonList count={4} itemHeight={100} /></View>
       </SafeAreaView>
     );
   }
@@ -96,62 +158,3 @@ export function SetlistSuggestionsScreen({ route }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  center: {
-    flex:              1,
-    alignItems:        'center',
-    justifyContent:    'center',
-    paddingHorizontal: spacing.xl,
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.xxxl,
-    gap:               spacing.md,
-  },
-  title: {
-    ...typography.displayMd,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color:     colors.text.secondary,
-    marginTop: -spacing.sm,
-  },
-  notice: {
-    flexDirection: 'row',
-    gap:            spacing.sm,
-    padding:        spacing.md,
-    borderRadius:   radius.lg,
-    borderWidth:    1,
-  },
-  noticeInfo: {
-    borderColor:     colors.border.brand,
-    backgroundColor: colors.bg.elevated,
-  },
-  noticeWarn: {
-    borderColor:     colors.accent.amber,
-    backgroundColor: colors.bg.elevated,
-  },
-  noticeText: {
-    ...typography.caption,
-    color: colors.text.secondary,
-    flex:  1,
-  },
-  list: {
-    padding:         spacing.lg,
-    borderRadius:    radius.xl,
-    borderWidth:     1,
-    borderColor:     colors.border.default,
-    backgroundColor: colors.bg.elevated,
-  },
-  empty: {
-    ...typography.bodySm,
-    color: colors.text.muted,
-  },
-});

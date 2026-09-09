@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { CheckCircle2, PlayCircle } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 import type { MusicRequest } from '../../domain/request.types';
 
@@ -20,7 +22,32 @@ function relativeTime(ageInMinutes: number): string {
 // Fonte real: useRequests(musicianId, 'all') já filtrado a is_accepted/
 // is_played pelo HomeScreen — não inclui gorjetas/badges/visualizações
 // (nenhum feed unificado existe pra esses eventos ainda).
+const useStyles = makeStyles((colors) => ({
+  card:  { gap: spacing.md },
+  title: { ...typography.title, color: colors.text.primary },
+  empty: { ...typography.body, color: colors.text.secondary },
+  list:  { gap: spacing.sm },
+  row: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+  },
+  iconBox: {
+    width:            32,
+    height:           32,
+    borderRadius:     radius.md,
+    backgroundColor: colors.brand.muted,
+    alignItems:      'center',
+    justifyContent:  'center',
+  },
+  textCol:  { flex: 1, gap: 2 },
+  rowTitle: { ...typography.body, color: colors.text.primary },
+  rowTime:  { ...typography.caption, color: colors.text.muted },
+}));
+
 export function RecentActivityList({ requests, isLoading }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <GlowCard accentColor={colors.brand.primary} riseDelay={200} style={s.card}>
       <Text style={s.title}>Atividade Recente</Text>
@@ -53,26 +80,3 @@ export function RecentActivityList({ requests, isLoading }: Props) {
     </GlowCard>
   );
 }
-
-const s = StyleSheet.create({
-  card:  { gap: spacing.md },
-  title: { ...typography.title, color: colors.text.primary },
-  empty: { ...typography.body, color: colors.text.secondary },
-  list:  { gap: spacing.sm },
-  row: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-  },
-  iconBox: {
-    width:            32,
-    height:           32,
-    borderRadius:     radius.md,
-    backgroundColor: colors.brand.muted,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  textCol:  { flex: 1, gap: 2 },
-  rowTitle: { ...typography.body, color: colors.text.primary },
-  rowTime:  { ...typography.caption, color: colors.text.muted },
-});

@@ -1,6 +1,8 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { CalendarClock, CalendarX2 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { formatHHMM, formatShortDate } from '@/shared/utils/date-format';
 import { useBandAgenda } from '../../application/useBandAgenda';
 
@@ -11,7 +13,58 @@ type Props = {
 // Seção de agenda na BandDetailScreen — lista simples dos próximos 30 dias
 // (shows confirmados + bloqueios), não o grid mensal interativo do músico
 // (AgendaScreen); leitura, sem editar disponibilidade da banda nesta v1.
+const useStyles = makeStyles((colors) => ({
+  centerRow: {
+    paddingVertical: spacing.lg,
+    alignItems:      'center',
+  },
+  errorText: {
+    ...typography.bodySm,
+    color: colors.status.error,
+  },
+  emptyRow: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.sm,
+    padding:        spacing.md,
+  },
+  emptyText: {
+    ...typography.bodySm,
+    color: colors.text.muted,
+  },
+  list: {
+    gap: spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.md,
+  },
+  iconBox: {
+    width:           32,
+    height:          32,
+    borderRadius:    radius.sm,
+    alignItems:      'center',
+    justifyContent:  'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  info: {
+    flex: 1,
+  },
+  date: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-Medium',
+    color:      colors.text.primary,
+  },
+  kind: {
+    ...typography.caption,
+    color: colors.text.muted,
+  },
+}));
+
 export function BandAgendaSummary({ bandId }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const { data, isPending, isError } = useBandAgenda(bandId);
 
   if (isPending) {
@@ -63,52 +116,3 @@ export function BandAgendaSummary({ bandId }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  centerRow: {
-    paddingVertical: spacing.lg,
-    alignItems:      'center',
-  },
-  errorText: {
-    ...typography.bodySm,
-    color: colors.status.error,
-  },
-  emptyRow: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.sm,
-    padding:        spacing.md,
-  },
-  emptyText: {
-    ...typography.bodySm,
-    color: colors.text.muted,
-  },
-  list: {
-    gap: spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.md,
-  },
-  iconBox: {
-    width:           32,
-    height:          32,
-    borderRadius:    radius.sm,
-    alignItems:      'center',
-    justifyContent:  'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  info: {
-    flex: 1,
-  },
-  date: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-Medium',
-    color:      colors.text.primary,
-  },
-  kind: {
-    ...typography.caption,
-    color: colors.text.muted,
-  },
-});

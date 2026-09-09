@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, BottomSheetFlatList, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { AlertTriangle } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { OverlayOutcome, OverlayConflictReason } from '../../domain/personal-chord-sheet.types';
 
 type Props = {
@@ -29,7 +31,74 @@ const REASON_LABEL: Record<OverlayConflictReason, string> = {
 // única ação disponível: não há "reaplicar automaticamente" porque o
 // conflito por definição significa que o backend não sabe onde a correção
 // deveria ir.
+const useStyles = makeStyles((colors) => ({
+  sheetBg: {
+    backgroundColor: colors.bg.elevated,
+    borderRadius:     radius.xl,
+  },
+  handle: {
+    backgroundColor: colors.border.strong,
+  },
+  header: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:      spacing.md,
+    gap:                 spacing.xs,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  hint: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  listContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxl,
+    gap:                spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems:    'center',
+    gap:            spacing.md,
+    borderRadius:  radius.lg,
+    borderWidth:    1,
+    borderColor:   `${colors.accent.coral}40`,
+    backgroundColor: `${colors.accent.coral}0F`,
+    padding:        spacing.md,
+  },
+  rowText: {
+    flex: 1,
+    gap:   2,
+  },
+  rowType: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
+  },
+  rowReason: {
+    ...typography.bodySm,
+    color: colors.text.secondary,
+  },
+  discardBtn: {
+    minWidth:          72,
+    height:            36,
+    alignItems:        'center',
+    justifyContent:    'center',
+    borderRadius:      radius.md,
+    paddingHorizontal: spacing.sm,
+    backgroundColor:  `${colors.status.error}1F`,
+  },
+  discardLabel: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.status.error,
+  },
+}));
+
 export function ConflictsReviewSheet({ visible, outcomes, discardingEditId, onDiscard, onClose }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const sheetRef = useRef<BottomSheetModal>(null);
   const conflicts = outcomes.filter((o) => o.status === 'conflict');
 
@@ -101,68 +170,3 @@ const EDIT_TYPE_LABEL: Record<string, string> = {
   relabel_section: 'Renomear seção',
   annotate:        'Anotação',
 };
-
-const s = StyleSheet.create({
-  sheetBg: {
-    backgroundColor: colors.bg.elevated,
-    borderRadius:     radius.xl,
-  },
-  handle: {
-    backgroundColor: colors.border.strong,
-  },
-  header: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:      spacing.md,
-    gap:                 spacing.xs,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  hint: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  listContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxl,
-    gap:                spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems:    'center',
-    gap:            spacing.md,
-    borderRadius:  radius.lg,
-    borderWidth:    1,
-    borderColor:   `${colors.accent.coral}40`,
-    backgroundColor: `${colors.accent.coral}0F`,
-    padding:        spacing.md,
-  },
-  rowText: {
-    flex: 1,
-    gap:   2,
-  },
-  rowType: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  rowReason: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-  },
-  discardBtn: {
-    minWidth:          72,
-    height:            36,
-    alignItems:        'center',
-    justifyContent:    'center',
-    borderRadius:      radius.md,
-    paddingHorizontal: spacing.sm,
-    backgroundColor:  `${colors.status.error}1F`,
-  },
-  discardLabel: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.status.error,
-  },
-});

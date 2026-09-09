@@ -2,7 +2,8 @@ import { View, StyleSheet } from 'react-native';
 import { CreditCard, Smartphone, Mail, KeyRound } from 'lucide-react-native';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
 import { FormField } from '@/shared/components/FormField';
-import { colors, spacing } from '@/shared/design-system/tokens';
+import { spacing } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { PixKeyType } from '../../domain/musician.validation';
 
 type Props = {
@@ -38,6 +39,7 @@ const PLACEHOLDER: Record<PixKeyType, string> = {
 // chave), reescrito aqui sem o título/subtítulo de wizard-step — o header do
 // AccordionSection já cobre esse papel dentro do EditProfileScreen.
 export function EditWalletSection({ pixKeyType, pixKey, onChangeType, onChangeKey, error }: Props) {
+  const { colors } = useTheme();
   return (
     <View style={s.root}>
       <View style={s.chipWrap}>
