@@ -59,12 +59,6 @@ export type RegisterFormValues = z.infer<typeof registerSchema>;
 
 // Login não valida complexidade de senha — essa regra é de criação de conta,
 // não de autenticação (espelha LoginInput do backend).
-export const loginSchema = z.object({
-  email:    emailField,
-  password: z.string().min(1, 'Informe sua senha'),
-});
-
-export type LoginFormValues = z.infer<typeof loginSchema>;
 
 // Usado só pelo fluxo de login social pendente (músico) — mesma regra de
 // obrigatoriedade de CPF/celular do cadastro por senha.

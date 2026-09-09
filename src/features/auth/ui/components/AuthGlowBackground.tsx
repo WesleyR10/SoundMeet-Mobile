@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
+import { useTheme } from '@/shared/hooks/useTheme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,8 +9,9 @@ import Animated, {
   interpolateColor,
   interpolate,
 } from 'react-native-reanimated';
-import { colors } from '@/shared/design-system/tokens';
+
 import { EqBar }    from '@/shared/components/EqBar';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { Particle } from '@/shared/components/Particle';
 import type { RegisterRole } from '@/features/auth/domain/auth.types';
 
@@ -32,15 +34,24 @@ type Props = {
 };
 
 export function AuthGlowBackground({ variant = 'full', role = null }: Props) {
+  const { colors } = useTheme();
+  const reducedMotion = useReducedMotion();
   const glowOpacity = useSharedValue(0.10);
   const glowScale   = useSharedValue(1);
   const roleStep    = useSharedValue(0);
 
   useEffect(() => {
+    // Fundo das telas de auth — é a primeira coisa que alguém vê no app, e
+    // fica respirando atrás do formulário inteiro. Parado no meio da faixa.
+    if (reducedMotion) {
+      glowOpacity.value = 0.16;
+      glowScale.value   = 1;
+      return;
+    }
     glowOpacity.value = withRepeat(withTiming(0.22, { duration: 5500 }), -1, true);
     glowScale.value   = withRepeat(withTiming(1.07, { duration: 5500 }), -1, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reducedMotion]);
 
   useEffect(() => {
     roleStep.value = withTiming(ROLE_STEP[role ?? 'none'], { duration: 420 });

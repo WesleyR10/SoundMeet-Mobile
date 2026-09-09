@@ -8,9 +8,15 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { colors, spacing, radius } from '@/shared/design-system/tokens';
+import { spacing, radius } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
-const SLIDES = [
+/*
+ * Função do tema, não constante de módulo: avaliada no carregamento, congelaria
+ * a paleta escura.
+ */
+const slides = (colors: ThemeColors) => ([
   {
     badge:          'AO VIVO',
     badgeColor:     colors.brand.primary,
@@ -41,9 +47,14 @@ const SLIDES = [
     highlightColor: colors.accent.amber,
     after:          ' da galera.',
   },
-] as const;
+]) as const;
 
-export const SLIDE_COUNT = SLIDES.length;
+/*
+ * Contagem, não cor: fica como constante de módulo de propósito. O
+ * `OnboardingScreen` a consome fora de qualquer componente (num `setInterval`),
+ * e o número de slides não muda com o tema.
+ */
+export const SLIDE_COUNT = 3;
 
 const SW = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = SW * 0.20; // 20% da tela para mudar slide
@@ -51,6 +62,8 @@ const SWIPE_THRESHOLD = SW * 0.20; // 20% da tela para mudar slide
 // ── Dot animado ───────────────────────────────────────────────────────────────
 
 function AnimatedDot({ isActive }: { isActive: boolean }) {
+  // Helper é componente: chama o hook por conta própria.
+  const { colors } = useTheme();
   const progress = useSharedValue(isActive ? 1 : 0);
   const dotWidth = useSharedValue(isActive ? 26 : 8);
 
@@ -79,6 +92,7 @@ type Props = {
 };
 
 export function SlideCarousel({ slide, onGoto }: Props) {
+  const { colors } = useTheme();
   // posição base do slide atual + offset do drag em andamento
   const baseX  = useSharedValue(-SW * slide);
   const dragX  = useSharedValue(0);
@@ -120,7 +134,7 @@ export function SlideCarousel({ slide, onGoto }: Props) {
       <GestureDetector gesture={pan}>
         <Animated.View style={s.outer}>
           <Animated.View style={[s.track, trackStyle, { width: SW * SLIDE_COUNT }]}>
-            {SLIDES.map((sl, i) => (
+            {slides(colors).map((sl, i) => (
               <View key={i} style={[s.slide, { width: SW }]}>
                 <View style={[s.badge, { backgroundColor: sl.badgeBg, borderColor: sl.badgeBorder }]}>
                   <Text style={[s.badgeText, { color: sl.badgeColor }]}>{sl.badge}</Text>
@@ -137,7 +151,7 @@ export function SlideCarousel({ slide, onGoto }: Props) {
       </GestureDetector>
 
       <View style={s.dots}>
-        {SLIDES.map((_, i) => (
+        {slides(colors).map((_, i) => (
           <AnimatedDot key={i} isActive={i === slide} />
         ))}
       </View>

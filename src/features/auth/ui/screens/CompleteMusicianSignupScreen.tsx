@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { FormField } from '@/shared/components/FormField';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
@@ -20,7 +22,51 @@ import type { AuthScreenProps } from '@/navigation/types';
 
 type Props = AuthScreenProps<'CompleteMusicianSignup'>;
 
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  flex: { flex: 1 },
+  backBtn: {
+    width:          48,
+    height:         48,
+    marginLeft:     spacing.lg,
+    marginTop:      spacing.sm,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  scroll: {
+    paddingHorizontal: spacing.xl,
+    paddingTop:        spacing.md,
+    paddingBottom:     spacing.xxxl,
+    gap:               spacing.lg,
+  },
+  title: {
+    ...typography.displayMd,
+    fontFamily: 'SpaceGrotesk-Bold',
+    color:      colors.text.primary,
+    marginTop:  spacing.lg,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  form: {
+    gap:       spacing.lg,
+    marginTop: spacing.lg,
+  },
+  banner: {
+    marginTop: spacing.lg,
+  },
+  submitBtn: {
+    marginTop: spacing.xl,
+  },
+}));
+
 export function CompleteMusicianSignupScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const socialSignupMutation = useSocialSignup();
 
   const { control, handleSubmit } = useForm<CompleteCadastroFormValues>({
@@ -135,45 +181,3 @@ export function CompleteMusicianSignupScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  flex: { flex: 1 },
-  backBtn: {
-    width:          48,
-    height:         48,
-    marginLeft:     spacing.lg,
-    marginTop:      spacing.sm,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  scroll: {
-    paddingHorizontal: spacing.xl,
-    paddingTop:        spacing.md,
-    paddingBottom:     spacing.xxxl,
-    gap:               spacing.lg,
-  },
-  title: {
-    ...typography.displayMd,
-    fontFamily: 'SpaceGrotesk-Bold',
-    color:      colors.text.primary,
-    marginTop:  spacing.lg,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  form: {
-    gap:       spacing.lg,
-    marginTop: spacing.lg,
-  },
-  banner: {
-    marginTop: spacing.lg,
-  },
-  submitBtn: {
-    marginTop: spacing.xl,
-  },
-});

@@ -1,7 +1,6 @@
 import {
   checkPasswordRules,
   completeCadastroSchema,
-  loginSchema,
   passwordMeetsRules,
   registerSchema,
 } from '../auth.validation';
@@ -89,22 +88,6 @@ describe('registerSchema — cpf/phone condicionais por role', () => {
   });
 });
 
-describe('loginSchema — sem regra de complexidade de senha', () => {
-  it('aceita qualquer senha não vazia (não é regra de criação de conta)', () => {
-    const result = loginSchema.safeParse({ email: 'user@example.com', password: 'x' });
-    expect(result.success).toBe(true);
-  });
-
-  it('rejeita senha vazia', () => {
-    const result = loginSchema.safeParse({ email: 'user@example.com', password: '' });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejeita e-mail inválido', () => {
-    const result = loginSchema.safeParse({ email: 'invalido', password: 'x' });
-    expect(result.success).toBe(false);
-  });
-});
 
 describe('completeCadastroSchema — login social pendente do músico', () => {
   it('exige CPF e celular válidos (mesma regra do cadastro por senha)', () => {

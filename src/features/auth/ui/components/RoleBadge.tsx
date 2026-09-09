@@ -1,18 +1,25 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 import type { RegisterRole } from '@/features/auth/domain/auth.types';
 
 type Props = {
   role: RegisterRole;
 };
 
-const ROLE_META: Record<RegisterRole, { emoji: string; label: string; color: string }> = {
+/*
+ * Função do tema, não constante de módulo: avaliada no carregamento, congelaria
+ * a paleta escura.
+ */
+const roleMeta = (colors: ThemeColors) => ({
   musician: { emoji: '🎸', label: 'Cadastro de Músico', color: colors.brand.primary },
   audience: { emoji: '🎵', label: 'Cadastro de Fã',      color: colors.accent.coral },
-};
+}) as const;
 
 export function RoleBadge({ role }: Props) {
-  const meta = ROLE_META[role];
+  const { colors } = useTheme();
+  const meta = roleMeta(colors)[role];
 
   return (
     <View style={[s.badge, { borderColor: `${meta.color}4D`, backgroundColor: `${meta.color}1A` }]}>

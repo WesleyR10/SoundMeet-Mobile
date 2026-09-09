@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { colors } from '@/shared/design-system/tokens';
+
 import { musicianVideoSource, fanVideoSource } from '@/shared/constants/role-video-sources';
 import type { RegisterRole } from '@/features/auth/domain/auth.types';
 
@@ -23,7 +24,17 @@ type Props = {
 // existente (ou desmontar/remontar ao alternar role) não rebinda de forma confiável no
 // Android, o que fazia o segundo role escolhido nunca aparecer. Troca de role só alterna
 // opacidade estática entre as duas views já montadas, sem recriar nenhuma superfície nativa.
+const useStyles = makeStyles((colors) => ({
+  scrim: {
+    backgroundColor: colors.bg.overlay,
+  },
+  hidden: {
+    opacity: 0,
+  },
+}));
+
 export function RoleVideoBackground({ role }: Props) {
+  const s = useStyles();
   const musicianPlayer = useVideoPlayer(musicianVideoSource, (player) => {
     player.loop = true;
     player.muted = true;
@@ -81,12 +92,3 @@ export function RoleVideoBackground({ role }: Props) {
     </View>
   );
 }
-
-const s = StyleSheet.create({
-  scrim: {
-    backgroundColor: colors.bg.overlay,
-  },
-  hidden: {
-    opacity: 0,
-  },
-});

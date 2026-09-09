@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { ArrowLeft, Guitar, Users } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AuthGlowBackground } from '../components/AuthGlowBackground';
@@ -17,7 +19,56 @@ import type { RegisterRole } from '@/features/auth/domain/auth.types';
 
 type Props = AuthScreenProps<'RoleSelection'>;
 
+const useStyles = makeStyles((colors) => ({
+  root: {
+    flex:            1,
+    backgroundColor: colors.bg.primary,
+  },
+  backBtn: {
+    width:          48,
+    height:         48,
+    marginLeft:     spacing.lg,
+    marginTop:      spacing.sm,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  content: {
+    flex:              1,
+    paddingHorizontal: spacing.xl,
+    justifyContent:    'center',
+    gap:               spacing.xxl,
+  },
+  header: {
+    gap: spacing.sm,
+  },
+  eyebrow: {
+    ...typography.caption,
+    fontFamily:    'Inter-Bold',
+    letterSpacing:  1.5,
+    color:          colors.brand.primary,
+  },
+  title: {
+    ...typography.displayMd,
+    fontFamily: 'SpaceGrotesk-Bold',
+    color:      colors.text.primary,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.text.secondary,
+  },
+  cards: {
+    gap: spacing.lg,
+  },
+  footer: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom:     spacing.xxl,
+    gap:               spacing.md,
+  },
+}));
+
 export function RoleSelectionScreen({ navigation }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const [role, setRole] = useState<RegisterRole | null>(null);
   const [bannerError, setBannerError] = useState<string | null>(null);
 
@@ -147,50 +198,3 @@ export function RoleSelectionScreen({ navigation }: Props) {
     </SafeAreaView>
   );
 }
-
-const s = StyleSheet.create({
-  root: {
-    flex:            1,
-    backgroundColor: colors.bg.primary,
-  },
-  backBtn: {
-    width:          48,
-    height:         48,
-    marginLeft:     spacing.lg,
-    marginTop:      spacing.sm,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  content: {
-    flex:              1,
-    paddingHorizontal: spacing.xl,
-    justifyContent:    'center',
-    gap:               spacing.xxl,
-  },
-  header: {
-    gap: spacing.sm,
-  },
-  eyebrow: {
-    ...typography.caption,
-    fontFamily:    'Inter-Bold',
-    letterSpacing:  1.5,
-    color:          colors.brand.primary,
-  },
-  title: {
-    ...typography.displayMd,
-    fontFamily: 'SpaceGrotesk-Bold',
-    color:      colors.text.primary,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  cards: {
-    gap: spacing.lg,
-  },
-  footer: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom:     spacing.xxl,
-    gap:               spacing.md,
-  },
-});

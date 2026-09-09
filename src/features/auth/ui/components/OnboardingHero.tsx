@@ -8,7 +8,10 @@ import Animated, {
   withDelay,
   withSpring,
 } from 'react-native-reanimated';
-import { colors, spacing, shadows } from '@/shared/design-system/tokens';
+import { spacing, shadows } from '@/shared/design-system/tokens';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 import { EqBar } from '@/shared/components/EqBar';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -18,7 +21,11 @@ const RING_OUTER = 220;
 const RING_INNER = 270;
 const RING_BOX   = RING_INNER;
 
-const MINI_EQ_BARS = [
+/*
+ * Função do tema, não constante de módulo: avaliada no carregamento, congelaria
+ * a paleta escura.
+ */
+const miniEqBars = (colors: ThemeColors) => ([
   { h: 14, c: colors.brand.primary, dur: 1000, d: 0   },
   { h: 26, c: colors.brand.primary, dur: 1200, d: 150 },
   { h: 34, c: colors.brand.primary, dur: 900,  d: 50  },
@@ -26,17 +33,25 @@ const MINI_EQ_BARS = [
   { h: 30, c: colors.brand.primary, dur: 1100, d: 350 },
   { h: 16, c: colors.brand.primary, dur: 1000, d: 200 },
   { h: 28, c: colors.brand.primary, dur: 1250, d: 100 },
-] as const;
+]) as const;
 
 export function OnboardingHero() {
+  const { colors } = useTheme();
+  const reducedMotion = useReducedMotion();
   const rotOuter    = useSharedValue(0);
   const rotInner    = useSharedValue(0);
   const logoOpacity = useSharedValue(0);
   const logoScale   = useSharedValue(0.72);
 
   useEffect(() => {
-    rotOuter.value    = withRepeat(withTiming(360,  { duration: 7000  }), -1, false);
-    rotInner.value    = withRepeat(withTiming(-360, { duration: 11000 }), -1, false);
+    // 🔴 Anéis em rotação CONTÍNUA são o pior caso da tela: movimento
+    // circular perpétuo atrás do logo. Param em 0 (a pose de repouso do
+    // desenho); a entrada do logo abaixo continua, porque é transição única
+    // e curta, não movimento ambiente.
+    if (!reducedMotion) {
+      rotOuter.value    = withRepeat(withTiming(360,  { duration: 7000  }), -1, false);
+      rotInner.value    = withRepeat(withTiming(-360, { duration: 11000 }), -1, false);
+    }
     logoOpacity.value = withDelay(80, withTiming(1, { duration: 300 }));
     logoScale.value   = withDelay(80, withSpring(1));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,7 +81,7 @@ export function OnboardingHero() {
           <Image source={LOGO} style={[s.logoImg, s.logoSharp]} resizeMode="contain" />
         </View>
         <View style={s.miniEq}>
-          {MINI_EQ_BARS.map((bar, i) => (
+          {miniEqBars(colors).map((bar, i) => (
             <EqBar key={i} color={bar.c} height={bar.h} duration={bar.dur} delay={bar.d} />
           ))}
         </View>

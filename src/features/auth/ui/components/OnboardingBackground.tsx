@@ -1,27 +1,38 @@
 import { useEffect } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
+import { useTheme } from '@/shared/hooks/useTheme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { colors } from '@/shared/design-system/tokens';
+
 import { EqBar }    from '@/shared/components/EqBar';
 import { Particle } from '@/shared/components/Particle';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 
 // App é portrait-only (app.json) — largura não muda
 const SW = Dimensions.get('window').width;
 
 export function OnboardingBackground() {
+  const { colors } = useTheme();
+  const reducedMotion = useReducedMotion();
   const glowOpacity = useSharedValue(0.12);
   const glowScale   = useSharedValue(1);
 
   useEffect(() => {
+    // Primeira tela do app inteiro. Parado no meio da faixa — o gradiente
+    // segue compondo o fundo, sem respirar atrás do carrossel.
+    if (reducedMotion) {
+      glowOpacity.value = 0.18;
+      glowScale.value   = 1;
+      return;
+    }
     glowOpacity.value = withRepeat(withTiming(0.24, { duration: 5000 }), -1, true);
     glowScale.value   = withRepeat(withTiming(1.08, { duration: 5000 }), -1, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reducedMotion]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity:   glowOpacity.value,

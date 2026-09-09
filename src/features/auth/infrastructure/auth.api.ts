@@ -5,8 +5,6 @@ import type { ApiEnvelope } from '@/shared/services/http/types';
 import type {
   AddRolePayload,
   AddRoleResponse,
-  LoginPayload,
-  LoginResponse,
   RegisterPayload,
   RegisterResponse,
   SocialSignupPayload,
@@ -15,11 +13,6 @@ import type {
 
 export async function registerUser(payload: RegisterPayload): Promise<RegisterResponse> {
   const { data } = await httpClient.post<ApiEnvelope<RegisterResponse>>('/auth/register', payload);
-  return data.data;
-}
-
-export async function loginUser(payload: LoginPayload): Promise<LoginResponse> {
-  const { data } = await httpClient.post<ApiEnvelope<LoginResponse>>('/auth/login', payload);
   return data.data;
 }
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,7 +10,10 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { Check, type LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, shadows, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, shadows, typography } from '@/shared/design-system/tokens';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 // rgba() explícito em vez de concatenar alpha em hex (`${accentColor}0A`) — remove
 // qualquer ambiguidade de parsing de hex8 entre plataformas dentro do interpolateColor.
@@ -34,17 +37,71 @@ type Props = {
   onPress:     () => void;
 };
 
+const useStyles = makeStyles((colors) => ({
+  pressed: {
+    transform: [{ scale: 0.98 }],
+  },
+  card: {
+    flexDirection:      'row',
+    alignItems:         'center',
+    minHeight:           108,
+    borderRadius:        radius.xl,
+    paddingHorizontal:   spacing.xl,
+    paddingVertical:     spacing.lg,
+    gap:                 spacing.md,
+    backgroundColor:     colors.bg.elevated,
+    shadowOffset:        { width: 0, height: 8 },
+    shadowRadius:        20,
+    elevation:           4,
+  },
+  iconWrap: {
+    width:          52,
+    height:         52,
+    borderRadius:   radius.lg,
+    borderWidth:    1,
+    alignItems:     'center',
+    justifyContent: 'center',
+  },
+  textBlock: {
+    flex: 1,
+    gap:  spacing.xs / 2,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text.primary,
+  },
+  subtitle: {
+    ...typography.bodySm,
+    fontFamily: 'Inter-Regular',
+    color:      colors.text.secondary,
+  },
+  checkBadge: {
+    width:          24,
+    height:         24,
+    borderRadius:   radius.full,
+    alignItems:     'center',
+    justifyContent: 'center',
+    ...shadows.sm,
+  },
+}));
+
 export function RoleCard({ icon: Icon, emoji, title, subtitle, accentColor, selected, dimmed = false, onPress }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const reducedMotion = useReducedMotion();
   const selectProgress = useSharedValue(0);
   const pulseScale      = useSharedValue(1);
   const dimOpacity      = useSharedValue(1);
 
   useEffect(() => {
     selectProgress.value = withTiming(selected ? 1 : 0, { duration: 260 });
-    pulseScale.value = selected
+    // O pulso é reforço do estado "selecionado"; quem carrega esse estado é a
+    // cor da borda (`selectProgress`) e o check. Parar em 1 não perde
+    // informação — só o respiro.
+    pulseScale.value = selected && !reducedMotion
       ? withRepeat(withTiming(1.015, { duration: 1200, easing: Easing.inOut(Easing.ease) }), -1, true)
       : withTiming(1, { duration: 200 });
-  }, [selected, selectProgress, pulseScale]);
+  }, [selected, reducedMotion, selectProgress, pulseScale]);
 
   useEffect(() => {
     dimOpacity.value = withTiming(dimmed ? 0.5 : 1, { duration: 260 });
@@ -97,51 +154,3 @@ export function RoleCard({ icon: Icon, emoji, title, subtitle, accentColor, sele
     </Pressable>
   );
 }
-
-const s = StyleSheet.create({
-  pressed: {
-    transform: [{ scale: 0.98 }],
-  },
-  card: {
-    flexDirection:      'row',
-    alignItems:         'center',
-    minHeight:           108,
-    borderRadius:        radius.xl,
-    paddingHorizontal:   spacing.xl,
-    paddingVertical:     spacing.lg,
-    gap:                 spacing.md,
-    backgroundColor:     colors.bg.elevated,
-    shadowOffset:        { width: 0, height: 8 },
-    shadowRadius:        20,
-    elevation:           4,
-  },
-  iconWrap: {
-    width:          52,
-    height:         52,
-    borderRadius:   radius.lg,
-    borderWidth:    1,
-    alignItems:     'center',
-    justifyContent: 'center',
-  },
-  textBlock: {
-    flex: 1,
-    gap:  spacing.xs / 2,
-  },
-  title: {
-    ...typography.title,
-    color: colors.text.primary,
-  },
-  subtitle: {
-    ...typography.bodySm,
-    fontFamily: 'Inter-Regular',
-    color:      colors.text.secondary,
-  },
-  checkBadge: {
-    width:          24,
-    height:         24,
-    borderRadius:   radius.full,
-    alignItems:     'center',
-    justifyContent: 'center',
-    ...shadows.sm,
-  },
-});
