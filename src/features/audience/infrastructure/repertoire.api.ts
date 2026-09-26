@@ -1,34 +1,37 @@
 import { httpClient } from '@/shared/services/http/client';
-import type { PublicRepertoirePage } from '../domain/repertoire.types';
+import type { ApiEnvelope } from '@/shared/services/http/types';
+import type { SongCatalogResponse } from '../domain/repertoire.types';
 
-// GET /musicians/:musician_id/repertoire — catálogo do músico para quem vai
-// PEDIR (backend Bloco 9.6c, que fecha o 7.14).
+// GET /musicians/:musician_id/song-catalog — catálogo para quem vai PEDIR.
 //
-// Resposta já traz `meta` (CollectionPresenter), então o WrapperDataInterceptor
-// pula o envelope: NÃO é `ApiEnvelope<T>`. Mesmo caso de
-// `features/musician/infrastructure/music-library.api.ts`.
+// ⚠️ Não existe parâmetro de ESCOPO, e a ausência é a regra: quem decide se a
+// busca varre a plataforma inteira ou só o repertório do músico é o próprio
+// músico, lido no servidor. Um escopo na query devolveria ao cliente
+// exatamente o limite que desligar o switch existe para impor.
 //
-// ⚠️ `musician_id` vive só no PATH por desenho do backend — não existe "listar
-// a biblioteca inteira" para terceiro, e mandá-lo na query seria descartado de
-// qualquer forma (o controller sobrescreve com o do path). Por isso o parâmetro
-// não é oferecido aqui.
+// ⚠️ `musician_id` vive só no PATH, como na rota de repertório: o cliente
+// escolhe DE QUEM é o catálogo, nunca "de todos".
 //
-// ⚠️ A rota tem `@Throttle(30/min)` PRÓPRIO, além do teto global — é catálogo
-// raspável. Por isso a busca é debounced e exige 2 caracteres no hook.
-export async function searchMusicianRepertoire(
+// ⚠️ A rota tem `@Throttle(30/min)` PRÓPRIO, além do teto global. Por isso a
+// busca é debounced no hook.
+//
+// 🔴 Resposta É envelopada. `SongCatalogPresenter` não tem `meta` (não é um
+// `CollectionPresenter` — a paginação não faz sentido num catálogo com
+// `limit`), e o `WrapperDataInterceptor` embrulha tudo que não tem `meta` em
+// `{ data }`. Ler `data.items` direto devolveria `undefined` em silêncio: a
+// lista viria vazia e a tela pareceria só "sem resultados".
+export async function searchSongCatalog(
   musicianId: string,
-  params: { title?: string; per_page?: number } = {},
-): Promise<PublicRepertoirePage> {
-  const { data } = await httpClient.get<PublicRepertoirePage>(
-    `/musicians/${musicianId}/repertoire`,
+  params: { term?: string; limit?: number } = {},
+): Promise<SongCatalogResponse> {
+  const { data } = await httpClient.get<ApiEnvelope<SongCatalogResponse>>(
+    `/musicians/${musicianId}/song-catalog`,
     {
       params: {
-        per_page: params.per_page ?? 20,
-        sort:     'title',
-        sort_dir: 'asc',
-        ...(params.title ? { title: params.title } : {}),
+        limit: params.limit ?? 20,
+        ...(params.term ? { term: params.term } : {}),
       },
     },
   );
-  return data;
+  return data.data;
 }

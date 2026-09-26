@@ -1,6 +1,5 @@
 import { ScrollView, View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Trophy } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -10,6 +9,8 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { FanProfileScreenProps } from '@/navigation/types';
 import { useAudiencePoints, useAudienceBadges } from '../../application/useAudienceGamification';
 import { BadgeGrid } from '../components/BadgeGrid';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanProfileScreenProps<'Gamification'>;
 
@@ -58,7 +59,7 @@ const useStyles = makeStyles((colors) => ({
     width:            '100%',
     height:           8,
     borderRadius:     radius.full,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: withAlpha(colors.text.primary, 0.08),
     overflow:         'hidden',
   },
   progressFill: {
@@ -120,7 +121,7 @@ export function GamificationScreen({ navigation }: Props) {
   if (pointsQuery.isPending || badgesQuery.isPending) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.skeleton}>
           <SkeletonProfileHeader avatarSize={72} />
           {/* Pontos, nível e progresso; depois a grade de badges. */}
@@ -135,7 +136,7 @@ export function GamificationScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Text style={s.title}>Gamificação</Text>
 

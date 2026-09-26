@@ -1,15 +1,15 @@
-import { catalogGenre, stillMatchesPick } from '../song-request.rules';
-import type { PublicRepertoireItem } from '../repertoire.types';
+import { catalogGenre, catalogLibraryId, stillMatchesPick } from '../song-request.rules';
+import type { SongCatalogItem } from '../repertoire.types';
 
-function item(overrides: Partial<PublicRepertoireItem> = {}): PublicRepertoireItem {
+const LIBRARY_ID = 'c0ffee00-0000-4000-8000-000000000001';
+
+function item(overrides: Partial<SongCatalogItem> = {}): SongCatalogItem {
   return {
-    id:               'c0ffee00-0000-4000-8000-000000000001',
-    musician_id:      'c0ffee00-0000-4000-8000-000000000002',
-    title:            'Garota de Ipanema',
-    artist:           'Tom Jobim',
-    genre:            'bossa-nova',
-    difficulty:       3,
-    duration_seconds: 210,
+    title:           'Garota de Ipanema',
+    artist:          'Tom Jobim',
+    genre:           'bossa-nova',
+    musicians_count: 4,
+    library_id:      LIBRARY_ID,
     ...overrides,
   };
 }
@@ -55,5 +55,28 @@ describe('catalogGenre', () => {
 
   it('devolve null quando o fã digitou tudo à mão', () => {
     expect(catalogGenre(null, 'Qualquer coisa', 'Alguém')).toBeNull();
+  });
+});
+
+describe('catalogLibraryId', () => {
+  it('devolve o library_id quando a escolha continua válida', () => {
+    expect(catalogLibraryId(item(), 'Garota de Ipanema', 'Tom Jobim')).toBe(LIBRARY_ID);
+  });
+
+  // 🔴 O caso mais importante: um `library_id` herdado de um item que não é
+  // mais o que está sendo pedido amarraria o pedido à música errada da
+  // biblioteca do artista.
+  it('devolve null assim que o texto deixa de corresponder ao item', () => {
+    expect(catalogLibraryId(item(), 'Outra música', 'Tom Jobim')).toBeNull();
+  });
+
+  // Entrada do catálogo da plataforma que ESTE músico ainda não tem: legítima,
+  // e o pedido segue por título e artista.
+  it('devolve null quando o músico ainda não tem a música na biblioteca', () => {
+    expect(catalogLibraryId(item({ library_id: null }), 'Garota de Ipanema', 'Tom Jobim')).toBeNull();
+  });
+
+  it('devolve null quando o fã digitou tudo à mão', () => {
+    expect(catalogLibraryId(null, 'Qualquer coisa', 'Alguém')).toBeNull();
   });
 });

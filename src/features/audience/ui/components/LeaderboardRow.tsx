@@ -1,8 +1,12 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Trophy, User } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { Avatar } from '@/shared/components/Avatar';
 import type { UserPoints } from '@/shared/services/gamification/gamification.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   entry:    UserPoints;
@@ -13,17 +17,19 @@ type Props = {
 // Sem cores de medalha "reais" (ouro/prata/bronze) hardcoded — só tokens do
 // design system (CLAUDE.md: "toda cor vem de tokens.ts"), diferenciando o
 // top-3 com os accents já existentes em vez de introduzir hex novo.
-const MEDAL_COLOR: Record<number, string> = {
+const MEDAL_COLOR = (colors: ThemeColors): Record<number, string> => ({
   1: colors.accent.amber,
   2: colors.text.secondary,
   3: colors.accent.coral,
-};
+});
 
 // Backend 7.16b (jul/2026): GET /gamification/leaderboard agora inclui
 // nickname/avatar — nome real em vez de "Fã #<hash>". Nickname ainda pode
 // vir null (fã que nunca preencheu o próprio apelido), daí o fallback.
 export function LeaderboardRow({ entry, position, isSelf }: Props) {
-  const medalColor = MEDAL_COLOR[position];
+  const s = useStyles();
+  const { colors } = useTheme();
+  const medalColor = MEDAL_COLOR(colors)[position];
   const displayName = isSelf ? 'Você' : (entry.nickname ?? `Fã #${entry.user_id.slice(0, 6)}`);
 
   return (
@@ -48,7 +54,7 @@ export function LeaderboardRow({ entry, position, isSelf }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     alignItems:    'center',
@@ -56,7 +62,7 @@ const s = StyleSheet.create({
     borderRadius:   radius.lg,
     borderWidth:     1,
     borderColor:    colors.border.default,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding:          spacing.md,
   },
   rowSelf: {
@@ -67,7 +73,7 @@ const s = StyleSheet.create({
     width:            32,
     height:           32,
     borderRadius:     radius.full,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: withAlpha(colors.text.primary, 0.06),
     alignItems:      'center',
     justifyContent:  'center',
   },
@@ -91,4 +97,4 @@ const s = StyleSheet.create({
     fontFamily: 'SpaceGrotesk-SemiBold',
     color:      colors.accent.amber,
   },
-});
+}));

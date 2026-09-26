@@ -1,6 +1,5 @@
 import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Music2 } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -9,6 +8,7 @@ import { useEventPerformers } from '../../application/useEstablishment';
 import { PerformerRow } from '../components/PerformerRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { SkeletonList } from '@/shared/components/Skeleton';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'EventPerformers'>;
 
@@ -52,7 +52,7 @@ export function EventPerformersScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <View style={s.header}>
         <Text style={s.title}>Quem toca hoje</Text>
         <Text style={s.subtitle}>Escolha um artista pra pedir uma música ou deixar uma gorjeta.</Text>

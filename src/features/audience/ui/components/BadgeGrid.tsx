@@ -1,16 +1,21 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withDelay, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { Award } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import type { UserBadge } from '@/shared/services/gamification/gamification.types';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   badges: UserBadge[];
 };
 
 function BadgeCell({ badge, index }: { badge: UserBadge; index: number }) {
+  const s = useStyles();
+  const { colors } = useTheme();
   // Helper não exportado chama o hook por conta própria (ver CLAUDE.md).
   const reducedMotion = useReducedMotion();
   const glow = useSharedValue(0.35);
@@ -58,6 +63,7 @@ function BadgeCell({ badge, index }: { badge: UserBadge; index: number }) {
 // RecentBadgesRow (musician, top-3 na Home); aqui mostra o catálogo inteiro
 // do fã, com barra de progresso nas ainda não desbloqueadas.
 export function BadgeGrid({ badges }: Props) {
+  const s = useStyles();
   if (badges.length === 0) {
     return <Text style={s.empty}>Ainda sem conquistas — escaneie QR codes e peça músicas pra desbloquear.</Text>;
   }
@@ -71,7 +77,7 @@ export function BadgeGrid({ badges }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   grid: {
     flexDirection: 'row',
     flexWrap:      'wrap',
@@ -89,7 +95,7 @@ const s = StyleSheet.create({
     borderRadius:      radius.lg,
     borderWidth:        1,
     borderColor:      `${colors.accent.amber}40`,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding:            spacing.md,
     shadowColor:      colors.accent.amber,
     shadowOffset:     { width: 0, height: 0 },
@@ -116,7 +122,7 @@ const s = StyleSheet.create({
     width:            '100%',
     height:           4,
     borderRadius:     radius.full,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: withAlpha(colors.text.primary, 0.08),
     overflow:         'hidden',
   },
   progressFill: {
@@ -124,4 +130,4 @@ const s = StyleSheet.create({
     borderRadius:     radius.full,
     backgroundColor: colors.accent.amber,
   },
-});
+}));

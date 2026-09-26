@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import {
   BottomSheetModal,
@@ -14,6 +14,8 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { QRFrame } from '@/shared/components/QRFrame';
 import { useRequestBoostPayment } from '../../application/useRequestBoostPayment';
 import { usePendingBoostStore } from '../../application/pending-boost.store';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   requestId: string | null;
@@ -80,7 +82,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:      radius.lg,
     borderWidth:       1,
     borderColor:       colors.border.default,
-    backgroundColor:  'rgba(255,255,255,0.03)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.03),
     padding:           spacing.md,
     gap:               spacing.xs,
   },
@@ -150,16 +152,11 @@ const useStyles = makeStyles((colors) => ({
 export function RequestBoostPaymentSheet({ requestId, onClose }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(!!requestId);
   const pending  = usePendingBoostStore((s) => s.pending);
   const clearPending = usePendingBoostStore((s) => s.clear);
 
   const { data } = useRequestBoostPayment(requestId);
-
-  useEffect(() => {
-    if (requestId) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [requestId]);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -201,7 +198,7 @@ export function RequestBoostPaymentSheet({ requestId, onClose }: Props) {
       clearPending(requestId);
       sheetRef.current?.dismiss();
     }
-  }, [status, requestId, clearPending]);
+  }, [status, requestId, clearPending, sheetRef]);
 
   const minutes = remaining !== null ? Math.floor(remaining / 60_000) : null;
   const seconds = remaining !== null ? Math.floor((remaining % 60_000) / 1_000) : null;
@@ -212,7 +209,7 @@ export function RequestBoostPaymentSheet({ requestId, onClose }: Props) {
       ref={sheetRef}
       snapPoints={['85%']}
       enablePanDownToClose
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

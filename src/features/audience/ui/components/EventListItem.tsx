@@ -5,6 +5,7 @@ import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import type { EventItem } from '../../domain/event.types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   event:   EventItem;
@@ -38,7 +39,7 @@ const useStyles = makeStyles((colors) => ({
     alignItems:      'center',
     paddingVertical:   spacing.xs,
     borderRadius:      radius.md,
-    backgroundColor:  'rgba(255,255,255,0.06)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.06),
   },
   dateWeekday: {
     ...typography.caption,

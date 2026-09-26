@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { FlatList, View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ChevronLeft, ListMusic } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -14,6 +13,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { SkeletonList } from '@/shared/components/Skeleton';
 import { MyRequestCard } from '../components/MyRequestCard';
 import { RequestBoostPaymentSheet } from '../components/RequestBoostPaymentSheet';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'MyRequests'>;
 
@@ -85,7 +85,7 @@ export function MyRequestsScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
 
       <View style={s.header}>
         <Pressable

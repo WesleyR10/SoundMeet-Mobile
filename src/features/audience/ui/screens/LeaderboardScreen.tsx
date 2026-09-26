@@ -1,6 +1,5 @@
 import { FlatList, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Trophy } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -10,6 +9,7 @@ import { useLeaderboard } from '../../application/useLeaderboard';
 import { LeaderboardRow } from '../components/LeaderboardRow';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { SkeletonList } from '@/shared/components/Skeleton';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanProfileScreenProps<'Leaderboard'>;
 
@@ -45,7 +45,7 @@ export function LeaderboardScreen(_props: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <View style={s.header}>
         <Text style={s.title}>Ranking</Text>
       </View>

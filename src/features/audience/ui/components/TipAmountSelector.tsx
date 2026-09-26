@@ -4,6 +4,7 @@ import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   value:    number | null;
@@ -37,7 +38,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:       radius.md,
     borderWidth:         1,
     borderColor:        colors.border.default,
-    backgroundColor:   'rgba(255,255,255,0.04)',
+    backgroundColor:   withAlpha(colors.text.primary, 0.04),
     paddingHorizontal:  spacing.md,
   },
   customBoxActive: {

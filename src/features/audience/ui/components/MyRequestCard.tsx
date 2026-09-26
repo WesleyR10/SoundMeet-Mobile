@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Music2, Sparkles } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { GlowCard } from '@/shared/components/GlowCard';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import type { AudienceRequest } from '../../domain/request.types';
@@ -10,6 +10,9 @@ import {
   requestStatusTone,
   type RequestTone,
 } from '../../domain/request.rules';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 type Props = {
   request: AudienceRequest;
@@ -18,12 +21,12 @@ type Props = {
   onResumePayment?: (request: AudienceRequest) => void;
 };
 
-const TONE_COLOR: Record<RequestTone, string> = {
+const TONE_COLOR = (colors: ThemeColors): Record<RequestTone, string> => ({
   pending: colors.accent.amber,
   positive: colors.status.success,
   live: colors.brand.primary,
   negative: colors.text.muted,
-};
+});
 
 function formatBRL(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -48,9 +51,11 @@ function timeAgo(iso: string): string {
 }
 
 export function MyRequestCard({ request, riseDelay, onResumePayment }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const badge = boostBadge(request);
   const tone = requestStatusTone(request);
-  const toneColor = TONE_COLOR[tone];
+  const toneColor = TONE_COLOR(colors)[tone];
 
   // Só vira cartão tocável quando há algo a fazer. Um card que "afunda" ao
   // toque e não leva a lugar nenhum promete uma ação inexistente — mesma razão
@@ -123,7 +128,7 @@ export function MyRequestCard({ request, riseDelay, onResumePayment }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: { gap: spacing.md },
   headerRow: {
     flexDirection: 'row',
@@ -192,4 +197,4 @@ const s = StyleSheet.create({
     ...typography.caption,
     fontFamily: 'Inter-SemiBold',
   },
-});
+}));

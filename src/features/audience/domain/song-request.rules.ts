@@ -1,4 +1,4 @@
-import type { PublicRepertoireItem } from './repertoire.types';
+import type { SongCatalogItem } from './repertoire.types';
 
 /**
  * Regras puras do pedido de música com catálogo (`RepertoirePicker`).
@@ -9,20 +9,24 @@ import type { PublicRepertoireItem } from './repertoire.types';
  */
 
 /**
- * O texto digitado ainda corresponde ao item escolhido no repertório?
+ * O texto digitado ainda corresponde ao item escolhido no catálogo?
  *
  * 🔴 É a trava contra **dado herdado**. O fã escolhe "Garota de Ipanema" do
  * catálogo, edita o título para "Garota de Ipanema (ao vivo)" e o pedido
- * continuaria carregando o gênero da linha original — um fato afirmado sobre
- * uma música que não é mais aquela. Não quebra nada, não aparece em log: o
- * pedido chega ao músico com um gênero que ninguém escolheu.
+ * continuaria carregando o gênero — e, pior, o `library_id` — da linha
+ * original: fatos afirmados sobre uma música que não é mais aquela. Não quebra
+ * nada, não aparece em log.
+ *
+ * ⚠️ Isto só existe porque os campos de texto continuam editáveis DEPOIS da
+ * escolha, no modo `platform`. No modo `repertoire` não há texto livre: o
+ * pedido é a linha escolhida, e a pergunta não chega a ser feita.
  *
  * A comparação é EXATA de propósito (sem `trim`, sem `toLowerCase`): qualquer
  * afrouxamento aqui volta a aceitar como "a mesma música" um texto que o fã
  * mudou justamente porque não era.
  */
 export function stillMatchesPick(
-  picked: PublicRepertoireItem | null,
+  picked: SongCatalogItem | null,
   title: string,
   artist: string,
 ): boolean {
@@ -39,10 +43,31 @@ export function stillMatchesPick(
  * quem chama omite a chave em vez de mandá-la vazia.
  */
 export function catalogGenre(
-  picked: PublicRepertoireItem | null,
+  picked: SongCatalogItem | null,
   title: string,
   artist: string,
 ): string | null {
   if (!stillMatchesPick(picked, title, artist)) return null;
   return picked!.genre ?? null;
+}
+
+/**
+ * `library_id` a enviar — a linha DESTE músico para a música escolhida.
+ *
+ * 🔴 Nulo em três situações diferentes, e as três são legítimas: o fã digitou
+ * à mão; escolheu do catálogo e depois editou o texto; ou escolheu uma música
+ * que a plataforma tem mas ESTE músico ainda não cadastrou (`library_id` nulo
+ * na própria entrada). Nos três casos o pedido segue por título e artista — e
+ * é o servidor, não esta função, que decide se isso basta.
+ *
+ * ⚠️ Nunca inventar um id aqui. `library_id` que não é do músico é recusado
+ * pelo `CreateRequestUseCase` com 422, nos dois modos.
+ */
+export function catalogLibraryId(
+  picked: SongCatalogItem | null,
+  title: string,
+  artist: string,
+): string | null {
+  if (!stillMatchesPick(picked, title, artist)) return null;
+  return picked!.library_id;
 }

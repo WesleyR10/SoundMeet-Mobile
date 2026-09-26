@@ -1,6 +1,5 @@
 import { ScrollView, View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { FileText, CalendarX } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -16,6 +15,8 @@ import { TagChipRow } from '../components/TagChipRow';
 import { EventListItem } from '../components/EventListItem';
 import { StageTechSpecSection } from '@/shared/components/StageTechSpecSection';
 import { EmptyState } from '@/shared/components/EmptyState';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'EstablishmentDetail'>;
 
@@ -41,7 +42,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:      radius.lg,
     borderWidth:        1,
     borderColor:       colors.border.default,
-    backgroundColor:  'rgba(255,255,255,0.03)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.03),
     padding:             spacing.md,
     gap:                 4,
   },
@@ -85,7 +86,7 @@ export function EstablishmentDetailScreen({ route, navigation }: Props) {
   if (isPending || !establishment) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.skeleton}>
           <SkeletonProfileHeader avatarSize={72} centered={false} />
           <SkeletonText lines={2} />
@@ -101,7 +102,7 @@ export function EstablishmentDetailScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <EstablishmentHero establishment={establishment} />
 

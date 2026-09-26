@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, View, Text, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { LogOut, Users } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -23,6 +22,7 @@ import { GENRE_OPTIONS, INSTRUMENT_OPTIONS } from '../../domain/audience.constan
 import { FanProfileHero } from '../components/FanProfileHero';
 import { SpotifyLinkCard } from '../components/SpotifyLinkCard';
 import { RoleSwitchSheet } from '@/navigation/components/RoleSwitchSheet';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanProfileScreenProps<'FanProfile'>;
 
@@ -123,7 +123,7 @@ export function FanProfileScreen({ navigation }: Props) {
   if (isPending || !audience) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.skeleton}>
           <SkeletonProfileHeader />
           <SkeletonText lines={2} />
@@ -136,7 +136,7 @@ export function FanProfileScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <FanProfileHero audience={audience} onPressLevel={() => navigation.navigate('Gamification')} />
 

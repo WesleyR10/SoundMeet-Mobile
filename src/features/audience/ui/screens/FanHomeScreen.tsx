@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { ScrollView, RefreshControl, View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Building2, ChevronRight } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
@@ -20,6 +19,7 @@ import { MusicianRecommendationCard } from '../components/MusicianRecommendation
 import { EstablishmentCard } from '../components/EstablishmentCard';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { SkeletonList } from '@/shared/components/Skeleton';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'FanHome'>;
 
@@ -103,7 +103,7 @@ export function FanHomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground glows={homeGlows(colors)} />
 
       <ScrollView

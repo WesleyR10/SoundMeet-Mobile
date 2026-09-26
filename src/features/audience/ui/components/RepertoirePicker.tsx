@@ -1,27 +1,37 @@
 import { View, Text } from 'react-native';
-import { ListMusic, SearchX } from 'lucide-react-native';
+import { ListMusic, SearchX, Info } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { Skeleton } from '@/shared/components/Skeleton';
-import type { PublicRepertoireItem } from '../../domain/repertoire.types';
+import type { SongCatalogItem, SongCatalogScope } from '../../domain/repertoire.types';
 import { RepertoireRow } from './RepertoireRow';
 import { SearchBar } from './SearchBar';
 
 type Props = {
-  items:         PublicRepertoireItem[];
+  items:         SongCatalogItem[];
   isPending:     boolean;
   query:         string;
   onChangeQuery: (value: string) => void;
-  /** `id` do item já escolhido — nulo quando o fã digitou à mão. */
-  selectedId:    string | null;
-  onSelect:      (item: PublicRepertoireItem) => void;
+  /** Nulo até a primeira resposta chegar. */
+  scope:         SongCatalogScope | null;
+  /** Item já escolhido — nulo quando o fã digitou à mão. */
+  selected:      SongCatalogItem | null;
+  onSelect:      (item: SongCatalogItem) => void;
 };
 
 // Teto de linhas renderizadas. A tela é um `ScrollView`, então uma `FlatList`
 // aqui daria o aviso de VirtualizedList aninhada — e virtualizar 8 linhas não
 // paga o custo. O corte é visual, não de dados: o rodapé diz quantas sobraram.
 const MAX_VISIBLE = 8;
+
+// Identidade da linha. O catálogo é AGREGADO — não há `id`, porque uma entrada
+// corresponde à linha de vários músicos ao mesmo tempo. O par (título, artista)
+// é o que a própria consulta usa para agrupar.
+//
+// Separador improvável no texto: com um espaço, título "A B" + artista vazio
+// colidiria com título "A" + artista "B".
+const itemKey = (item: SongCatalogItem) => `${item.title}||${item.artist}`;
 
 const useStyles = makeStyles((colors) => ({
   root: {
@@ -37,6 +47,27 @@ const useStyles = makeStyles((colors) => ({
     color:          colors.text.muted,
     textTransform: 'uppercase',
     letterSpacing:  0.6,
+  },
+  notice: {
+    flexDirection:     'row',
+    alignItems:        'flex-start',
+    gap:                spacing.sm,
+    paddingVertical:    spacing.sm,
+    paddingHorizontal:  spacing.md,
+    borderRadius:       radius.md,
+    borderWidth:         1,
+    borderColor:        colors.border.default,
+    backgroundColor:    colors.bg.elevated,
+  },
+  noticeText: {
+    ...typography.bodySm,
+    flex:       1,
+    color:      colors.text.secondary,
+    lineHeight: 18,
+  },
+  noticeStrong: {
+    fontFamily: 'Inter-SemiBold',
+    color:      colors.text.primary,
   },
   list: {
     borderRadius:    radius.md,
@@ -71,30 +102,37 @@ const useStyles = makeStyles((colors) => ({
 }));
 
 /**
- * Catálogo navegável do músico dentro do pedido de música.
+ * Catálogo navegável dentro do pedido de música.
  *
- * Fecha a ressalva do item 11.8 do `Docs/roadmap-mobile.md`, que estava marcado
- * como entregue **com** a nota "sem catálogo navegável": a rota que o destravava
- * (`GET /musicians/:id/repertoire`, backend 9.6c) existe desde 07/ago/2026 e não
- * tinha cliente nenhum — nem aqui, nem no `soundmeet-web`.
+ * ## Os dois escopos, e por que a diferença é dita em voz alta
  *
- * 🔴 **Escolher do catálogo NÃO substitui o texto livre.** `MusicLibrary` é
- * biblioteca pessoal e hoje a maioria dos itens tem só título/artista; pedir uma
- * música que o artista sabe tocar mas ainda não cadastrou é caso legítimo, e
- * travar o pedido no que está catalogado transformaria uma ajuda em barreira.
- * Por isso os campos de texto continuam abaixo — o que este componente faz é
- * **preenchê-los**.
+ * Por padrão o fã busca no catálogo da **plataforma** — tudo que a SoundMeet
+ * já cifrou — e pode pedir o que quiser: se o artista não souber ou não quiser
+ * tocar, ele recusa. Um músico pode desligar isso, e aí a busca é só no
+ * repertório dele.
+ *
+ * 🔴 **O aviso do modo restrito vem ANTES da busca, não no estado vazio.** Se
+ * aparecesse só quando nada é encontrado, o fã procuraria a música dele, veria
+ * "nada com esse nome" e concluiria que a busca do SoundMeet está quebrada.
+ * Dito antes, ele já procura sabendo onde está procurando.
+ *
+ * ⚠️ **No modo restrito não há texto livre** — a tela esconde os campos, e o
+ * servidor recusaria de qualquer forma. No modo plataforma o texto livre
+ * continua: `MusicLibrary` é biblioteca pessoal e nem tudo que um artista sabe
+ * tocar está cadastrado; travar o pedido no que está catalogado transformaria
+ * uma ajuda em barreira.
  *
  * ⚠️ O que o catálogo devolve é só metadado. Acorde, cifra e letra nunca saem
- * daquela rota (allowlist no `PublicMusicLibraryItemPresenter`), então não há o
- * que exibir aqui além de título, artista, gênero e duração.
+ * daquela rota (allowlist no `SongCatalogItemPresenter`), e o DONO de cada
+ * linha também não.
  */
 export function RepertoirePicker({
   items,
   isPending,
   query,
   onChangeQuery,
-  selectedId,
+  scope,
+  selected,
   onSelect,
 }: Props) {
   const s = useStyles();
@@ -102,19 +140,35 @@ export function RepertoirePicker({
 
   const visible = items.slice(0, MAX_VISIBLE);
   const hidden  = items.length - visible.length;
-  const isSearching = query.trim().length > 0;
+  const isSearching  = query.trim().length > 0;
+  const isRestricted = scope === 'repertoire';
+  const selectedKey  = selected ? itemKey(selected) : null;
 
   return (
     <View style={s.root}>
       <View style={s.header}>
         <ListMusic size={14} color={colors.text.muted} />
-        <Text style={s.headerText}>Repertório do artista</Text>
+        <Text style={s.headerText}>
+          {isRestricted ? 'Repertório do artista' : 'Catálogo SoundMeet'}
+        </Text>
       </View>
+
+      {isRestricted && (
+        <View style={s.notice}>
+          <Info size={16} color={colors.text.secondary} />
+          <Text style={s.noticeText}>
+            <Text style={s.noticeStrong}>
+              Este artista prefere pedidos do próprio repertório.
+            </Text>
+            {' '}Busque abaixo entre as músicas que ele toca.
+          </Text>
+        </View>
+      )}
 
       <SearchBar
         value={query}
         onChangeText={onChangeQuery}
-        placeholder="Buscar música ou artista..."
+        placeholder={isRestricted ? 'Buscar no repertório...' : 'Buscar música ou artista...'}
       />
 
       <View style={s.list}>
@@ -130,18 +184,23 @@ export function RepertoirePicker({
           <View style={s.emptyRow}>
             <SearchX size={18} color={colors.text.muted} />
             <Text style={s.emptyText}>
-              {isSearching
-                ? 'Nada com esse nome no repertório. Você ainda pode pedir escrevendo abaixo.'
-                : 'Este artista ainda não publicou o repertório. Escreva a música abaixo.'}
+              {isRestricted
+                ? (isSearching
+                    ? 'Nada com esse nome no repertório deste artista.'
+                    : 'Este artista ainda não publicou o repertório dele.')
+                : (isSearching
+                    ? 'Nada com esse nome no catálogo. Você ainda pode pedir escrevendo abaixo.'
+                    : 'Catálogo indisponível agora. Você ainda pode pedir escrevendo abaixo.')}
             </Text>
           </View>
         ) : (
           visible.map((item, index) => (
             <RepertoireRow
-              key={item.id}
+              key={itemKey(item)}
               item={item}
-              selected={item.id === selectedId}
+              selected={itemKey(item) === selectedKey}
               isFirst={index === 0}
+              showsInRepertoire={!isRestricted}
               onPress={onSelect}
             />
           ))

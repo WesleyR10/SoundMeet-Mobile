@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Heart } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -15,6 +14,8 @@ import { ENV } from '@/shared/services/config/env';
 import type { FanStackScreenProps } from '@/navigation/types';
 import { useSendTip } from '../../application/useSendTip';
 import { TipAmountSelector } from '../components/TipAmountSelector';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'TipMusician'>;
 
@@ -66,7 +67,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:       radius.lg,
     borderWidth:          1,
     borderColor:        colors.border.default,
-    backgroundColor:   'rgba(255,255,255,0.03)',
+    backgroundColor:   withAlpha(colors.text.primary, 0.03),
     padding:              spacing.md,
     gap:                  spacing.xs,
   },
@@ -119,7 +120,7 @@ export function TipMusicianScreen({ route, navigation }: Props) {
     const result = tipMutation.data;
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <ScrollView contentContainerStyle={s.successScroll} showsVerticalScrollIndicator={false}>
           <Heart size={48} color={colors.accent.coral} fill={colors.accent.coral} />
           <Text style={s.successTitle}>Quase lá!</Text>
@@ -165,7 +166,7 @@ export function TipMusicianScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Text style={s.title}>Enviar gorjeta</Text>
         <Text style={s.subtitle}>Mostre seu apoio direto pro músico via PIX.</Text>

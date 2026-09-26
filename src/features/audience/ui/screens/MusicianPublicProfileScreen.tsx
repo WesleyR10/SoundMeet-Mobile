@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ScrollView, View, Text, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Star, BadgeCheck, User, Music, Clock } from 'lucide-react-native';
 import { spacing, radius, typography, gradients, shadows } from '@/shared/design-system/tokens';
@@ -18,6 +17,8 @@ import { PublicStatCard } from '../components/PublicStatCard';
 import { TagChipRow } from '../components/TagChipRow';
 import { SocialLinksRow } from '../components/SocialLinksRow';
 import { VerifiedResumeSection } from '../components/VerifiedResumeSection';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'MusicianPublicProfile'>;
 
@@ -95,7 +96,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:      radius.lg,
     borderWidth:         1,
     borderColor:        colors.border.default,
-    backgroundColor:   'rgba(255,255,255,0.03)',
+    backgroundColor:   withAlpha(colors.text.primary, 0.03),
     padding:              spacing.md,
   },
   ctaBlockedText: {
@@ -129,7 +130,7 @@ export function MusicianPublicProfileScreen({ route, navigation }: Props) {
   if (isPending || !musician) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.skeleton}>
           <SkeletonProfileHeader />
           {/* Stats públicos: shows, avaliação, público alcançado. */}
@@ -146,7 +147,7 @@ export function MusicianPublicProfileScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={s.hero}>
           <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>

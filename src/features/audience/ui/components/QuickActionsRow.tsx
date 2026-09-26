@@ -3,6 +3,7 @@ import { QrCode, Trophy, ListMusic, type LucideIcon } from 'lucide-react-native'
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Action = {
   key:         string;
@@ -37,7 +38,7 @@ const useStyles = makeStyles((colors) => ({
     gap:               spacing.xs,
     borderRadius:      radius.lg,
     borderWidth:        1,
-    backgroundColor:  'rgba(255,255,255,0.03)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.03),
     paddingVertical:    spacing.md,
     paddingHorizontal:  spacing.xs,
   },

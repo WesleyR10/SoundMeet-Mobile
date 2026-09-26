@@ -1,7 +1,6 @@
 import { useMemo, useState, type ReactElement } from 'react';
 import { View, Text, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { SearchX } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -20,6 +19,7 @@ import { EmptyState } from '@/shared/components/EmptyState';
 import { SkeletonList } from '@/shared/components/Skeleton';
 import { useUserLocation } from '@/shared/services/location/useUserLocation';
 import { haversineKm } from '@/shared/utils/geo';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'FanExplore'>;
 
@@ -116,7 +116,7 @@ export function FanExploreScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
 
       <View style={s.header}>
         <Text style={s.title}>Explorar</Text>

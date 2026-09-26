@@ -3,6 +3,7 @@ import { Search, SlidersHorizontal } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   value:        string;
@@ -28,7 +29,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:        radius.md,
     borderWidth:          1,
     borderColor:         colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.04)',
+    backgroundColor:    withAlpha(colors.text.primary, 0.04),
     paddingHorizontal:   spacing.md,
   },
   input: {
@@ -43,7 +44,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:     radius.md,
     borderWidth:       1,
     borderColor:      colors.border.default,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: withAlpha(colors.text.primary, 0.04),
     alignItems:      'center',
     justifyContent:  'center',
   },

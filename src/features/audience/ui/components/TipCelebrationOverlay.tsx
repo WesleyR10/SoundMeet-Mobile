@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { Download, X } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { CelebrationBurst } from '@/shared/components/CelebrationBurst';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
@@ -138,7 +139,7 @@ const useStyles = makeStyles((colors) => ({
 
 export function TipCelebrationOverlay({ payload, musicianName, fanName, onDismiss }: Props) {
   const s = useStyles();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { width } = useWindowDimensions();
   const reducedMotion = useReducedMotion();
   const cardRef = useRef<TipReceiptCardHandle>(null);
@@ -251,7 +252,9 @@ export function TipCelebrationOverlay({ payload, musicianName, fanName, onDismis
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
-      <View style={s.root}>
+      {/* O véu quase preto é do tema escuro. No claro, o texto do tema (tinta
+          escura) sumiria sobre ele — o véu passa a ser o próprio fundo claro. */}
+      <View style={[s.root, !isDark && { backgroundColor: withAlpha(colors.bg.primary, 0.96) }]}>
         <Animated.View style={[s.bloomWrap, { width: bloomSize, height: bloomSize }, bloomStyle]}>
           <LinearGradient
             colors={[colors.accent.coral, colors.accent.coralDeep, 'transparent']}

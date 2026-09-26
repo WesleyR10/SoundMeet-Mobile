@@ -78,6 +78,17 @@ export interface MakeMusicRequestPayload {
   // persistido. A prioridade real agora custa dinheiro e é verificada pelo
   // domínio.
   boost?: { amount: number; dedication?: string };
+  /*
+   * 🔴 `library_id` viaja aqui dentro, e não como campo de primeiro nível, por
+   * causa do backend: `MakeMusicRequestUseCase` lê `input.metadata?.library_id`
+   * e repassa ao `CreateRequestUseCase`. Um `library_id` solto no corpo seria
+   * recusado com 422 pelo `forbidNonWhitelisted` (INP-1), que reprova campo
+   * sem decorator no DTO.
+   *
+   * É o que amarra o pedido à linha da biblioteca DO MÚSICO — e o servidor
+   * confere a posse: id de terceiro é 422 nos dois modos.
+   */
+  metadata?: { library_id: string };
 }
 
 export interface MakeMusicRequestResult {

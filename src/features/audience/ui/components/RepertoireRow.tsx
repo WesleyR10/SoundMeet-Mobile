@@ -3,21 +3,20 @@ import { Check } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
-import type { PublicRepertoireItem } from '../../domain/repertoire.types';
+import type { SongCatalogItem } from '../../domain/repertoire.types';
 
 type Props = {
-  item:      PublicRepertoireItem;
+  item:      SongCatalogItem;
   selected:  boolean;
   /** Primeira linha não desenha divisória — a borda do cartão já separa. */
   isFirst:   boolean;
-  onPress:   (item: PublicRepertoireItem) => void;
+  /**
+   * Marca "no repertório". Só faz sentido na busca da plataforma: no modo
+   * restrito TODA linha é do repertório, e o selo em todas não informa nada.
+   */
+  showsInRepertoire: boolean;
+  onPress:   (item: SongCatalogItem) => void;
 };
-
-function formatDuration(seconds: number | null): string | null {
-  if (seconds === null) return null;
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
-}
 
 const useStyles = makeStyles((colors) => ({
   row: {
@@ -48,16 +47,24 @@ const useStyles = makeStyles((colors) => ({
     ...typography.bodySm,
     color: colors.text.muted,
   },
-  duration: {
+  badge: {
     ...typography.caption,
-    color: colors.text.muted,
+    color: colors.brand.primary,
   },
 }));
 
-export function RepertoireRow({ item, selected, isFirst, onPress }: Props) {
+export function RepertoireRow({
+  item,
+  selected,
+  isFirst,
+  showsInRepertoire,
+  onPress,
+}: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const duration = formatDuration(item.duration_seconds);
+  // `library_id` não nulo significa que ESTE músico já tem a música na
+  // biblioteca dele — o sinal mais útil para o fã escolher o que pedir.
+  const inRepertoire = showsInRepertoire && item.library_id !== null;
 
   return (
     <Pressable
@@ -69,7 +76,7 @@ export function RepertoireRow({ item, selected, isFirst, onPress }: Props) {
       ]}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={`${item.title}, de ${item.artist}${duration ? `, ${duration}` : ''}`}
+      accessibilityLabel={`${item.title}, de ${item.artist}${inRepertoire ? ', no repertório do artista' : ''}`}
       accessibilityHint="Usa esta música no pedido"
     >
       <View style={s.texts}>
@@ -79,7 +86,7 @@ export function RepertoireRow({ item, selected, isFirst, onPress }: Props) {
         </Text>
       </View>
 
-      {duration && <Text style={s.duration}>{duration}</Text>}
+      {inRepertoire && <Text style={s.badge}>toca isso</Text>}
       {selected && <Check size={18} color={colors.brand.primary} />}
     </Pressable>
   );

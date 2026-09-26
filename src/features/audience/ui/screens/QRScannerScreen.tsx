@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { QrCode } from 'lucide-react-native';
-import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, colors as cameraColors } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
@@ -14,6 +14,7 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { parseQrTarget } from '@/shared/utils/qr-link';
 import type { FanStackScreenProps } from '@/navigation/types';
 import { useScanQr } from '../../application/useScanQr';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'QRScanner'>;
 
@@ -32,11 +33,15 @@ const useStyles = makeStyles((colors) => ({
     justifyContent:    'center',
     gap:                spacing.xxl,
   },
+  // Sobre a CÂMERA, não sobre o fundo do tema: a imagem é a mesma nos dois
+  // temas, então o texto é sempre claro sobre véu preto (a paleta escura fixa).
+  // Com `colors.text.primary` do tema claro a instrução virava tinta escura
+  // sobre o véu — ilegível.
   instruction: {
     ...typography.body,
     fontFamily:      'Inter-SemiBold',
-    color:           colors.text.primary,
-    backgroundColor: colors.bg.overlay,
+    color:           cameraColors.text.primary,
+    backgroundColor: cameraColors.bg.overlay,
     paddingHorizontal: spacing.md,
     paddingVertical:   spacing.sm,
     borderRadius:      radius.md,
@@ -64,7 +69,7 @@ const useStyles = makeStyles((colors) => ({
   },
   validating: {
     ...typography.bodySm,
-    color: colors.text.secondary,
+    color: cameraColors.text.secondary,
   },
   permissionRoot: {
     flex:           1,
@@ -149,7 +154,7 @@ export function QRScannerScreen({ navigation }: Props) {
   if (!permission.granted) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.permissionRoot}>
           <QrCode size={56} color={colors.text.muted} />
           <Text style={s.permissionTitle}>Precisamos da câmera</Text>
@@ -162,6 +167,7 @@ export function QRScannerScreen({ navigation }: Props) {
 
   return (
     <View style={s.root}>
+      {/* Sobre a câmera: claro nos dois temas. */}
       <StatusBar style="light" />
       <CameraView
         style={StyleSheet.absoluteFill}

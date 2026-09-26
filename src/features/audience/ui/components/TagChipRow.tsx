@@ -2,6 +2,7 @@ import { View, Text } from 'react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   label:  string;
@@ -30,7 +31,7 @@ const useStyles = makeStyles((colors) => ({
     paddingVertical:    spacing.xs,
     borderRadius:       radius.full,
     borderWidth:         1,
-    backgroundColor:   'rgba(255,255,255,0.03)',
+    backgroundColor:   withAlpha(colors.text.primary, 0.03),
   },
   chipText: {
     ...typography.bodySm,

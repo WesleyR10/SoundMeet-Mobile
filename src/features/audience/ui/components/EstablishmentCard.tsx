@@ -6,6 +6,7 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import { formatDistanceKm } from '@/shared/utils/geo';
 import type { Establishment } from '../../domain/establishment.types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   establishment: Establishment;
@@ -28,7 +29,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:     radius.lg,
     borderWidth:       1,
     borderColor:      colors.border.default,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding:           spacing.md,
   },
   row: {
@@ -99,7 +100,7 @@ const useStyles = makeStyles((colors) => ({
     paddingHorizontal: spacing.xs,
     paddingVertical:    2,
     borderRadius:       radius.sm,
-    backgroundColor:   'rgba(255,255,255,0.05)',
+    backgroundColor:   withAlpha(colors.text.primary, 0.05),
   },
   chipText: {
     ...typography.caption,

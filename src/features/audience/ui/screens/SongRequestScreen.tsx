@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { FormField } from '@/shared/components/FormField';
@@ -13,10 +12,12 @@ import type { FanStackScreenProps } from '@/navigation/types';
 import { useAttendEvent } from '../../application/useAttendEvent';
 import { useSongRequestForm } from '../../application/useSongRequestForm';
 import { useMakeMusicRequest, useRequestSuggestions } from '../../application/useSongRequest';
+import { PickedSongSummary } from '../components/PickedSongSummary';
 import { RepertoirePicker } from '../components/RepertoirePicker';
 import { RequestBoostSection, BOOST_MIN_AMOUNT } from '../components/RequestBoostSection';
 import { SongRequestSuccess } from '../components/SongRequestSuccess';
 import { SongSuggestionChips } from '../components/SongSuggestionChips';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = FanStackScreenProps<'SongRequest'>;
 
@@ -78,6 +79,17 @@ export function SongRequestScreen({ route, navigation }: Props) {
       // momento em que o gênero é um fato do repertório do artista, e não um
       // palpite. Quem decide é `catalogGenre` (domain/song-request.rules.ts).
       ...(form.genre ? { genre: form.genre } : {}),
+      /*
+       * 🔴 `library_id` é a linha DESTE músico para a música escolhida — o que
+       * amarra o pedido à biblioteca dele em vez de deixá-lo só como texto.
+       * Vai em `metadata` porque é onde `MakeMusicRequestUseCase` o lê antes
+       * de repassar ao `CreateRequestUseCase`.
+       *
+       * Omitido quando não há: `metadata` é `@IsObject()` e um
+       * `library_id: null` lá dentro viraria um `library_id` inválido no
+       * agregado, que exige UUID.
+       */
+      ...(form.libraryId ? { metadata: { library_id: form.libraryId } } : {}),
       ...(hasValidBoost
         ? {
             boost: {
@@ -93,7 +105,7 @@ export function SongRequestScreen({ route, navigation }: Props) {
     const boost = requestMutation.data.request_metadata.boost;
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <SongRequestSuccess
           audienceId={audienceId}
           songTitle={form.songTitle.trim()}
@@ -108,7 +120,7 @@ export function SongRequestScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView
         contentContainerStyle={s.scroll}
         showsVerticalScrollIndicator={false}
@@ -117,24 +129,49 @@ export function SongRequestScreen({ route, navigation }: Props) {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={s.title}>Pedir uma música</Text>
-        <Text style={s.subtitle}>Escolha a música que você quer ouvir agora.</Text>
+        <Text style={s.subtitle}>
+          {form.isRestricted
+            ? 'Escolha uma música do repertório deste artista.'
+            : 'Escolha a música que você quer ouvir agora.'}
+        </Text>
 
         <RepertoirePicker
           items={form.catalogItems}
           isPending={form.catalogPending}
           query={form.catalogQuery}
           onChangeQuery={form.setCatalogQuery}
-          selectedId={form.pickedSong?.id ?? null}
+          scope={form.scope}
+          selected={form.pickedSong}
           onSelect={form.selectFromCatalog}
         />
 
-        <SongSuggestionChips
-          suggestions={suggestionsData?.suggestions ?? []}
-          onSelect={form.selectSuggestion}
-        />
+        {/*
+          Sugestões vêm do HISTÓRICO de pedidos, não do catálogo — não há
+          `library_id` por trás. No modo restrito elas levariam o fã a um
+          pedido que o servidor recusa, então ficam de fora.
+        */}
+        {!form.isRestricted && (
+          <SongSuggestionChips
+            suggestions={suggestionsData?.suggestions ?? []}
+            onSelect={form.selectSuggestion}
+          />
+        )}
 
-        <FormField label="Música"  value={form.songTitle}  onChangeText={form.changeTitle}  placeholder="Nome da música"  autoCapitalize="sentences" />
-        <FormField label="Artista" value={form.artistName} onChangeText={form.changeArtist} placeholder="Nome do artista" autoCapitalize="sentences" />
+        {/*
+          🔴 Sem texto livre no modo restrito. Os campos continuariam
+          preenchidos pela escolha, mas editáveis — e qualquer edição faria o
+          pedido perder o `library_id` e levar 422 no envio. Aqui a escolha no
+          catálogo É o pedido; o resumo abaixo mostra o que foi escolhido.
+        */}
+        {form.isRestricted ? (
+          <PickedSongSummary title={form.songTitle} artist={form.artistName} />
+        ) : (
+          <>
+            <FormField label="Música"  value={form.songTitle}  onChangeText={form.changeTitle}  placeholder="Nome da música"  autoCapitalize="sentences" />
+            <FormField label="Artista" value={form.artistName} onChangeText={form.changeArtist} placeholder="Nome do artista" autoCapitalize="sentences" />
+          </>
+        )}
+
         <FormField label="Mensagem (opcional)" value={form.message} onChangeText={form.setMessage} placeholder="Deixe um recado..." autoCapitalize="sentences" multiline />
 
         {/*

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, Pressable, TextInput, ActivityIndicator, FlatList } from 'react-native';
 import {
   BottomSheetModal,
@@ -16,6 +16,7 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { extractApiMessage } from '@/shared/services/http/types';
 import { listEstablishments } from '../../infrastructure/establishment.api';
 import { indicateMusician } from '../../infrastructure/indication.api';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 const MESSAGE_MAX_LENGTH = 1000;
 
@@ -98,7 +99,7 @@ const useStyles = makeStyles((colors) => ({
 export function IndicateMusicianSheet({ musicianId, musicianName, visible, onClose }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const audienceId = useAuthStore((state) => state.user?.audienceId ?? null);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -113,11 +114,6 @@ export function IndicateMusicianSheet({ musicianId, musicianName, visible, onClo
     enabled:  visible,
     staleTime: 5 * 60_000,
   });
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   // Ajuste durante o render (padrão do React para "prop mudou"), não
   // useEffect: um efeito renderizaria uma vez com o estado do artista
@@ -162,7 +158,7 @@ export function IndicateMusicianSheet({ musicianId, musicianName, visible, onClo
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
