@@ -1,4 +1,4 @@
-import { parseChordSymbol, lookupChordDiagram, lookupPianoChordShape } from '../chord-diagram-lookup';
+import { parseChordSymbol, lookupChordDiagram, lookupPianoChordShape, describeBassFallback } from '../chord-diagram-lookup';
 
 describe('parseChordSymbol', () => {
   it('parses a plain major chord', () => {
@@ -153,5 +153,111 @@ describe('lookupPianoChordShape', () => {
 
   it('returns null for an unparseable symbol', () => {
     expect(lookupPianoChordShape('not-a-chord')).toBeNull();
+  });
+});
+
+/*
+ * 🔴 25/set/2026 — "clico no acorde e não aparece no instrumento". O parser só
+ * conhecia 13 grafias exatas; o backend (`ChordSymbol`) emite `Bm7(b5)`,
+ * `Am(maj7)`, `Cmaj9`, `G7(b9)`, e o músico digita `C7M`, `E°`, `A4`. Tudo
+ * isso caía em "Diagrama não disponível".
+ */
+describe('parseChordSymbol — os três dialetos chegam à mesma qualidade', () => {
+  it.each([
+    // brasileiro (Cifra Club / digitado)
+    ['C7M', 'maj7'], ['Am7(b5)', 'm7b5'], ['Bm7(5-)', 'm7b5'], ['E°', 'dim'],
+    ['Eº', 'dim'], ['E°7', 'dim7'], ['C+', 'aug'], ['C5+', 'aug'], ['A4', 'sus4'],
+    ['G7(4)', '7sus4'], ['C7(9)', '9'], ['C7M(9)', 'maj9'], ['Dm7(9)', 'm9'],
+    ['C(add9)', 'add9'], ['C2', 'add9'], ['Am(add9)', 'madd9'], ['Am(7M)', 'mmaj7'],
+    ['C6(9)', '69'], ['C6/9', '69'], ['A7(b9)', '7b9'], ['A7(#9)', '7#9'],
+    // como o backend escreve (`ChordSymbol.toString`)
+    ['Bm7(b5)', 'm7b5'], ['Am(maj7)', 'mmaj7'], ['Cmaj9', 'maj9'], ['Cdim7', 'dim7'],
+    ['C6add9', '69'], ['C5', '5'], ['Csus47', '7sus4'], ['Caug7', 'aug7'],
+    // colon do worker MIR
+    ['C:maj', ''], ['A:min', 'm'], ['A:min7', 'm7'], ['B:hdim7', 'm7b5'],
+    ['G:7', '7'], ['F:maj7', 'maj7'], ['D:sus4', 'sus4'], ['E:dim7', 'dim7'],
+    // sinônimos que o `ChordSymbol` do backend também aceita no colon
+    ['C:major', ''], ['C:minor', 'm'], ['C:major7', 'maj7'], ['C:minor7', 'm7'], ['C:sus', 'sus4'],
+  ])('%s → %j', (symbol, quality) => {
+    expect(parseChordSymbol(symbol)).toMatchObject({ quality });
+    expect(parseChordSymbol(symbol)?.approximate).toBeUndefined();
+  });
+
+  it('normaliza acidente unicode na fundamental e no baixo', () => {
+    expect(parseChordSymbol('F♯m7/C♯')).toEqual({ root: 'F#', quality: 'm7', bass: 'C#' });
+  });
+
+  it('extensão sem forma no dataset cai no acorde-base, marcada APROXIMADA', () => {
+    expect(parseChordSymbol('G7(b13)')).toEqual({ root: 'G', quality: '7', approximate: true });
+    expect(parseChordSymbol('C7M(#11)')).toEqual({ root: 'C', quality: 'maj7', approximate: true });
+  });
+
+  it('colon com adição em parênteses NÃO vira maj9 — é aproximado', () => {
+    // Em Harte, `C:maj(9)` é tríade + nona adicionada, não sétima maior com nona.
+    expect(parseChordSymbol('C:maj(9)')).toEqual({ root: 'C', quality: '', approximate: true });
+  });
+
+  it('colon com baixo em grau é aproximado (a inversão não é desenhada)', () => {
+    expect(parseChordSymbol('C:maj/3')).toEqual({ root: 'C', quality: '', approximate: true });
+  });
+
+  it('não adivinha `7+` — é sétima aumentada numa escola e sétima maior noutra', () => {
+    expect(parseChordSymbol('C7+')).toBeNull();
+  });
+
+  it('palavra que começa por A–G não vira acorde', () => {
+    expect(parseChordSymbol('Casa')).toBeNull();
+    expect(parseChordSymbol('Bom dia')).toBeNull();
+  });
+});
+
+describe('lookupChordDiagram / lookupPianoChordShape — grafias do backend', () => {
+  it.each(['Bm7(b5)', 'C7M', 'Am(maj7)', 'E:min', 'G:maj', 'Cdim7', 'Csus47'])(
+    'acha forma de violão para %s',
+    (symbol) => {
+      const shape = lookupChordDiagram(symbol);
+      expect(shape?.positions.length).toBeGreaterThan(0);
+      expect(shape?.approximate).toBe(false);
+    },
+  );
+
+  it('forma aproximada chega ao chamador com o aviso', () => {
+    expect(lookupChordDiagram('G7(b13)')).toMatchObject({ displaySuffix: '7', approximate: true });
+  });
+
+  it('power chord não tem forma no dataset do violão, mas tem teclas', () => {
+    expect(lookupChordDiagram('C5')).toBeNull();
+    expect(lookupPianoChordShape('C5')?.pitchClasses.sort((a, b) => a - b)).toEqual([0, 7]);
+  });
+
+  it('meio-diminuto no teclado: B D F A', () => {
+    expect(lookupPianoChordShape('Bm7(b5)')?.pitchClasses.sort((a, b) => a - b)).toEqual([2, 5, 9, 11]);
+  });
+});
+
+describe('lookupChordDiagram — baixo fora do dataset', () => {
+  const OPEN = [4, 9, 2, 7, 11, 4];
+  // Classe de altura da corda mais grave que SOA — é o que o ouvido chama de baixo.
+  const lowestPc = (frets: number[], baseFret: number) => {
+    const i = frets.findIndex((f) => f >= 0);
+    const abs = frets[i] === 0 ? 0 : frets[i] + baseFret - 1;
+    return (OPEN[i] + abs) % 12;
+  };
+
+  it('E7/C: o desenho muda e toda posição tem dó na corda mais grave', () => {
+    const plain = lookupChordDiagram('E7')!;
+    const slash = lookupChordDiagram('E7/C')!;
+    expect(slash.bass).toEqual({ note: 'C', status: 'adapted' });
+    expect(slash.positions[0].frets).not.toEqual(plain.positions[0].frets);
+    for (const p of slash.positions) expect(lowestPc(p.frets, p.baseFret)).toBe(0);
+  });
+
+  it('inversão que o chords-db já charteia não passa pela adaptação', () => {
+    expect(lookupChordDiagram('C/E')!.bass).toBeUndefined();
+  });
+
+  it('a UI explica o desenho adaptado', () => {
+    expect(describeBassFallback(lookupChordDiagram('E7/C'))).toMatch(/Baixo em C/);
+    expect(describeBassFallback(lookupChordDiagram('E7'))).toBeNull();
   });
 });

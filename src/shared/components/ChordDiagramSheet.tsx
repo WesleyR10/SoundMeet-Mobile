@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
@@ -9,8 +9,9 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { ChordDiagram } from './ChordDiagram';
 import { PianoChordDiagram } from './PianoChordDiagram';
 import type { ChordInstrument } from './InstrumentToggle';
-import { lookupChordDiagram, lookupPianoChordShape } from '@/shared/utils/chord-diagram-lookup';
+import { lookupChordDiagram, lookupPianoChordShape, describeBassFallback } from '@/shared/utils/chord-diagram-lookup';
 import { transposeChordSymbol } from '@/shared/utils/chord-transpose';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   visible:      boolean;
@@ -96,7 +97,7 @@ const useStyles = makeStyles((colors) => ({
 export function ChordDiagramSheet({ visible, chordSymbol, instrument, capoFret, preferFlats, onClose }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [positionIndex, setPositionIndex] = useState(0);
 
   const guitarShape = useMemo(
@@ -111,6 +112,7 @@ export function ChordDiagramSheet({ visible, chordSymbol, instrument, capoFret, 
   const hasMultiplePositions = instrument === 'guitar' && positions.length > 1;
   const currentPosition = positions[positionIndex] ?? positions[0];
   const hasDiagram = instrument === 'guitar' ? !!currentPosition : !!pianoShape;
+  const approximate = instrument === 'guitar' ? !!guitarShape?.approximate : !!pianoShape?.approximate;
 
   // chordSymbol já é a FORMA (capotraste desloca o que é mostrado pra baixo
   // -- ver chord-transpose.ts); o acorde REAL que soa é a forma deslocada de
@@ -123,11 +125,6 @@ export function ChordDiagramSheet({ visible, chordSymbol, instrument, capoFret, 
   useEffect(() => {
     setPositionIndex(0);
   }, [chordSymbol]);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -148,7 +145,7 @@ export function ChordDiagramSheet({ visible, chordSymbol, instrument, capoFret, 
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
@@ -175,6 +172,14 @@ export function ChordDiagramSheet({ visible, chordSymbol, instrument, capoFret, 
                   <ChevronRight size={20} color={colors.brand.primary} />
                 </Pressable>
               </View>
+            )}
+            {/* Extensão/alteração sem forma no dataset: mostra o acorde-base e
+                DIZ isso — um diagrama aproximado sem aviso ensinaria errado. */}
+            {instrument === 'guitar' && describeBassFallback(guitarShape) && (
+              <Text style={s.capoCaption}>{describeBassFallback(guitarShape)}</Text>
+            )}
+            {approximate && (
+              <Text style={s.capoCaption}>Forma aproximada: sem todas as extensões de {chordSymbol}</Text>
             )}
             {isCapoShape && realChordSymbol && (
               <Text style={s.capoCaption}>{realChordSymbol} com forma de {chordSymbol}</Text>

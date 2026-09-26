@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
@@ -6,6 +6,7 @@ import { makeStyles } from '@/shared/design-system/makeStyles';
 import { InstrumentToggle, type ChordInstrument } from './InstrumentToggle';
 import { TransposeStepper } from './TransposeStepper';
 import { CapoPicker } from './CapoPicker';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   visible:             boolean;
@@ -70,12 +71,7 @@ export function ChordSheetControlsSheet({
   capoFret, onChangeCapo,
 }: Props) {
   const s = useStyles();
-  const sheetRef = useRef<BottomSheetModal>(null);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -87,7 +83,7 @@ export function ChordSheetControlsSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

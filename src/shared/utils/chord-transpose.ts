@@ -10,7 +10,7 @@
 //   acorde real (a casa já soma os N semitons de volta fisicamente).
 //
 // Os dois se compõem: displayShift = transposeSemitones - capoFret.
-import { parseChordSymbol, noteToPitchClass } from './chord-diagram-lookup';
+import { splitChordSymbol, noteToPitchClass } from './chord-diagram-lookup';
 import type { ChordSheetTokenGrid } from './chord-sheet';
 
 const SHARP_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -25,33 +25,35 @@ export function shouldPreferFlatsForKey(key: string | null | undefined): boolean
   return key.trim()[0]?.toUpperCase() === 'F';
 }
 
-// symbol como vem do backend (ex.: "F#m7", "G/B", "N"). semitones pode ser
-// negativo. "N" (sem acorde) e símbolos não reconhecíveis voltam sem
+// symbol como vem do backend (ex.: "F#m7", "G/B", "Bm7(b5)", "N"). semitones
+// pode ser negativo. "N" (sem acorde) e texto que não é acorde voltam sem
 // alteração — não há o que transpor.
+//
+// 🔴 Só fundamental e baixo mudam; a QUALIDADE segue verbatim. Até 25/set/2026
+// o símbolo era remontado pela qualidade reconhecida pelo parser de diagramas,
+// e qualidade fora daquele vocabulário (`Bm7(b5)`, `C7M(9)`, `G7(b13)`)
+// voltava SEM transpor: com o tom mudado no Play Mode, esses acordes ficavam
+// no tom antigo no meio dos transpostos, sem aviso. Transpor não exige
+// entender a qualidade — e reescrevê-la trocaria a grafia que o músico lê.
 export function transposeChordSymbol(
   symbol: string,
   semitones: number,
   preferFlats = false,
 ): string {
   if (semitones === 0) return symbol;
-  const parsed = parseChordSymbol(symbol);
-  if (!parsed) return symbol;
+  const parts = splitChordSymbol(symbol);
+  if (!parts) return symbol;
 
   const names = preferFlats ? FLAT_NAMES : SHARP_NAMES;
-  const rootPc = noteToPitchClass(parsed.root);
-  if (rootPc === null) return symbol;
+  const shift = (note: string) => {
+    const pc = noteToPitchClass(note);
+    return pc === null ? note : names[((pc + semitones) % 12 + 12) % 12];
+  };
 
-  const newRoot = names[((rootPc + semitones) % 12 + 12) % 12];
-  let result = `${newRoot}${parsed.quality}`;
-
-  if (parsed.bass) {
-    const bassPc = noteToPitchClass(parsed.bass);
-    result += bassPc === null
-      ? `/${parsed.bass}`
-      : `/${names[((bassPc + semitones) % 12 + 12) % 12]}`;
-  }
-
-  return result;
+  const root = `${shift(parts.root)}${parts.suffix}`;
+  if (parts.bass) return `${root}/${shift(parts.bass)}`;
+  // Baixo que não é nota (`6/9`, colon `:maj/3`) é parte da qualidade: verbatim.
+  return parts.bassRaw ? `${root}/${parts.bassRaw}` : root;
 }
 
 // Aplica a transposição em toda a grade renderável (usada depois de

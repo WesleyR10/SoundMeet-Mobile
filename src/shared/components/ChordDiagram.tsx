@@ -1,16 +1,19 @@
 import { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Line, Circle, Rect, Text as SvgText } from 'react-native-svg';
-import { spacing } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
 import { useTheme } from '@/shared/hooks/useTheme';
 import type { ChordDiagramPosition } from '@/shared/utils/chord-diagram-lookup';
 
 const STRING_COUNT = 6;
-const SVG_WIDTH    = 200;
-const MARGIN_X     = 24;
+// Margem esquerda maior que a direita: é onde mora o número da casa. Com 24px
+// dos dois lados o "7fr" terminava em x=12 e saía do SVG — só sobrava "fr".
+const MARGIN_X     = 44;
+const MARGIN_RIGHT = 24;
+const NECK_WIDTH   = 152;
+const SVG_WIDTH    = MARGIN_X + NECK_WIDTH + MARGIN_RIGHT;
 const MARGIN_TOP   = 36;
 const NECK_HEIGHT  = 140;
-const NECK_WIDTH   = SVG_WIDTH - MARGIN_X * 2;
 const STRING_GAP   = NECK_WIDTH / (STRING_COUNT - 1);
 const DOT_RADIUS   = 11;
 
@@ -65,8 +68,8 @@ export function ChordDiagram({ position }: { position: ChordDiagramPosition }) {
         {baseFret === 1 ? (
           <Rect x={MARGIN_X - 2} y={MARGIN_TOP - 3} width={NECK_WIDTH + 4} height={5} fill={colors.text.primary} rx={2} />
         ) : (
-          <SvgText x={MARGIN_X - 12} y={rowCenterY(1) + 5} fill={colors.text.secondary} fontSize={13} fontFamily="JetBrainsMono-Bold" textAnchor="end">
-            {`${baseFret}fr`}
+          <SvgText x={MARGIN_X - 10} y={rowCenterY(1) + 5} fill={colors.text.primary} fontSize={15} fontFamily="JetBrainsMono-Bold" textAnchor="end">
+            {`${baseFret}ª`}
           </SvgText>
         )}
 
@@ -131,6 +134,9 @@ export function ChordDiagram({ position }: { position: ChordDiagramPosition }) {
           ) : null,
         )}
       </Svg>
+      {baseFret > 1 && (
+        <Text style={[s.fretCaption, { color: colors.text.secondary }]}>Começa na {baseFret}ª casa</Text>
+      )}
     </View>
   );
 }
@@ -140,5 +146,9 @@ const s = StyleSheet.create({
     alignItems:     'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
+  },
+  fretCaption: {
+    ...typography.bodySm,
+    marginTop: -spacing.sm,
   },
 });

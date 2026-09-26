@@ -78,6 +78,16 @@ export interface ChordSheet {
 
 export interface RenderableToken extends ChordSheetToken {
   chordSymbol?: string;
+  /**
+   * Início DO ACORDE na timeline — não o da palavra (`startMs`).
+   *
+   * 🔴 A correção de acorde (cifra pessoal) casa no backend por tempo, com
+   * tolerância de 250 ms (`DEFAULT_ANCHOR_TOLERANCE_MS`). O acorde costuma
+   * começar antes ou depois da palavra que o carrega; mandar o tempo da
+   * palavra fazia "corrigir" e "remover" virarem conflito `anchor_not_found`
+   * — a requisição dava 200 e nada mudava na tela.
+   */
+  chordStartMs?: number;
 }
 
 export interface RenderableLine {
@@ -97,7 +107,7 @@ export type ChordSheetTokenGrid = RenderableSection[];
 // de tokens. Reflow-safe por design — a junção é por índice de posição
 // (seção/linha/token), não por coluna de caractere.
 export function buildTokenGrid(sheet: ChordSheet): ChordSheetTokenGrid {
-  const chordBySection = new Map<string, string>();
+  const chordBySection = new Map<string, { symbol: string; startMs: number }>();
   // Seções instrumentais/sem letra (section.lines === []) não têm token
   // nenhum pra ancorar — o backend aponta TODO acorde nelas pra
   // {lineIndex:0, tokenIndex:0} como fallback (ver findAnchorForChord no
@@ -105,7 +115,7 @@ export function buildTokenGrid(sheet: ChordSheet): ChordSheetTokenGrid {
   // esses acordes (e o próprio rótulo da seção) simplesmente desapareceriam
   // da tela — um solo/intro instrumental ficaria invisível no Play Mode,
   // mesmo tendo acordes reais tocando durante aquele tempo.
-  const chordsForEmptySection = new Map<number, string[]>();
+  const chordsForEmptySection = new Map<number, { symbol: string; startMs: number }[]>();
 
   for (const [chordIndexStr, anchor] of Object.entries(sheet.alignment.anchors)) {
     const chordIndex = Number(chordIndexStr);
@@ -115,13 +125,13 @@ export function buildTokenGrid(sheet: ChordSheet): ChordSheetTokenGrid {
     const section = sheet.lyrics.normalized.sections[anchor.sectionIndex];
     if (section && section.lines.length === 0) {
       const list = chordsForEmptySection.get(anchor.sectionIndex) ?? [];
-      list.push(chord.symbol);
+      list.push({ symbol: chord.symbol, startMs: chord.startMs });
       chordsForEmptySection.set(anchor.sectionIndex, list);
       continue;
     }
 
     const key = `${anchor.sectionIndex}-${anchor.lineIndex}-${anchor.tokenIndex}`;
-    chordBySection.set(key, chord.symbol);
+    chordBySection.set(key, { symbol: chord.symbol, startMs: chord.startMs });
   }
 
   return sheet.lyrics.normalized.sections.map((section, sectionIndex) => {
@@ -133,12 +143,12 @@ export function buildTokenGrid(sheet: ChordSheet): ChordSheetTokenGrid {
       // Linha sintética "só de acorde" — sem palavra embaixo, só o símbolo
       // acima, uma coluna por acorde distinto consecutivo (evita repetir o
       // mesmo acorde sustentado por vários segmentos de timeline seguidos).
-      const dedup = chords.filter((symbol, i) => symbol !== chords[i - 1]);
-      const tokens = dedup.map((symbol, i) => ({
+      const dedup = chords.filter((chord, i) => chord.symbol !== chords[i - 1]?.symbol);
+      const tokens = dedup.map(({ symbol, startMs: chordStartMs }, i) => ({
         // Placeholder visual "—" em vez de string vazia — deixa claro que é
         // intencional (seção instrumental, só acorde) e não um glitch de
         // render; `kind: 'punct'` porque não é uma palavra da letra.
-        text: '—', kind: 'punct' as const, normalized: '—', chordSymbol: symbol,
+        text: '—', kind: 'punct' as const, normalized: '—', chordSymbol: symbol, chordStartMs,
         // startMs/endMs do PRIMEIRO/ÚLTIMO token = janela de tempo da seção
         // (quando o backend a informa) — sem isso, computeLineWeightMs
         // (chord-sheet-timing.ts) cairia no fallback de contagem de palavras
@@ -154,8 +164,8 @@ export function buildTokenGrid(sheet: ChordSheet): ChordSheetTokenGrid {
       label: section.label,
       lines: section.lines.map((line, lineIndex) => ({
         tokens: line.tokens.map((token, tokenIndex) => {
-          const chordSymbol = chordBySection.get(`${sectionIndex}-${lineIndex}-${tokenIndex}`);
-          return chordSymbol ? { ...token, chordSymbol } : token;
+          const chord = chordBySection.get(`${sectionIndex}-${lineIndex}-${tokenIndex}`);
+          return chord ? { ...token, chordSymbol: chord.symbol, chordStartMs: chord.startMs } : token;
         }),
       })),
     };

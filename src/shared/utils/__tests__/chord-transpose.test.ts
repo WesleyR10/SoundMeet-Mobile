@@ -96,3 +96,35 @@ describe('transposeTokenGrid', () => {
     expect(grid[0].lines[0].tokens[0].chordSymbol).toBe('C');
   });
 });
+
+/*
+ * 🔴 25/set/2026 — qualidade fora do vocabulário do parser de diagramas
+ * voltava SEM transpor. Com o tom mudado, `Bm7(b5)` ficava no tom antigo no
+ * meio dos acordes transpostos, sem aviso nenhum.
+ */
+describe('transposeChordSymbol — a qualidade segue verbatim', () => {
+  it.each([
+    ['Bm7(b5)', 2, 'C#m7(b5)'],
+    ['C7M(9)', 2, 'D7M(9)'],
+    ['G7(b13)', -2, 'F7(b13)'],
+    ['E°', 1, 'F°'],
+    ['C6/9', 2, 'D6/9'],
+    ['A:min7', 3, 'C:min7'],
+  ])('%s %+d → %s', (symbol, semitones, expected) => {
+    expect(transposeChordSymbol(symbol, semitones)).toBe(expected);
+  });
+
+  it('não reescreve a grafia do músico (`C7M` não vira `Cmaj7`)', () => {
+    expect(transposeChordSymbol('C7M', 5)).toBe('F7M');
+  });
+
+  it('transpõe o baixo de acorde com qualidade desconhecida', () => {
+    expect(transposeChordSymbol('Am7(11)/G', 2, true)).toBe('Bm7(11)/A');
+  });
+
+  it('não transpõe palavra que só começa por A–G', () => {
+    expect(transposeChordSymbol('Casa', 2)).toBe('Casa');
+    expect(transposeChordSymbol('Amor', 2)).toBe('Amor');
+    expect(transposeChordSymbol('Bem', 2)).toBe('Bem');
+  });
+});

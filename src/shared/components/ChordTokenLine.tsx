@@ -27,13 +27,12 @@ type Props = {
   // palavra pura não tem alvo de toque morto.
   onPressChord?: (symbol: string) => void;
   // onPressToken é aditivo (jul/2026, cifra pessoal — Bloco 8D) — quando
-  // presente, tem PRIORIDADE sobre onPressChord e torna TODO token
-  // pressable (com ou sem acorde, necessário pra inserir acorde/anotar num
-  // ponto sem acorde ainda), trocando o sublinhado pontilhado teal do modo
-  // "ver diagrama" por uma borda tracejada na coluna inteira ("isso é
-  // editável"). Só o editor de cifra pessoal passa isso; Play Mode e
-  // SharedSongViewer continuam 100% intocados (ausência de prop = mesmo
-  // comportamento de sempre).
+  // presente, tem PRIORIDADE sobre onPressChord e torna tocável o que dá para
+  // editar: todo ACORDE (corrigir/remover) e toda PALAVRA com tempo marcado
+  // (inserir acorde/anotar). Espaço e pontuação sem acorde ficam inertes — a
+  // letra não é editável. O acorde ganha um chip de destaque. Só o editor de
+  // cifra pessoal passa isso; Play Mode e SharedSongViewer continuam
+  // intocados (ausência de prop = mesmo comportamento de sempre).
   onPressToken?: (token: RenderableToken, tokenIndex: number) => void;
 };
 
@@ -71,16 +70,17 @@ const useStyles = makeStyles((colors) => ({
     alignItems:   'flex-start',
     marginRight:   2,
   },
-  // Modo edição (onPressToken) — borda tracejada na coluna inteira em vez do
-  // sublinhado só-no-acorde do modo visualização, pra sinalizar "toque em
-  // qualquer palavra pra corrigir/inserir/anotar", não só nos acordes.
-  tokenColEditable: {
-    borderWidth:        1,
-    borderStyle:        'dashed',
-    borderColor:        'rgba(0,224,184,0.35)',
-    borderRadius:        4,
-    paddingHorizontal:   2,
-    paddingBottom:        1,
+  // Modo edição — só o ACORDE ganha destaque (chip). Até 25/set/2026 cada
+  // token, inclusive espaço e pontuação, levava uma borda tracejada: a tela
+  // inteira parecia editável, e a letra não é (vem da IA; só acordes e
+  // anotações mudam).
+  chordChip: {
+    borderWidth:       1,
+    borderColor:       colors.border.brand,
+    backgroundColor:   colors.brand.muted,
+    borderRadius:      4,
+    paddingHorizontal: 3,
+    overflow:          'hidden',
   },
   chord: {
     ...typography.chordLive,
@@ -164,19 +164,42 @@ export function ChordTokenLine({ label, tokens, index, state, onLayoutY, onPress
 
       <View style={s.row}>
         {tokens.map((token, tokenIndex) => {
-          if (onPressToken) {
+          // Edição: tocável só o que dá para editar — acorde (corrigir/remover)
+          // ou palavra com tempo marcado (inserir/anotar). Espaço e pontuação
+          // sem acorde não têm onde ancorar a edição e não viram alvo morto.
+          const editable = !!token.chordSymbol || (token.kind === 'word' && typeof token.startMs === 'number');
+          if (onPressToken && editable) {
             return (
               <Pressable
                 key={tokenIndex}
                 onPress={() => handlePressToken(token, tokenIndex)}
-                style={[s.tokenCol, s.tokenColEditable]}
-                hitSlop={{ top: 8, bottom: 4, left: 4, right: 4 }}
+                style={s.tokenCol}
+                hitSlop={{ top: 8, bottom: 4, left: 2, right: 2 }}
                 accessibilityRole="button"
                 accessibilityLabel={
-                  token.chordSymbol ? `Editar acorde ${token.chordSymbol}` : `Adicionar acorde ou anotação em "${token.text}"`
+                  token.chordSymbol ? `Editar acorde ${token.chordSymbol}` : `Inserir acorde ou anotar em "${token.text}"`
                 }
               >
-                <Text style={s.chord}>{token.chordSymbol ?? ' '}</Text>
+                <Text style={[s.chord, !!token.chordSymbol && s.chordChip]}>{token.chordSymbol ?? ' '}</Text>
+                <Text style={wordStyle}>{token.text}</Text>
+              </Pressable>
+            );
+          }
+
+          // Visualização: a COLUNA inteira (acorde + palavra) abre o diagrama.
+          // Só o símbolo era alvo — pequeno demais, e tocar na palavra logo
+          // abaixo não fazia nada.
+          if (!onPressToken && token.chordSymbol && onPressChord) {
+            return (
+              <Pressable
+                key={tokenIndex}
+                onPress={() => handlePressChord(token.chordSymbol!)}
+                style={s.tokenCol}
+                hitSlop={{ top: 12, bottom: 4, left: 2, right: 2 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Ver diagrama do acorde ${token.chordSymbol}`}
+              >
+                <Text style={[s.chord, s.chordTappable]}>{token.chordSymbol}</Text>
                 <Text style={wordStyle}>{token.text}</Text>
               </Pressable>
             );
@@ -184,18 +207,7 @@ export function ChordTokenLine({ label, tokens, index, state, onLayoutY, onPress
 
           return (
             <View key={tokenIndex} style={s.tokenCol}>
-              {token.chordSymbol && onPressChord ? (
-                <Pressable
-                  onPress={() => handlePressChord(token.chordSymbol!)}
-                  hitSlop={{ top: 12, bottom: 4, left: 6, right: 6 }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Ver diagrama do acorde ${token.chordSymbol}`}
-                >
-                  <Text style={[s.chord, s.chordTappable]}>{token.chordSymbol}</Text>
-                </Pressable>
-              ) : (
-                <Text style={s.chord}>{token.chordSymbol ?? ' '}</Text>
-              )}
+              <Text style={s.chord}>{token.chordSymbol ?? ' '}</Text>
               <Text style={wordStyle}>{token.text}</Text>
             </View>
           );
