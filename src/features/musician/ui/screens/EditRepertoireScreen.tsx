@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, Text, Pressable, Alert, ScrollView, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Trash2 } from 'lucide-react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,6 +26,7 @@ import {
 import { EditRepertoireShareSection } from '../components/EditRepertoireShareSection';
 import { EditRepertoireInviteSection } from '../components/EditRepertoireInviteSection';
 import type { RepertoireScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'EditRepertoire'>;
 
@@ -158,7 +158,7 @@ export function EditRepertoireScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <Pressable onPress={() => navigation.goBack()} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8}>

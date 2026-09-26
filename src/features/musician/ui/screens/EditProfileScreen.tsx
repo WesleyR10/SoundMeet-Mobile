@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Alert, Text, KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 import { ArrowLeft } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -81,7 +81,7 @@ export function EditProfileScreen({ navigation }: Props) {
   if (isPending) {
     return (
       <SafeAreaView style={s.loaderRoot} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.skeleton}>
           <SkeletonProfileHeader avatarSize={72} />
           {/* O formulário é uma pilha de accordions fechados. */}
@@ -94,7 +94,7 @@ export function EditProfileScreen({ navigation }: Props) {
   if (isError || !musician || !musicianId) {
     return (
       <SafeAreaView style={s.loaderRoot} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <ErrorBanner message="Não conseguimos carregar seu perfil." />
         <Pressable onPress={() => refetch()} style={s.retryBtn} accessibilityRole="button" accessibilityLabel="Tentar novamente">
           <Text style={s.retryText}>Tentar novamente</Text>
@@ -124,9 +124,10 @@ function EditProfileAccordion({ musician, musicianId, onGoBack }: AccordionProps
   const [openId, setOpenId] = useState<SectionId | null>('identity');
 
   const {
-    control, avatarUri, handleChangeAvatar,
+    control, avatarUri, handleChangeAvatar, isUploadingAvatar,
     instrumentIds, toggleInstrument, genreIds, toggleGenre,
-    bannerError, sections, location, touring, wallet, qrCode, availability, isDirty,
+    bannerError, sections, location, touring, wallet, qrCode, availability, requestScope,
+    presentationAudio, isDirty,
   } = useEditProfileForm(musician, musicianId);
 
   const toggle = (id: SectionId) => setOpenId((prev) => (prev === id ? null : id));
@@ -148,7 +149,7 @@ function EditProfileAccordion({ musician, musicianId, onGoBack }: AccordionProps
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <Pressable onPress={handleGoBack} style={s.backBtn} hitSlop={12} accessibilityRole="button" accessibilityLabel="Voltar">
@@ -166,6 +167,7 @@ function EditProfileAccordion({ musician, musicianId, onGoBack }: AccordionProps
             control={control}
             avatarUri={avatarUri}
             handleChangeAvatar={handleChangeAvatar}
+            isUploadingAvatar={isUploadingAvatar}
             instrumentIds={instrumentIds}
             toggleInstrument={toggleInstrument}
             genreIds={genreIds}
@@ -176,6 +178,8 @@ function EditProfileAccordion({ musician, musicianId, onGoBack }: AccordionProps
             wallet={wallet}
             qrCode={qrCode}
             availability={availability}
+            requestScope={requestScope}
+            presentationAudio={presentationAudio}
             openId={openId}
             onToggle={toggle}
           />

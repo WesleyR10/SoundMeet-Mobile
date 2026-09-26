@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { ArrowLeft, FileText, Globe2, Plus, ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
@@ -11,6 +10,7 @@ import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { RepertoireScreenProps } from '@/navigation/types';
 import { usePersonalChordSheets } from '../../application/usePersonalChordSheets';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'ChordSheetsHub'>;
 
@@ -109,7 +109,7 @@ export function ChordSheetsHubScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

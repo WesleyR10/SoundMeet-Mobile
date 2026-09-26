@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react-native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,6 +29,7 @@ import type { ImportedChordSheet } from '../../domain/personal-chord-sheet.types
 import { CifraSearchResultCard } from '../components/CifraSearchResultCard';
 import { CifraAnalysisProgressCard } from '../components/CifraAnalysisProgressCard';
 import { ConflictsReviewSheet } from '../components/ConflictsReviewSheet';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'ImportCommunityChordSheet'>;
 
@@ -144,7 +144,7 @@ export function ImportCommunityChordSheetScreen({ navigation, route }: Props) {
   const targetReady = existing?.has_chord_sheet ? existing.id : (job.data?.status === 'completed' ? analysis?.targetId : null);
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
       <View style={s.header}>
         <Pressable onPress={() => navigation.goBack()} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Voltar"><ArrowLeft size={22} color={colors.text.primary} /></Pressable>

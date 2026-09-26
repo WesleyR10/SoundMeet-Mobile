@@ -1,9 +1,12 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import type {
   SetlistEvidenceReason,
   SetlistSuggestion,
 } from '@/shared/services/performance/performance.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 type Props = { suggestion: SetlistSuggestion; position: number };
 
@@ -22,15 +25,17 @@ const REASON_LABEL: Record<SetlistEvidenceReason, (n: number) => string> = {
   in_repertoire_never_played_here: () => 'no seu repertório, nunca tocada aqui',
 };
 
-const REASON_COLOR: Record<SetlistEvidenceReason, string> = {
+const REASON_COLOR = (colors: ThemeColors): Record<SetlistEvidenceReason, string> => ({
   requested_and_played:  colors.status.success,
   requested_and_accepted: colors.brand.primary,
   requested_not_played:  colors.accent.amber,
   played_here_before:    colors.accent.violet,
   in_repertoire_never_played_here: colors.text.muted,
-};
+});
 
 export function SetlistSuggestionRow({ suggestion, position }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={s.root}>
       <Text style={s.position}>{String(position).padStart(2, '0')}</Text>
@@ -43,9 +48,9 @@ export function SetlistSuggestionRow({ suggestion, position }: Props) {
           {suggestion.evidence.map((evidence) => (
             <View
               key={evidence.reason}
-              style={[s.chip, { borderColor: REASON_COLOR[evidence.reason] }]}
+              style={[s.chip, { borderColor: REASON_COLOR(colors)[evidence.reason] }]}
             >
-              <Text style={[s.chipText, { color: REASON_COLOR[evidence.reason] }]}>
+              <Text style={[s.chipText, { color: REASON_COLOR(colors)[evidence.reason] }]}>
                 {REASON_LABEL[evidence.reason](evidence.occurrences)}
               </Text>
             </View>
@@ -56,7 +61,7 @@ export function SetlistSuggestionRow({ suggestion, position }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flexDirection: 'row',
     gap:            spacing.md,
@@ -96,4 +101,4 @@ const s = StyleSheet.create({
     ...typography.caption,
     fontSize: 10,
   },
-});
+}));

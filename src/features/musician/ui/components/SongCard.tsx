@@ -7,6 +7,7 @@ import { spacing, radius, typography, shadows } from '@/shared/design-system/tok
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import type { RepertoireSong } from '../../domain/repertoire.types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   song:      RepertoireSong;
@@ -125,7 +126,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:       radius.sm,
     paddingHorizontal:  spacing.xs,
     paddingVertical:    2,
-    backgroundColor:   'rgba(255,255,255,0.06)',
+    backgroundColor:   withAlpha(colors.text.primary, 0.06),
   },
   noSheetBadgeText: {
     ...typography.caption,

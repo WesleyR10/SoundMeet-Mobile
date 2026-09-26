@@ -1,6 +1,5 @@
 import { ScrollView, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Coins, Music2, Send, Users } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -13,6 +12,7 @@ import { usePerformanceReport } from '../../application/usePerformance';
 import { ReportStatCard } from '../components/ReportStatCard';
 import { ReportSongList } from '../components/ReportSongList';
 import { ShowRecapSection } from '../components/ShowRecapSection';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'PerformanceReport'>;
 
@@ -71,7 +71,7 @@ export function PerformanceReportScreen({ route, navigation }: Props) {
   if (isPending) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.skeleton}>
           <SkeletonStatRow count={3} />
           <SkeletonText lines={2} />
@@ -85,7 +85,7 @@ export function PerformanceReportScreen({ route, navigation }: Props) {
   if (isError || !report) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.center}>
           <ErrorBanner message="Não conseguimos carregar o relatório deste show." />
         </View>
@@ -95,7 +95,7 @@ export function PerformanceReportScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Text style={s.title}>Show encerrado</Text>
         <Text style={s.subtitle}>{formatShowWindow(report.started_at, report.ended_at)}</Text>

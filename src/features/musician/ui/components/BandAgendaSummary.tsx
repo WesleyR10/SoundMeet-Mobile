@@ -5,6 +5,7 @@ import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { formatHHMM, formatShortDate } from '@/shared/utils/date-format';
 import { useBandAgenda } from '../../application/useBandAgenda';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   bandId: string;
@@ -46,7 +47,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:    radius.sm,
     alignItems:      'center',
     justifyContent:  'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: withAlpha(colors.text.primary, 0.05),
   },
   info: {
     flex: 1,

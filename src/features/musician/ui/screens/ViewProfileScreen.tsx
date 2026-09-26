@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -148,7 +148,7 @@ export function ViewProfileScreen({ navigation }: Props) {
   if (isPending) {
     return (
       <SafeAreaView style={s.loaderRoot} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.skeleton}>
           <SkeletonProfileHeader />
           <SkeletonStatRow count={3} />
@@ -162,7 +162,7 @@ export function ViewProfileScreen({ navigation }: Props) {
   if (isError || !musician) {
     return (
       <SafeAreaView style={s.loaderRoot} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <ErrorBanner message="Não conseguimos carregar seu perfil." style={s.errorBanner} />
         <Pressable onPress={() => refetch()} style={s.retryBtn} accessibilityRole="button" accessibilityLabel="Tentar novamente">
           <Text style={s.retryText}>Tentar novamente</Text>
@@ -173,7 +173,7 @@ export function ViewProfileScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>

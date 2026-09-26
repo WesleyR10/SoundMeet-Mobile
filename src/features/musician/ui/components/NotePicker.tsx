@@ -1,4 +1,7 @@
-import { ScrollView, Text, Pressable } from 'react-native';
+import { Text, Pressable } from 'react-native';
+// ScrollView do gesture-handler, não do RN: dentro de um BottomSheetModal o
+// gesto do sheet captura o arraste e a fileira do RN não rola para o lado.
+import { ScrollView } from 'react-native-gesture-handler';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 

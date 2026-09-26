@@ -7,6 +7,7 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { useMusicianSearch } from '../../application/useMusicianSearch';
 import type { RepertoireInvitee } from '../../domain/repertoire.types';
 import type { MusicianSearchResult } from '../../domain/musician-search.types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   ownMusicianId:  string | null;
@@ -26,7 +27,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:    12,
     borderWidth:      1,
     borderColor:      colors.border.default,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding:          spacing.lg,
     gap:              spacing.sm,
   },
@@ -52,7 +53,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:        radius.md,
     borderWidth:          1,
     borderColor:         colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.04)',
+    backgroundColor:    withAlpha(colors.text.primary, 0.04),
     paddingHorizontal:   spacing.sm,
   },
   searchInput: {
@@ -72,7 +73,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:      radius.md,
     paddingVertical:   spacing.sm,
     paddingHorizontal: spacing.sm,
-    backgroundColor:  'rgba(255,255,255,0.03)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.03),
   },
   resultName: {
     ...typography.bodySm,

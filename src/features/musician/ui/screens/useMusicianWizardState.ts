@@ -1,7 +1,10 @@
 import { useReducer } from 'react';
 import type { PixKeyType, Step1FieldErrors } from '../../domain/musician.validation';
+import { canJumpBackTo, type WizardStep } from '../../domain/wizard.rules';
+import { GENRE_OPTIONS, INSTRUMENT_OPTIONS, resolveIds } from '../../domain/musician.constants';
+import type { MusicianProfile } from '../../domain/musician.types';
 
-export type WizardStep = 1 | 2 | 3 | 4 | 5;
+export type { WizardStep };
 
 export interface WizardState {
   step:        WizardStep;
@@ -30,7 +33,7 @@ type Action =
   | { type: 'ADVANCE_TO_STEP3'; qrCode: string | null }
   | { type: 'ADVANCE_TO_STEP4' }
   | { type: 'ADVANCE_TO_STEP5' }
-  | { type: 'GO_BACK_TO_STEP1' }
+  | { type: 'GO_BACK_TO_STEP'; step: WizardStep }
   | { type: 'SET_AVATAR_URI'; uri: string | null }
   | { type: 'SET_AVATAR_ERROR'; message: string | null }
   | { type: 'SET_PIX_TYPE'; pixKeyType: PixKeyType }
@@ -53,7 +56,8 @@ function reducer(state: WizardState, action: Action): WizardState {
     case 'ADVANCE_TO_STEP3':      return { ...state, step: 3, qrCode: action.qrCode, step2Error: null };
     case 'ADVANCE_TO_STEP4':      return { ...state, step: 4, avatarError: null };
     case 'ADVANCE_TO_STEP5':      return { ...state, step: 5, pixError: null };
-    case 'GO_BACK_TO_STEP1':      return { ...state, step: 1 };
+    case 'GO_BACK_TO_STEP':
+      return canJumpBackTo(action.step, state.step) ? { ...state, step: action.step } : state;
     case 'SET_AVATAR_URI':        return { ...state, avatarUri: action.uri };
     case 'SET_AVATAR_ERROR':      return { ...state, avatarError: action.message };
     case 'SET_PIX_TYPE':          return { ...state, pixKeyType: action.pixKeyType, pixError: null };
@@ -63,13 +67,22 @@ function reducer(state: WizardState, action: Action): WizardState {
   }
 }
 
-const initialState = (initialStep: WizardStep): WizardState => ({
+type InitArgs = { initialStep: WizardStep; profile: MusicianProfile | null };
+
+/*
+ * 🔴 Começa com o que o servidor já tem. Ao retomar no passo 3, o estado
+ * nascia VAZIO: o botão final gravava nome artístico em branco no cache do
+ * perfil, o gate concluía "falta o nome" e o app ficava preso no passo 5
+ * ("Ir para minha home" não saía). E voltar ao passo 1 mostraria os campos em
+ * branco — e salvaria o branco por cima do nome de verdade.
+ */
+const initialState = ({ initialStep, profile }: InitArgs): WizardState => ({
   step:        initialStep,
-  stageName:   '',
-  bio:         '',
-  instruments: [],
-  genres:      [],
-  qrCode:      null,
+  stageName:   profile?.stage_name ?? '',
+  bio:         profile?.bio ?? '',
+  instruments: resolveIds(profile?.instruments ?? [], INSTRUMENT_OPTIONS),
+  genres:      resolveIds(profile?.genres ?? [], GENRE_OPTIONS),
+  qrCode:      profile?.qr_code ?? null,
   fieldErrors: {},
   step2Error:  null,
   avatarUri:   null,
@@ -79,8 +92,11 @@ const initialState = (initialStep: WizardStep): WizardState => ({
   pixError:    null,
 });
 
-export function useMusicianWizardState(initialStep: WizardStep = 1) {
-  const [state, dispatch] = useReducer(reducer, initialStep, initialState);
+export function useMusicianWizardState(
+  initialStep: WizardStep = 1,
+  profile: MusicianProfile | null = null,
+) {
+  const [state, dispatch] = useReducer(reducer, { initialStep, profile }, initialState);
 
   return {
     state,
@@ -94,7 +110,7 @@ export function useMusicianWizardState(initialStep: WizardStep = 1) {
     advanceToStep3:    (qrCode: string | null) => dispatch({ type: 'ADVANCE_TO_STEP3', qrCode }),
     advanceToStep4:    () => dispatch({ type: 'ADVANCE_TO_STEP4' }),
     advanceToStep5:    () => dispatch({ type: 'ADVANCE_TO_STEP5' }),
-    goBackToStep1:     () => dispatch({ type: 'GO_BACK_TO_STEP1' }),
+    goBackToStep:      (step: WizardStep) => dispatch({ type: 'GO_BACK_TO_STEP', step }),
     setAvatarUri:      (uri: string | null) => dispatch({ type: 'SET_AVATAR_URI', uri }),
     setAvatarError:    (message: string | null) => dispatch({ type: 'SET_AVATAR_ERROR', message }),
     setPixKeyType:     (pixKeyType: PixKeyType) => dispatch({ type: 'SET_PIX_TYPE', pixKeyType }),

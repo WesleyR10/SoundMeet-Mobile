@@ -2,7 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { getMusician } from '../infrastructure/musician.api';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { getWizardCompleted } from '@/shared/services/storage/wizard.storage';
-import type { WizardStep } from '../ui/screens/useMusicianWizardState';
+import { getMusicianWallet } from '../infrastructure/musician-wallet.api';
+import { musicianWalletKey } from './useMusicianWallet';
+import { resolveWizardGate, type WizardStep } from '../domain/wizard.rules';
 
 export const musicianWizardGateKey = (musicianId: string) => ['musician', musicianId, 'wizard-gate'] as const;
 export const wizardCompletedKey = (musicianId: string) => ['musician', musicianId, 'wizard-completed'] as const;
@@ -24,6 +26,11 @@ export type WizardGateStatus =
 // Por isso soma-se a flag local `getWizardCompleted` (só true quando o músico
 // chegou no Step 5 ao menos uma vez): sem ela, fechar o app entre o Step 2 e o
 // Step 5 marcaria o onboarding como completo e pularia foto/PIX para sempre.
+//
+// 🔴 25/set/2026: a flag local sozinha mandava de volta ao assistente quem JÁ
+// tinha foto e PIX no servidor (outro aparelho, reinstalação, seed). Agora a
+// foto do perfil e a chave PIX da carteira também contam — ver
+// `resolveWizardGate`.
 export function useMusicianWizardGate(): WizardGateStatus {
   const user = useAuthStore((s) => s.user);
   const isMusician = user?.roles.includes('musician') ?? false;
@@ -45,12 +52,28 @@ export function useMusicianWizardGate(): WizardGateStatus {
     staleTime: Infinity,
   });
 
+  // Mesma chave do `useMusicianWallet`: o cache serve à Carteira e ao passo do
+  // PIX sem segunda requisição.
+  const walletQuery = useQuery({
+    queryKey: musicianId ? musicianWalletKey(musicianId) : ['musician', 'wallet', 'disabled'],
+    queryFn:  () => getMusicianWallet(musicianId!),
+    enabled:  isMusician && !!musicianId && hasStageName,
+    staleTime: 30 * 1_000,
+  });
+
   if (!isMusician) return { kind: 'not-applicable' };
   if (profileQuery.isPending) return { kind: 'loading' };
   if (profileQuery.isError) return { kind: 'error', retry: () => profileQuery.refetch() };
 
   if (!hasStageName) return { kind: 'needs-wizard', resumeStep: 1 };
-  if (completedQuery.isPending) return { kind: 'loading' };
+  if (completedQuery.isPending || walletQuery.isPending) return { kind: 'loading' };
 
-  return completedQuery.data ? { kind: 'complete' } : { kind: 'needs-wizard', resumeStep: 3 };
+  // Carteira com erro NÃO trava ninguém: conta como "sem chave", e o pior caso
+  // é rever o passo do PIX, que é pulável.
+  return resolveWizardGate({
+    hasStageName,
+    completedOnThisDevice: completedQuery.data === true,
+    hasAvatar:             !!profileQuery.data?.avatar,
+    hasPixKey:             !!walletQuery.data?.pix_key,
+  });
 }

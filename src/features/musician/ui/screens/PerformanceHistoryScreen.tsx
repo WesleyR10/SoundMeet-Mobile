@@ -1,6 +1,5 @@
 import { FlatList, View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ChevronRight, Disc3 } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -11,6 +10,7 @@ import { SkeletonList } from '@/shared/components/Skeleton';
 import type { RootScreenProps } from '@/navigation/types';
 import type { Performance } from '@/shared/services/performance/performance.types';
 import { usePerformanceHistory } from '../../application/usePerformance';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'PerformanceHistory'>;
 
@@ -106,7 +106,7 @@ export function PerformanceHistoryScreen({ navigation }: Props) {
   if (isPending) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.list}>
           <SkeletonList count={4} itemHeight={96} />
         </View>
@@ -116,7 +116,7 @@ export function PerformanceHistoryScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <Text style={s.title}>Meus shows</Text>
 
       {isError ? (

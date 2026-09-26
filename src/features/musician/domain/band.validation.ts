@@ -32,6 +32,65 @@ export const createBandSchema = z.object({
 export type CreateBandForm = z.infer<typeof createBandSchema>;
 
 /**
+ * Ano de formação ("tempo de estrada").
+ *
+ * 🔴 **O teto é o ANO CORRENTE, calculado a cada validação.** Um schema com
+ * `.max(new Date().getFullYear())` fixaria o limite no momento em que o módulo
+ * é carregado — e app mobile fica dias com o mesmo bundle na memória. Na virada
+ * do ano o usuário passaria a receber "ano inválido" ao digitar o ano em que
+ * está, e ninguém reproduziria isso em desenvolvimento.
+ *
+ * ⚠️ **Espelha `formation-year.ts` do backend.** Divergir aqui faz o app
+ * recusar o que a API aceita (ou pior: aceitar o que ela recusa, e o usuário
+ * leva 422 depois de preencher).
+ */
+export const FORMATION_YEAR_MIN = 1900;
+
+export function formationYearMax(now: Date = new Date()): number {
+  return now.getFullYear();
+}
+
+/**
+ * Lê o que foi digitado e devolve o ano, `null` (apagar) ou uma mensagem.
+ *
+ * Campo de texto e não seletor de data: o dado é um ANO, e um date picker
+ * pediria dia e mês que ninguém sabe — precisão falsa num campo que o
+ * estabelecimento lê como credencial.
+ */
+export type FormationYearParse =
+  | { ok: true; value: number | null }
+  | { ok: false; message: string };
+
+export function parseFormationYear(
+  raw: string,
+  now: Date = new Date(),
+): FormationYearParse {
+  const trimmed = raw.trim();
+
+  // Vazio é "apagar", operação legítima: quem digitou errado precisa de
+  // caminho de volta ao "não informado".
+  if (trimmed === '') return { ok: true, value: null };
+
+  // `Number` aceita "2019.5" e " 2019 "; a regex barra antes de chegar lá.
+  if (!/^\d{4}$/.test(trimmed)) {
+    return { ok: false, message: 'Digite o ano com 4 dígitos (ex.: 2019)' };
+  }
+
+  const year = Number(trimmed);
+  const max = formationYearMax(now);
+
+  if (year < FORMATION_YEAR_MIN) {
+    return { ok: false, message: `O ano precisa ser ${FORMATION_YEAR_MIN} ou depois` };
+  }
+
+  if (year > max) {
+    return { ok: false, message: 'A banda não pode ter se formado no futuro' };
+  }
+
+  return { ok: true, value: year };
+}
+
+/**
  * Confirmação de dissolução.
  *
  * 🔴 `DELETE /bands/:id` é irreversível e o backend só checa liderança — nada

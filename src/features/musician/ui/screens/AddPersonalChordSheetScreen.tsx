@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, FileMusic, Search } from 'lucide-react-native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,6 +18,7 @@ import { usePersonalChordSheets } from '../../application/usePersonalChordSheets
 import { useForkChordSheet, getPersonalChordSheetMutationErrorMessage } from '../../application/usePersonalChordSheetMutations';
 import type { MusicLibraryItem } from '../../domain/music-library.types';
 import { MusicLibraryItemPickerCard } from '../components/MusicLibraryItemPickerCard';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'AddPersonalChordSheet'>;
 
@@ -78,7 +78,7 @@ export function AddPersonalChordSheetScreen({ navigation }: Props) {
   const pending = library.isPending || personal.isPending;
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
       <View style={s.header}>
         <Pressable onPress={() => navigation.goBack()} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Voltar">

@@ -3,6 +3,7 @@ import { QrCode, Music, FileText, CalendarDays, ChartColumn, Gauge, Inbox, FileS
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Tile = {
   key:          string;
@@ -41,7 +42,7 @@ const useStyles = makeStyles((colors) => ({
     flexGrow:          1,
     borderRadius:      radius.lg,
     borderWidth:        1,
-    backgroundColor:  'rgba(255,255,255,0.03)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.03),
     padding:            spacing.md,
     gap:                spacing.xs,
     minHeight:          92,

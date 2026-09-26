@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, Pressable } from 'react-native';
+// ScrollView do gesture-handler, não do RN: dentro de um BottomSheetModal o
+// gesto do sheet captura o arraste e a fileira do RN não rola para o lado.
+import { ScrollView } from 'react-native-gesture-handler';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
+import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { ChordDiagram } from '@/shared/components/ChordDiagram';
 import { PianoChordDiagram } from '@/shared/components/PianoChordDiagram';
 import type { ChordInstrument } from '@/shared/components/InstrumentToggle';
-import { lookupChordDiagram, lookupPianoChordShape } from '@/shared/utils/chord-diagram-lookup';
+import { lookupChordDiagram, lookupPianoChordShape, describeBassFallback } from '@/shared/utils/chord-diagram-lookup';
 import { NotePicker } from './NotePicker';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   visible:       boolean;
@@ -17,6 +22,10 @@ type Props = {
   preferFlats?:  boolean;
   onConfirm:     (symbol: string) => void;
   onClose:       () => void;
+  /** Salvando: o botão mostra carregamento e não aceita segundo toque. */
+  loading?:      boolean;
+  /** Erro do salvamento — mostrado AQUI, não num banner atrás do sheet. */
+  error?:        string | null;
 };
 
 // Conjunto v1 do editor. O piano resolve todas por teoria musical; o violão
@@ -133,9 +142,9 @@ const useStyles = makeStyles((colors) => ({
   },
 }));
 
-export function ChordPickerSheet({ visible, initialSymbol, instrument, preferFlats = false, onConfirm, onClose }: Props) {
+export function ChordPickerSheet({ visible, initialSymbol, instrument, preferFlats = false, onConfirm, onClose, loading = false, error = null }: Props) {
   const s = useStyles();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [root, setRoot] = useState('C');
   const [quality, setQuality] = useState('');
   const [bass, setBass] = useState<string | null>(null);
@@ -159,11 +168,6 @@ export function ChordPickerSheet({ visible, initialSymbol, instrument, preferFla
     setBass(bassPart ?? null);
   }, [visible, initialSymbol]);
 
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
-
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1} pressBehavior="close" />
@@ -185,7 +189,7 @@ export function ChordPickerSheet({ visible, initialSymbol, instrument, preferFla
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
@@ -197,7 +201,12 @@ export function ChordPickerSheet({ visible, initialSymbol, instrument, preferFla
         <Text style={s.symbolPreview}>{symbol}</Text>
 
         {instrument === 'guitar' && guitarShape?.positions[0] ? (
-          <ChordDiagram position={guitarShape.positions[0]} />
+          <View style={s.previewFallback}>
+            <ChordDiagram position={guitarShape.positions[0]} />
+            {!!describeBassFallback(guitarShape) && (
+              <Text style={s.previewHint}>{describeBassFallback(guitarShape)}</Text>
+            )}
+          </View>
         ) : pianoShape ? (
           <View style={s.previewFallback}>
             {instrument === 'guitar' && (
@@ -247,7 +256,8 @@ export function ChordPickerSheet({ visible, initialSymbol, instrument, preferFla
           <NotePicker value={bass} onChange={setBass} preferFlats={preferFlats} clearable />
         </View>
 
-        <PrimaryButton label="Usar este acorde" onPress={() => onConfirm(symbol)} style={s.confirmBtn} />
+        {!!error && <ErrorBanner message={error} />}
+        <PrimaryButton label="Usar este acorde" onPress={() => onConfirm(symbol)} loading={loading} style={s.confirmBtn} />
       </BottomSheetView>
     </BottomSheetModal>
   );

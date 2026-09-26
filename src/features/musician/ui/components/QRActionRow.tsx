@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, Pressable, Text, StyleSheet, type StyleProp, type ViewStyle, type TextStyle } from 'react-native';
+import { ActivityIndicator, Pressable, Text, type StyleProp, type ViewStyle, type TextStyle } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from 'react-native-reanimated';
 import { Share2, Download, Check } from 'lucide-react-native';
-import { colors, spacing, radius, shadows, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, shadows, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   onShare:    () => void;
@@ -29,6 +31,8 @@ export function QRActionRow({
   shareAccessibilityLabel = 'Compartilhar QR Code',
   saveAccessibilityLabel  = 'Salvar QR Code na galeria',
 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <>
       <ActionButton
@@ -85,6 +89,8 @@ function ActionButton({
   onPress, loading, success, disabled, icon: Icon, label, successLabel,
   style, pressedStyle, labelStyle, iconColor, accessibilityLabel,
 }: ActionButtonProps) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -125,7 +131,7 @@ function ActionButton({
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   btn: {
     height:         56,
     borderRadius:   radius.xl,
@@ -162,4 +168,4 @@ const s = StyleSheet.create({
   disabled: {
     opacity: 0.5,
   },
-});
+}));

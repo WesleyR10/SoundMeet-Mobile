@@ -1,4 +1,9 @@
-import { BAND_NAME_MAX, confirmsBandDeletion, createBandSchema } from '../band.validation';
+import {
+  BAND_NAME_MAX,
+  confirmsBandDeletion,
+  createBandSchema,
+  parseFormationYear,
+} from '../band.validation';
 
 describe('createBandSchema', () => {
   it('aceita o mínimo: nome e um gênero', () => {
@@ -49,5 +54,45 @@ describe('confirmsBandDeletion', () => {
     expect(confirmsBandDeletion('Trio', 'Trio da Esquina')).toBe(false);
     expect(confirmsBandDeletion('', 'Trio da Esquina')).toBe(false);
     expect(confirmsBandDeletion('Outra Banda', 'Trio da Esquina')).toBe(false);
+  });
+});
+
+describe('parseFormationYear', () => {
+  const em = (year: number) => new Date(year, 5, 15);
+
+  it('aceita um ano válido', () => {
+    expect(parseFormationYear('2019', em(2026))).toEqual({ ok: true, value: 2019 });
+  });
+
+  it('vazio é APAGAR, não erro — precisa haver caminho de volta', () => {
+    expect(parseFormationYear('', em(2026))).toEqual({ ok: true, value: null });
+    expect(parseFormationYear('   ', em(2026))).toEqual({ ok: true, value: null });
+  });
+
+  it('aceita o ano corrente — banda formada este mês é caso real', () => {
+    expect(parseFormationYear('2026', em(2026))).toEqual({ ok: true, value: 2026 });
+  });
+
+  it('🔴 recusa o ano que vem', () => {
+    const result = parseFormationYear('2027', em(2026));
+    expect(result.ok).toBe(false);
+  });
+
+  it('recusa antes de 1900', () => {
+    expect(parseFormationYear('1899', em(2026)).ok).toBe(false);
+  });
+
+  it.each(['19', '20190', '2019.5', 'abc', '2o19', '-2019'])(
+    'recusa %s — não é um ano de 4 dígitos',
+    (raw) => {
+      expect(parseFormationYear(raw, em(2026)).ok).toBe(false);
+    },
+  );
+
+  it('🔴 o teto acompanha o relógio, não o load do módulo', () => {
+    // Com `.max(getFullYear())` fixado na carga, este caso passaria a falhar
+    // na virada do ano — num bundle que fica dias na memória do aparelho.
+    expect(parseFormationYear('2031', em(2031))).toEqual({ ok: true, value: 2031 });
+    expect(parseFormationYear('2031', em(2030)).ok).toBe(false);
   });
 });

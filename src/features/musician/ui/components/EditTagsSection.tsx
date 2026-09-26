@@ -1,8 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
 import { INSTRUMENT_OPTIONS, GENRE_OPTIONS } from '../../domain/musician.constants';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   selectedInstrumentIds: string[];
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function EditTagsSection({ selectedInstrumentIds, onToggleInstrument, selectedGenreIds, onToggleGenre }: Props) {
+  const s = useStyles();
   const { colors } = useTheme();
   return (
     <View style={s.root}>
@@ -55,7 +57,7 @@ export function EditTagsSection({ selectedInstrumentIds, onToggleInstrument, sel
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap: spacing.xl,
   },
@@ -71,7 +73,7 @@ const s = StyleSheet.create({
     ...typography.caption,
     fontFamily:    'Inter-Bold',
     letterSpacing:  0.6,
-    color:          'rgba(255,255,255,0.55)',
+    color:          colors.text.secondary,
     textTransform:  'uppercase',
   },
   count: {
@@ -83,4 +85,4 @@ const s = StyleSheet.create({
     flexWrap:      'wrap',
     gap:            spacing.sm,
   },
-});
+}));

@@ -115,6 +115,12 @@ export interface SetTouringLocationPayload {
 export const MAX_TOURING_DAYS = 30;
 export const MIN_TOURING_DAYS = 1;
 
+export interface PresentationAudio {
+  url:              string;
+  duration_seconds: number;
+  uploaded_at:      string;
+}
+
 // MusicianPresenter completo (GET /musicians/:id) — usado pelo wizard/gate
 // (campos do topo) e pelas telas de Bloco 2 (campos estendidos + profile).
 export interface MusicianProfile {
@@ -124,6 +130,10 @@ export interface MusicianProfile {
   stage_name:       string | null;
   bio:              string | null;
   avatar:           string | null;
+  // Preview de até 40s que o estabelecimento ouve antes de contratar
+  // (POST/DELETE /musicians/:id/presentation-audio). `null` é o estado normal
+  // de quem ainda não enviou, não uma pendência.
+  presentation_audio: PresentationAudio | null;
   phone:            string | null;
   // Só vem preenchido para o dono e para admin — a visão pública do backend
   // (PublicMusicianPresenter) omite o campo.
@@ -152,6 +162,12 @@ export interface MusicianProfile {
   // audiência. Setável em POST/PATCH /musicians e no PATCH .../open-to-gigs
   // dedicado (useUpdateOpenToGigs).
   open_to_gigs:     boolean | null;
+  // O público pode pedir música FORA do repertório deste músico. Nasce `true`
+  // — o caminho principal do produto é o fã pedir o que quiser e o músico
+  // recusar o que não toca. Desligado, o servidor RECUSA pedido que não venha
+  // de uma linha da biblioteca dele: não é filtro de UI, é regra
+  // (`CreateRequestUseCase`). Setável no PATCH .../request-scope dedicado.
+  accepts_requests_outside_repertoire: boolean;
 }
 
 // Payload aceito por PATCH /musicians/:id/profile (UpdateMusicianProfileInput

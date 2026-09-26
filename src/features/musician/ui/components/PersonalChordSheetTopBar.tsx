@@ -1,7 +1,9 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { ArrowLeft, AlertTriangle, Lock, Settings2, Share2 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { ReconcileBadge } from './ReconcileBadge';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   title: string;
@@ -18,6 +20,8 @@ type Props = {
 };
 
 export function PersonalChordSheetTopBar(props: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={s.root}>
       <View style={s.mainRow}>
@@ -59,6 +63,7 @@ export function PersonalChordSheetTopBar(props: Props) {
 }
 
 function ModeButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const s = useStyles();
   return (
     <Pressable onPress={onPress} style={[s.modeBtn, active && s.modeBtnActive]} accessibilityRole="button" accessibilityState={{ selected: active }}>
       <Text style={[s.modeText, active && s.modeTextActive]}>{label}</Text>
@@ -66,7 +71,7 @@ function ModeButton({ label, active, onPress }: { label: string; active: boolean
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: { paddingHorizontal: spacing.md, paddingTop: spacing.xs, paddingBottom: spacing.sm, gap: spacing.sm },
   mainRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   iconBtn: { width: 44, height: 44, borderRadius: radius.full, alignItems: 'center', justifyContent: 'center' },
@@ -89,4 +94,4 @@ const s = StyleSheet.create({
     backgroundColor: `${colors.accent.coral}1F`, paddingHorizontal: spacing.sm,
   },
   conflictText: { ...typography.caption, color: colors.accent.coral, fontFamily: 'Inter-Bold' },
-});
+}));

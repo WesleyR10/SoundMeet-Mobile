@@ -3,6 +3,7 @@ import { Controller, type Control } from 'react-hook-form';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   control: Control<EditProfileFormValues>;
@@ -16,14 +17,14 @@ const useStyles = makeStyles((colors) => ({
     ...typography.caption,
     fontFamily:    'Inter-Bold',
     letterSpacing:  0.6,
-    color:          'rgba(255,255,255,0.55)',
+    color:          colors.text.secondary,
     textTransform:  'uppercase',
   },
   row: {
     flexDirection:    'row',
     alignItems:       'center',
     justifyContent:  'space-between',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     borderWidth:      1,
     borderColor:     colors.border.brand,
     borderRadius:     radius.lg,

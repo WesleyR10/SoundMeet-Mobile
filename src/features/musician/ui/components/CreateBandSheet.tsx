@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text } from 'react-native';
 import {
   BottomSheetModal,
@@ -13,6 +13,7 @@ import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { MultiSelectChip } from '@/shared/components/MultiSelectChip';
 import { GENRE_OPTIONS } from '../../domain/musician.constants';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 import {
   BAND_DESCRIPTION_MAX,
   BAND_NAME_MAX,
@@ -74,18 +75,13 @@ const useStyles = makeStyles((colors) => ({
 
 export function CreateBandSheet({ visible, onClose, musicianId, onCreated }: Props) {
   const s = useStyles();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
   const [fieldError, setFieldError] = useState<string | null>(null);
 
   const createBand = useCreateBand(musicianId);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const handleDismiss = () => {
     setName('');
@@ -141,7 +137,7 @@ export function CreateBandSheet({ visible, onClose, musicianId, onCreated }: Pro
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={handleDismiss}
+      onDismiss={trackDismiss(handleDismiss)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

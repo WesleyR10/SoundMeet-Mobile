@@ -1,6 +1,5 @@
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Settings, Plus } from 'lucide-react-native';
 import DraggableFlatList, { type DragEndParams } from 'react-native-draggable-flatlist';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
@@ -15,6 +14,7 @@ import { useReorderSongs, useRemoveSong } from '../../application/useRepertoireM
 import { SongCard } from '../components/SongCard';
 import type { RepertoireSong } from '../../domain/repertoire.types';
 import type { RepertoireScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'RepertoireDetail'>;
 
@@ -156,7 +156,7 @@ export function RepertoireDetailScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

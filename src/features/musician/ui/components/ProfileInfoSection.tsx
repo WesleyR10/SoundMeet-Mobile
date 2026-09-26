@@ -1,7 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { MapPin, Phone, Mail, Crown, StickyNote } from 'lucide-react-native';
 import type { LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 import type { MusicianProfile } from '../../domain/musician.types';
 
 type Props = {
@@ -14,12 +16,17 @@ const PLAN_LABEL: Record<string, string> = {
   pro:       'Pro',
 };
 
-function InfoRow({ icon: Icon, label, value, accentColor = colors.brand.primary }: {
+// Helper É componente: chama os próprios hooks de tema (o do componente
+// exportado não alcança este escopo).
+function InfoRow({ icon: Icon, label, value, accentColor }: {
   icon:         LucideIcon;
   label:        string;
   value:        string;
   accentColor?: string;
 }) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  accentColor = accentColor ?? colors.brand.primary;
   return (
     <View style={s.row}>
       <View style={[s.iconBox, { backgroundColor: `${accentColor}14` }]}>
@@ -37,6 +44,8 @@ function InfoRow({ icon: Icon, label, value, accentColor = colors.brand.primary 
 // deve mostrar TUDO que o músico preencheu — antes localização, telefone,
 // e-mail e plano só apareciam dentro do EditProfile.
 export function ProfileInfoSection({ musician }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const location = musician.profile?.location ?? null;
   const cityLabel = location?.city
     ? location.state ? `${location.city} – ${location.state}` : location.city
@@ -92,7 +101,7 @@ export function ProfileInfoSection({ musician }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap: spacing.md,
   },
@@ -109,7 +118,7 @@ const s = StyleSheet.create({
     borderRadius:       radius.lg,
     borderWidth:         1,
     borderColor:        colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.03)',
+    backgroundColor:    colors.bg.surface,
   },
   row: {
     flexDirection: 'row',
@@ -135,4 +144,4 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-Medium',
     color:      colors.text.primary,
   },
-});
+}));

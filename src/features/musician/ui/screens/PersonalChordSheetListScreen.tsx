@@ -1,6 +1,5 @@
 import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, FileMusic, Globe2, Plus } from 'lucide-react-native';
 import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -14,6 +13,7 @@ import type { RepertoireScreenProps } from '@/navigation/types';
 import { usePersonalChordSheets } from '../../application/usePersonalChordSheets';
 import type { PersonalChordSheetSummary } from '../../domain/personal-chord-sheet.types';
 import { PersonalChordSheetCard } from '../components/PersonalChordSheetCard';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'PersonalChordSheetList'>;
 
@@ -43,7 +43,7 @@ export function PersonalChordSheetListScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
       <View style={s.header}>
         <Pressable onPress={() => navigation.goBack()} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Voltar">

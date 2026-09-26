@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Lock } from 'lucide-react-native';
@@ -9,6 +9,7 @@ import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { personalNotesSchema } from '../../domain/personal-chord-sheet.validation';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   visible:      boolean;
@@ -56,7 +57,7 @@ const useStyles = makeStyles((colors) => ({
 export function PersonalNotesSheet({ visible, initialNotes, loading, onConfirm, onClose }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [notes, setNotes] = useState(initialNotes ?? '');
   const [error, setError] = useState<string | null>(null);
 
@@ -66,11 +67,6 @@ export function PersonalNotesSheet({ visible, initialNotes, loading, onConfirm, 
       setError(null);
     }
   }, [visible, initialNotes]);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -92,7 +88,7 @@ export function PersonalNotesSheet({ visible, initialNotes, loading, onConfirm, 
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

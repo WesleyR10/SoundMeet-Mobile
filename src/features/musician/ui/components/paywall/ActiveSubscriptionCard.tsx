@@ -10,6 +10,7 @@ import {
   useActiveSubscription,
   useCancelSubscription,
 } from '../../../application/useSubscription';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   musicianId: string | null;
@@ -39,7 +40,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: `${colors.accent.violet}40`,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding: spacing.lg,
   },
   headerRow: {

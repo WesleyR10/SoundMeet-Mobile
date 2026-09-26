@@ -9,6 +9,8 @@ type Props = {
   avatarUri: string | null;
   onChangeAvatarUri: (uri: string) => void;
   error?:    string | null;
+  /** O "Continuar" da etapa está enviando a foto — o disco gira. */
+  busy?:     boolean;
 };
 
 const useStyles = makeStyles((colors) => ({
@@ -32,7 +34,7 @@ const useStyles = makeStyles((colors) => ({
   },
 }));
 
-export function StepThreePhoto({ avatarUri, onChangeAvatarUri, error }: Props) {
+export function StepThreePhoto({ avatarUri, onChangeAvatarUri, error, busy = false }: Props) {
   const s = useStyles();
   const opacity = useSharedValue(0);
   const y       = useSharedValue(16);
@@ -53,7 +55,7 @@ export function StepThreePhoto({ avatarUri, onChangeAvatarUri, error }: Props) {
       <Text style={s.title}>Mostre seu rosto</Text>
       <Text style={s.subtitle}>Uma foto de perfil ajuda o público a te reconhecer no evento.</Text>
 
-      <AvatarPicker uri={avatarUri} onChange={onChangeAvatarUri} />
+      <AvatarPicker uri={avatarUri} onChange={onChangeAvatarUri} busy={busy} />
 
       {!!error && <Text style={s.errorText}>{error}</Text>}
     </Animated.View>

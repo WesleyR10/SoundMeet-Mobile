@@ -14,6 +14,8 @@ import { useEditTouringSection } from './useEditTouringSection';
 import { useEditWalletSection } from './useEditWalletSection';
 import { useEditQRCodeSection } from './useEditQRCodeSection';
 import { useEditAvailabilitySection } from './useEditAvailabilitySection';
+import { useEditRequestScopeSection } from './useEditRequestScopeSection';
+import { useEditPresentationAudioSection } from './useEditPresentationAudioSection';
 import type { MusicianProfile } from '../../domain/musician.types';
 
 function toDefaultValues(musician: MusicianProfile): EditProfileFormValues {
@@ -70,15 +72,22 @@ export function useEditProfileForm(musician: MusicianProfile, musicianId: string
   const toggleGenre = (id: string) =>
     setGenreIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
 
-  // Avatar sobe imediatamente ao escolher — independente de qualquer seção do
-  // accordion, mesma UX do StepThreePhoto no wizard.
+  // Avatar sobe ao CONFIRMAR no disco ("Salvar foto" do AvatarPicker, com
+  // `confirmBeforeChange`) — independente de qualquer seção do accordion.
   const handleChangeAvatar = async (uri: string) => {
+    const previous = avatarUri;
     setAvatarUri(uri);
     setBannerError(null);
     try {
       await uploadAvatar.mutateAsync({ uri, name: inferImageFileName(uri), type: inferImageMimeType(uri) });
       queryClient.invalidateQueries({ queryKey: musicianProfileKey(musicianId) });
     } catch (err) {
+      /*
+       * Volta para a foto que ESTÁ gravada. Deixar a nova no disco depois de o
+       * envio falhar faria a tela afirmar uma troca que não aconteceu — o erro
+       * no banner diria uma coisa e o disco, outra.
+       */
+      setAvatarUri(previous);
       setBannerError(getUploadAvatarErrorMessage(err));
     }
   };
@@ -89,6 +98,14 @@ export function useEditProfileForm(musician: MusicianProfile, musicianId: string
   const wallet    = useEditWalletSection(musicianId, musician.email, musician.phone);
   const qrCode    = useEditQRCodeSection(musicianId, musician);
   const availability = useEditAvailabilitySection(musicianId, musician.open_to_gigs);
+  const requestScope = useEditRequestScopeSection(
+    musicianId,
+    musician.accepts_requests_outside_repertoire,
+  );
+  const presentationAudio = useEditPresentationAudioSection(
+    musicianId,
+    musician.presentation_audio,
+  );
 
   const sameIds = (a: string[], b: string[]) =>
     a.length === b.length && [...a].sort().join() === [...b].sort().join();
@@ -103,6 +120,7 @@ export function useEditProfileForm(musician: MusicianProfile, musicianId: string
     control,
     avatarUri,
     handleChangeAvatar,
+    isUploadingAvatar: uploadAvatar.isPending,
     instrumentIds,
     toggleInstrument,
     genreIds,
@@ -114,6 +132,8 @@ export function useEditProfileForm(musician: MusicianProfile, musicianId: string
     wallet,
     qrCode,
     availability,
+    requestScope,
+    presentationAudio,
     isDirty,
   };
 }

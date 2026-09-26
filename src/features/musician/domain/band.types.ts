@@ -76,6 +76,16 @@ export interface Band {
   // Endereço próprio da banda (não herdado do líder) — mesmo shape de
   // MusicianLocation, reaproveitado (não duplicado).
   address:      MusicianLocation | null;
+  // Ano de formação ("tempo de estrada"), 17/set/2026. É o par do
+  // `experience_years` do músico solo — mas ANO, não quantidade de anos: um
+  // número de anos gravado envelheceria sozinho no banco, o ano é estável e o
+  // tempo se deriva dele.
+  //
+  // ⚠️ `null` = não informado, e NUNCA derivado de `created_at` (aquilo é
+  // "cadastrada na SoundMeet desde", que é outro fato).
+  // `?` no tipo porque o campo nasceu depois da rota: um app rodando contra
+  // backend anterior à migration recebe `undefined`.
+  formed_in?:   number | null;
 }
 
 // Espelha BusyInterval/FreeBusy de features/scheduling/domain/availability.types —

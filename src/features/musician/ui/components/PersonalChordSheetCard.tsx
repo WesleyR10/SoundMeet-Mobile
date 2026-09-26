@@ -9,6 +9,7 @@ import { useMusicLibraryItem } from '../../application/useMusicLibraryItem';
 import { usePersonalChordSheetView } from '../../application/usePersonalChordSheetView';
 import type { PersonalChordSheetSummary } from '../../domain/personal-chord-sheet.types';
 import { ReconcileBadge } from './ReconcileBadge';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   sheet: PersonalChordSheetSummary;
@@ -29,7 +30,7 @@ const useStyles = makeStyles((colors) => ({
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
   badge: {
     minHeight: 28, flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-    borderRadius: radius.full, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: spacing.sm,
+    borderRadius: radius.full, backgroundColor: withAlpha(colors.text.primary, 0.05), paddingHorizontal: spacing.sm,
   },
   badgeText: { ...typography.caption, color: colors.text.secondary },
   bandBadge: { backgroundColor: colors.brand.muted },

@@ -12,6 +12,7 @@ import {
   useDeleteBand,
   useTransferBandLeadership,
 } from '../../application/useBandMutations';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   band: Band;
@@ -46,7 +47,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border.default,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding: spacing.lg,
   },
   dangerCard: { borderColor: `${colors.status.error}33` },
@@ -92,7 +93,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: `${colors.status.error}55`,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: withAlpha(colors.text.primary, 0.04),
     paddingHorizontal: spacing.md,
     ...typography.body,
     color: colors.text.primary,

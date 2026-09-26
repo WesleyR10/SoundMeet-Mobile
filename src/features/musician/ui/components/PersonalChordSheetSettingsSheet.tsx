@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { View, Text } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
   BottomSheetScrollView,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { InstrumentToggle, type ChordInstrument } from '@/shared/components/InstrumentToggle';
 import { TransposeStepper } from '@/shared/components/TransposeStepper';
@@ -17,6 +17,8 @@ import { ComplexityToggle } from './ComplexityToggle';
 import { AccidentalToggle } from './AccidentalToggle';
 import { LeftHandedSwitch } from './LeftHandedSwitch';
 import { ScrollSpeedStepper } from './ScrollSpeedStepper';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   visible: boolean;
@@ -27,16 +29,12 @@ type Props = {
 };
 
 export function PersonalChordSheetSettingsSheet({ visible, value, loading, onSave, onClose }: Props) {
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const s = useStyles();
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [draft, setDraft] = useState(value);
 
   useEffect(() => {
-    if (visible) {
-      setDraft(value);
-      sheetRef.current?.present();
-    } else {
-      sheetRef.current?.dismiss();
-    }
+    if (visible) setDraft(value);
   }, [visible, value]);
 
   const renderBackdrop = useCallback(
@@ -53,7 +51,7 @@ export function PersonalChordSheetSettingsSheet({ visible, value, loading, onSav
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
@@ -98,6 +96,7 @@ export function PersonalChordSheetSettingsSheet({ visible, value, loading, onSav
 }
 
 function Setting({ label, children }: { label: string; children: React.ReactNode }) {
+  const s = useStyles();
   return (
     <View style={s.section}>
       <Text style={s.label}>{label}</Text>
@@ -106,7 +105,7 @@ function Setting({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   sheetBg: { backgroundColor: colors.bg.elevated, borderRadius: radius.xl },
   handle: { backgroundColor: colors.border.strong },
   content: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxxl, gap: spacing.lg },
@@ -118,4 +117,4 @@ const s = StyleSheet.create({
     textTransform: 'uppercase', letterSpacing: 0.6,
   },
   save: { marginTop: spacing.sm },
-});
+}));

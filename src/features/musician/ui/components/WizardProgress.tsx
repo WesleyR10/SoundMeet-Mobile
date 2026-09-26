@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, Dimensions, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,13 +13,18 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
 import { Check } from 'lucide-react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { spacing, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 
 const SW = Dimensions.get('window').width; // módulo level — portrait-only, seguro
 const NODE_SIZE   = 32;
-const NODE_COLORS = [
+// Função do tema, não constante de módulo: avaliada no carregamento, a lista
+// congelaria a paleta escura (teal #00E0B8 sobre o fundo claro).
+const nodeColors = (colors: ThemeColors) => [
   colors.brand.primary,   // Identidade
   '#4D9CFF',              // Estilo
   colors.accent.violetLight, // Foto
@@ -27,24 +32,32 @@ const NODE_COLORS = [
   colors.accent.violet,   // QR Code (reveal premium)
 ] as const;
 const LABELS = ['Identidade', 'Estilo', 'Foto', 'PIX', 'QR Code'] as const;
-export const WIZARD_STEP_COUNT = NODE_COLORS.length;
+export const WIZARD_STEP_COUNT = LABELS.length;
 
 // 5 nós não cabem com o comprimento de linha original (76px, calibrado p/ 3 nós) —
 // recalcula o segmento para caber na largura da tela com folga de margem.
-const LINE_COUNT  = NODE_COLORS.length - 1;
+const LINE_COUNT  = WIZARD_STEP_COUNT - 1;
 const LINE_LENGTH = Math.max(
   28,
-  Math.floor((SW - NODE_SIZE * NODE_COLORS.length - 48) / LINE_COUNT),
+  Math.floor((SW - NODE_SIZE * WIZARD_STEP_COUNT - 48) / LINE_COUNT),
 );
 
 type WizardStep = 1 | 2 | 3 | 4 | 5;
 
-type Props = { step: WizardStep };
+type Props = {
+  step: WizardStep;
+  /** Toque numa etapa JÁ FEITA volta até ela. Etapas à frente não respondem. */
+  onStepPress?: (step: WizardStep) => void;
+};
 
 // Distinto de propósito do AnimatedDot do SlideCarousel (dots simples de conteúdo):
 // aqui são N nós conectados por linhas que "desenham" ao completar cada etapa,
 // com bounce de mola + check ao concluir — a assinatura visual própria do wizard.
-export function WizardProgress({ step }: Props) {
+export function WizardProgress({ step, onStepPress }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const NODE_COLORS = nodeColors(colors);
+  const firstColor  = NODE_COLORS[0];
   // Um shared value por nó "não-inicial" (2..N) — index 0 = nó 2, etc.
   const fills   = [useSharedValue(0), useSharedValue(0), useSharedValue(0), useSharedValue(0)];
   const scales  = [useSharedValue(1), useSharedValue(1), useSharedValue(1), useSharedValue(1)];
@@ -65,10 +78,13 @@ export function WizardProgress({ step }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
+  const pressFor = (target: WizardStep) =>
+    onStepPress && target < step ? () => onStepPress(target) : undefined;
+
   return (
     <View style={s.root}>
       <View style={s.row}>
-        <Node style={useAnimatedStyle(() => ({ backgroundColor: NODE_COLORS[0] }))} current={step === 1} label={LABELS[0]} accent={NODE_COLORS[0]} />
+        <Node style={useAnimatedStyle(() => ({ backgroundColor: firstColor }))} current={step === 1} label={LABELS[0]} accent={NODE_COLORS[0]} onPress={pressFor(1)} />
 
         {fills.map((fill, i) => (
           <ProgressLink
@@ -80,6 +96,7 @@ export function WizardProgress({ step }: Props) {
             color={NODE_COLORS[i + 1]}
             current={step === i + 2}
             label={LABELS[i + 1]}
+            onPress={pressFor((i + 2) as WizardStep)}
           />
         ))}
       </View>
@@ -88,7 +105,7 @@ export function WizardProgress({ step }: Props) {
 }
 
 function ProgressLink({
-  fill, scale, check, line, color, current, label,
+  fill, scale, check, line, color, current, label, onPress,
 }: {
   fill:    SharedValue<number>;
   scale:   SharedValue<number>;
@@ -97,7 +114,10 @@ function ProgressLink({
   color:   string;
   current: boolean;
   label:   string;
+  onPress?: () => void;
 }) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const lineProps = useAnimatedProps(() => ({
     strokeDashoffset: LINE_LENGTH * (1 - line.value),
   }));
@@ -122,22 +142,25 @@ function ProgressLink({
         />
       </Svg>
 
-      <Node style={nodeStyle} current={current} label={label} accent={color} checkStyle={checkStyle} />
+      <Node style={nodeStyle} current={current} label={label} accent={color} checkStyle={checkStyle} onPress={onPress} />
     </>
   );
 }
 
 function Node({
-  style, current, label, accent, checkStyle,
+  style, current, label, accent, checkStyle, onPress,
 }: {
   style:       ReturnType<typeof useAnimatedStyle>;
   current:     boolean;
   label:       string;
   accent:      string;
   checkStyle?: ReturnType<typeof useAnimatedStyle>;
+  onPress?:    () => void;
 }) {
-  return (
-    <View style={s.nodeCol}>
+  const s = useStyles();
+  const { colors } = useTheme();
+  const content = (
+    <>
       <Animated.View style={[s.node, style, current && { borderColor: accent, shadowColor: accent }, current && s.nodeCurrentShadow]}>
         {checkStyle && (
           <Animated.View style={checkStyle}>
@@ -146,11 +169,25 @@ function Node({
         )}
       </Animated.View>
       <Animated.Text style={[s.labelText, current && { color: colors.text.primary }]}>{label}</Animated.Text>
-    </View>
+    </>
+  );
+
+  if (!onPress) return <View style={s.nodeCol}>{content}</View>;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={s.nodeCol}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={`Voltar para ${label}`}
+    >
+      {content}
+    </Pressable>
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     alignItems: 'center',
   },
@@ -185,4 +222,4 @@ const s = StyleSheet.create({
     textTransform:  'uppercase',
     letterSpacing:  0.6,
   },
-});
+}));

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Users, UserPlus } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -19,6 +18,8 @@ import { BandLeaderSettingsSection } from '../components/BandLeaderSettingsSecti
 import { BandDangerZone } from '../components/BandDangerZone';
 import { InviteMemberSheet } from '../components/InviteMemberSheet';
 import type { ProfileScreenProps } from '@/navigation/types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = ProfileScreenProps<'BandDetail'>;
 
@@ -113,7 +114,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:       radius.lg,
     borderWidth:         1,
     borderColor:        colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.03)',
+    backgroundColor:    withAlpha(colors.text.primary, 0.03),
   },
   sectionHeaderRow: {
     flexDirection:  'row',
@@ -251,7 +252,7 @@ export function BandDetailScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

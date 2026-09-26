@@ -35,6 +35,20 @@ export async function updateOpenToGigs(id: string, open_to_gigs: boolean): Promi
   return data.data;
 }
 
+// PATCH /musicians/:id/request-scope — dedicado, mesmo desenho do
+// open-to-gigs acima: é um interruptor isolado, tocado de uma tela de
+// configuração, não um campo do accordion de perfil.
+export async function updateRequestScope(
+  id: string,
+  accepts_requests_outside_repertoire: boolean,
+): Promise<MusicianProfile> {
+  const { data } = await httpClient.patch<ApiEnvelope<MusicianProfile>>(
+    `/musicians/${id}/request-scope`,
+    { accepts_requests_outside_repertoire },
+  );
+  return data.data;
+}
+
 // PATCH /musicians/:id/push-token — registra/atualiza o Expo push token do
 // device (último dispositivo registrado sobrescreve o anterior no backend).
 export async function registerPushToken(
@@ -88,6 +102,45 @@ export async function uploadMusicianAvatar(id: string, file: MusicianAvatarFile)
   const { data } = await httpClient.post<ApiEnvelope<MusicianProfile>>(`/musicians/${id}/avatar`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+  return data.data;
+}
+
+export type PresentationAudioFile = {
+  uri:  string;
+  name: string;
+  type: string;
+};
+
+/**
+ * POST /musicians/:id/presentation-audio — trecho de 5 a 40s.
+ *
+ * ⚠️ **`type` aqui é só o que o `FormData` precisa para montar a parte
+ * multipart; ele NÃO decide nada.** O backend cheira os bytes
+ * (`assertFileSignature`) e a allowlist incide sobre o tipo real — o seletor de
+ * arquivos do Android manda `application/octet-stream` para MP3 legítimo com
+ * frequência, e filtrar pela afirmação recusaria arquivo bom.
+ */
+export async function uploadPresentationAudio(
+  id: string,
+  file: PresentationAudioFile,
+): Promise<MusicianProfile> {
+  const formData = new FormData();
+  formData.append('file', { uri: file.uri, name: file.name, type: file.type } as unknown as Blob);
+
+  const { data } = await httpClient.post<ApiEnvelope<MusicianProfile>>(
+    `/musicians/${id}/presentation-audio`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+  return data.data;
+}
+
+// DELETE /musicians/:id/presentation-audio — idempotente: quem não tem áudio
+// recebe 200 com `presentation_audio: null`, não erro.
+export async function deletePresentationAudio(id: string): Promise<MusicianProfile> {
+  const { data } = await httpClient.delete<ApiEnvelope<MusicianProfile>>(
+    `/musicians/${id}/presentation-audio`,
+  );
   return data.data;
 }
 

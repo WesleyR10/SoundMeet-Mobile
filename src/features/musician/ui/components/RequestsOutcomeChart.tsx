@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
 import Svg, { Circle, G } from 'react-native-svg';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { GlowCard } from '@/shared/components/GlowCard';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -25,6 +27,8 @@ type Props = {
 // Paleta: teal+âmbar (design-system.md, "Analytics" na tabela de paleta por
 // contexto), não teal+coral/vermelho como no resto do app.
 export function RequestsOutcomeChart({ accepted, rejected }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const total = accepted + rejected;
   const acceptedFraction = total > 0 ? accepted / total : 0;
   const rejectedFraction = total > 0 ? rejected / total : 0;
@@ -98,6 +102,7 @@ export function RequestsOutcomeChart({ accepted, rejected }: Props) {
 }
 
 function LegendRow({ color, label, value }: { color: string; label: string; value: number }) {
+  const s = useStyles();
   return (
     <View style={s.legendRow}>
       <View style={[s.legendDot, { backgroundColor: color }]} />
@@ -107,7 +112,7 @@ function LegendRow({ color, label, value }: { color: string; label: string; valu
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     gap: spacing.md,
   },
@@ -144,4 +149,4 @@ const s = StyleSheet.create({
     ...typography.mono,
     color: colors.text.primary,
   },
-});
+}));

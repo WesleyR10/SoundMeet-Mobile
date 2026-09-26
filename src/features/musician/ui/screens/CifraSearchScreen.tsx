@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Search } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -17,6 +16,8 @@ import { CifraSearchResultCard } from '../components/CifraSearchResultCard';
 import { CifraAnalysisProgressCard } from '../components/CifraAnalysisProgressCard';
 import type { CifraSearchResult } from '../../domain/cifra-search.types';
 import type { RepertoireScreenProps } from '@/navigation/types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'CifraSearch'>;
 
@@ -56,7 +57,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:        radius.md,
     borderWidth:          1,
     borderColor:         colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.04)',
+    backgroundColor:    withAlpha(colors.text.primary, 0.04),
     paddingHorizontal:   spacing.md,
     marginBottom:        spacing.lg,
   },
@@ -125,7 +126,7 @@ export function CifraSearchScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

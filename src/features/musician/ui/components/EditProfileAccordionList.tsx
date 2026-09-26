@@ -1,6 +1,5 @@
 import type { Control } from 'react-hook-form';
-import { UserRound, Music, Clock, Wallet, AtSign, MapPin, Landmark, QrCode, Radar, Plane } from 'lucide-react-native';
-import { colors } from '@/shared/design-system/tokens';
+import { UserRound, Music, Clock, Wallet, AtSign, MapPin, Landmark, QrCode, Radar, Plane, ListMusic, AudioLines } from 'lucide-react-native';
 import { AccordionSection } from '@/shared/components/AccordionSection';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { EditIdentitySection } from './EditIdentitySection';
@@ -14,12 +13,15 @@ import { touringSubtitle } from '../../domain/touring.rules';
 import { EditWalletSection } from './EditWalletSection';
 import { EditQRCodeSection } from './EditQRCodeSection';
 import { EditAvailabilitySection } from './EditAvailabilitySection';
+import { EditRequestScopeSection } from './EditRequestScopeSection';
+import { EditPresentationAudioSection } from './EditPresentationAudioSection';
 import { AccordionSaveFooter } from './AccordionSaveFooter';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
 import type { MusicianProfile } from '../../domain/musician.types';
 import type { useEditProfileForm } from '../screens/useEditProfileForm';
+import { useTheme } from '@/shared/hooks/useTheme';
 
-export type SectionId = 'identity' | 'availability' | 'tags' | 'experience' | 'price' | 'social' | 'location' | 'touring' | 'wallet' | 'qrcode';
+export type SectionId = 'identity' | 'availability' | 'presentationAudio' | 'requestScope' | 'tags' | 'experience' | 'price' | 'social' | 'location' | 'touring' | 'wallet' | 'qrcode';
 
 type EditProfileFormResult = ReturnType<typeof useEditProfileForm>;
 
@@ -28,6 +30,7 @@ type Props = {
   control:       Control<EditProfileFormValues>;
   avatarUri:           EditProfileFormResult['avatarUri'];
   handleChangeAvatar:  EditProfileFormResult['handleChangeAvatar'];
+  isUploadingAvatar:   EditProfileFormResult['isUploadingAvatar'];
   instrumentIds:       EditProfileFormResult['instrumentIds'];
   toggleInstrument:    EditProfileFormResult['toggleInstrument'];
   genreIds:            EditProfileFormResult['genreIds'];
@@ -38,6 +41,8 @@ type Props = {
   wallet:              EditProfileFormResult['wallet'];
   qrCode:              EditProfileFormResult['qrCode'];
   availability:        EditProfileFormResult['availability'];
+  requestScope:        EditProfileFormResult['requestScope'];
+  presentationAudio:   EditProfileFormResult['presentationAudio'];
   openId:   SectionId | null;
   onToggle: (id: SectionId) => void;
 };
@@ -46,10 +51,12 @@ type Props = {
 // seções do accordion de perfil (Bloco 2), cada uma com seu próprio botão de
 // salvar (AccordionSaveFooter). A tela em si só orquestra loading/erro/back.
 export function EditProfileAccordionList({
-  musician, control, avatarUri, handleChangeAvatar,
+  musician, control, avatarUri, handleChangeAvatar, isUploadingAvatar,
   instrumentIds, toggleInstrument, genreIds, toggleGenre,
-  sections, location, touring, wallet, qrCode, availability, openId, onToggle,
+  sections, location, touring, wallet, qrCode, availability, requestScope,
+  presentationAudio, openId, onToggle,
 }: Props) {
+  const { colors } = useTheme();
   return (
     <>
       <AccordionSection
@@ -61,7 +68,12 @@ export function EditProfileAccordionList({
         isOpen={openId === 'identity'}
         onToggle={() => onToggle('identity')}
       >
-        <EditIdentitySection control={control} avatarUri={avatarUri} onChangeAvatarUri={handleChangeAvatar} />
+        <EditIdentitySection
+          control={control}
+          avatarUri={avatarUri}
+          onChangeAvatarUri={handleChangeAvatar}
+          isUploadingAvatar={isUploadingAvatar}
+        />
         <AccordionSaveFooter onSave={sections.identity.onSave} isSaving={sections.identity.isSaving} error={sections.identity.error} />
       </AccordionSection>
 
@@ -76,6 +88,25 @@ export function EditProfileAccordionList({
       >
         <EditAvailabilitySection value={availability.value} onChange={availability.onChange} disabled={availability.isSaving} />
         {!!availability.error && <ErrorBanner message={availability.error} />}
+      </AccordionSection>
+
+      <AccordionSection
+        title="Pedidos de música"
+        subtitle={requestScope.value ? 'Pedidos abertos' : 'Só o meu repertório'}
+        icon={ListMusic}
+        accentColor={colors.brand.primary}
+        // Sempre "completo": o campo nasce `true` e nunca fica indefinido — ao
+        // contrário de `open_to_gigs`, que é tri-state e exige uma decisão.
+        isComplete
+        isOpen={openId === 'requestScope'}
+        onToggle={() => onToggle('requestScope')}
+      >
+        <EditRequestScopeSection
+          value={requestScope.value}
+          onChange={requestScope.onChange}
+          disabled={requestScope.isSaving}
+        />
+        {!!requestScope.error && <ErrorBanner message={requestScope.error} />}
       </AccordionSection>
 
       <AccordionSection
@@ -94,6 +125,34 @@ export function EditProfileAccordionList({
           onToggleGenre={toggleGenre}
         />
         <AccordionSaveFooter onSave={sections.tags.onSave} isSaving={sections.tags.isSaving} error={sections.tags.error} />
+      </AccordionSection>
+
+      {/*
+        Depois de "Instrumentos e gêneros" de propósito: "o que você toca" e
+        "como você soa" são a mesma pergunta do estabelecimento, feita duas
+        vezes. Separá-las por três seções faria o áudio parecer acessório.
+      */}
+      <AccordionSection
+        title="Áudio de apresentação"
+        subtitle={
+          presentationAudio.audio
+            ? `Enviado · ${presentationAudio.audio.duration_seconds}s`
+            : 'Deixe o local ouvir como você soa'
+        }
+        icon={AudioLines}
+        accentColor={colors.brand.primary}
+        isComplete={!!presentationAudio.audio}
+        isOpen={openId === 'presentationAudio'}
+        onToggle={() => onToggle('presentationAudio')}
+      >
+        <EditPresentationAudioSection
+          audio={presentationAudio.audio}
+          isSaving={presentationAudio.isSaving}
+          error={presentationAudio.error}
+          onPick={presentationAudio.onPick}
+          onRemove={presentationAudio.onRemove}
+          onLocalError={presentationAudio.setError}
+        />
       </AccordionSection>
 
       <AccordionSection

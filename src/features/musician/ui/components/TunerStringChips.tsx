@@ -4,6 +4,7 @@ import { spacing, radius, typography, shadows } from '@/shared/design-system/tok
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { GUITAR_STANDARD_TUNING } from '../../domain/tuner.types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   side:          'left' | 'right';
@@ -30,7 +31,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:     radius.md,
     borderWidth:       1,
     borderColor:      colors.border.strong,
-    backgroundColor:  'rgba(255,255,255,0.04)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.04),
     alignItems:      'center',
     justifyContent:  'center',
   },

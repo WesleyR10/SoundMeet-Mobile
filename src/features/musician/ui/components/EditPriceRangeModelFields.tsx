@@ -6,6 +6,7 @@ import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { FormField } from '@/shared/components/FormField';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type PriceFieldName = 'priceHourMin' | 'priceHourMax' | 'priceHourNotes' | 'priceEventMin' | 'priceEventMax' | 'priceEventNotes';
 
@@ -36,7 +37,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:       radius.md,
     borderWidth:         1,
     borderColor:        colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.03)',
+    backgroundColor:    withAlpha(colors.text.primary, 0.03),
   },
   toggleChipSelected: {
     borderColor:     colors.accent.amber,

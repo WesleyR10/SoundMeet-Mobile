@@ -1,16 +1,14 @@
-import { View, Text, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Star, BadgeCheck, User } from 'lucide-react-native';
-import { spacing, gradients, typography, shadows } from '@/shared/design-system/tokens';
+import { View, Text } from 'react-native';
+import { Star, BadgeCheck } from 'lucide-react-native';
+import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import type { MusicianProfile } from '../../domain/musician.types';
+import { ProfileAvatarButton } from './ProfileAvatarButton';
 
 type Props = {
   musician: MusicianProfile;
 };
-
-const AVATAR_SIZE = 108;
 
 // Extraído de ViewProfileScreen.tsx (limite de ~200 linhas/screen) — hero da
 // tela: avatar com ring gradiente (mesma técnica de bezel do QRFrame), nome,
@@ -19,28 +17,6 @@ const useStyles = makeStyles((colors) => ({
   root: {
     alignItems: 'center',
     gap:         spacing.sm,
-  },
-  avatarRing: {
-    width:          AVATAR_SIZE,
-    height:         AVATAR_SIZE,
-    borderRadius:   AVATAR_SIZE / 2,
-    padding:         3,
-    alignItems:     'center',
-    justifyContent: 'center',
-    ...shadows.violet,
-  },
-  avatarInner: {
-    width:            '100%',
-    height:           '100%',
-    borderRadius:     AVATAR_SIZE / 2,
-    backgroundColor: colors.bg.surface,
-    alignItems:      'center',
-    justifyContent:  'center',
-    overflow:         'hidden',
-  },
-  avatarImg: {
-    width:  '100%',
-    height: '100%',
   },
   nameRow: {
     flexDirection: 'row',
@@ -74,15 +50,8 @@ export function ProfileHeader({ musician }: Props) {
   const { colors } = useTheme();
   return (
     <View style={s.root}>
-      <LinearGradient colors={gradients.premium} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
-        <View style={s.avatarInner}>
-          {musician.avatar ? (
-            <Image source={{ uri: musician.avatar }} style={s.avatarImg} />
-          ) : (
-            <User size={40} color={colors.text.muted} />
-          )}
-        </View>
-      </LinearGradient>
+      {/* Tocar na foto troca a foto (25/set/2026) — antes só por Editar perfil. */}
+      <ProfileAvatarButton avatarUrl={musician.avatar} />
 
       <View style={s.nameRow}>
         <Text style={s.name}>{musician.display_name || musician.stage_name || musician.name}</Text>

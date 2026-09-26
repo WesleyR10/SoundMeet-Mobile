@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { X } from 'lucide-react-native';
 import { spacing, radius } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -25,6 +24,8 @@ import { PaywallFooter } from '../components/paywall/PaywallFooter';
 import { CheckoutSheet } from '../components/paywall/CheckoutSheet';
 import { ActiveSubscriptionCard } from '../components/paywall/ActiveSubscriptionCard';
 import type { RootScreenProps } from '@/navigation/types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'Plans'>;
 
@@ -64,7 +65,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:      radius.full,
     alignItems:       'center',
     justifyContent:   'center',
-    backgroundColor:  'rgba(255,255,255,0.05)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.05),
   },
   scroll: {
     paddingHorizontal: spacing.xl,
@@ -103,7 +104,7 @@ export function PlansPaywallScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground glows={paywallGlows(colors)} />
 
       <Pressable

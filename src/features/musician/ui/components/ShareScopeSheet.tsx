@@ -1,10 +1,14 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useCallback } from 'react';
+import { View, Text, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Lock, Users, Globe2 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import type { ShareScope } from '../../domain/personal-chord-sheet.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 type Props = {
   visible:        boolean;
@@ -16,11 +20,11 @@ type Props = {
   onClose:        () => void;
 };
 
-const OPTIONS: { value: ShareScope; label: string; hint: string; icon: typeof Lock; accent: string }[] = [
+const OPTIONS = (colors: ThemeColors): { value: ShareScope; label: string; hint: string; icon: typeof Lock; accent: string }[] => ([
   { value: 'private',   label: 'Privada',   hint: 'Só você vê essa cifra pessoal.',                          icon: Lock,   accent: colors.text.secondary },
   { value: 'band',      label: 'Banda',     hint: 'Todos os membros aceitos da sua banda podem ver.',        icon: Users,  accent: colors.brand.primary },
   { value: 'community',  label: 'Comunidade', hint: 'Qualquer músico da plataforma pode ver e importar.',    icon: Globe2, accent: colors.accent.violet },
-];
+]);
 
 // 3 pills private/band/community — mesmo idioma visual de
 // EditRepertoireShareSection.tsx, mas com 3 estados em vez de on/off.
@@ -28,12 +32,9 @@ const OPTIONS: { value: ShareScope; label: string; hint: string; icon: typeof Lo
 // é a única opção gated por plano (ESSENCIAL/PRO); banda é liberada em
 // todos os tiers.
 export function ShareScopeSheet({ visible, currentScope, loading, error, onSelect, onPressUpgrade, onClose }: Props) {
-  const sheetRef = useRef<BottomSheetModal>(null);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
+  const s = useStyles();
+  const { colors } = useTheme();
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -45,7 +46,7 @@ export function ShareScopeSheet({ visible, currentScope, loading, error, onSelec
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
@@ -54,7 +55,7 @@ export function ShareScopeSheet({ visible, currentScope, loading, error, onSelec
       <BottomSheetView style={s.content}>
         <Text style={s.title}>Compartilhamento</Text>
 
-        {OPTIONS.map((opt) => {
+        {OPTIONS(colors).map((opt) => {
           const active = currentScope === opt.value;
           return (
             <Pressable
@@ -88,7 +89,7 @@ export function ShareScopeSheet({ visible, currentScope, loading, error, onSelec
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   sheetBg: {
     backgroundColor: colors.bg.elevated,
     borderRadius:     radius.xl,
@@ -137,4 +138,4 @@ const s = StyleSheet.create({
     color:      colors.brand.primary,
     textAlign: 'center',
   },
-});
+}));

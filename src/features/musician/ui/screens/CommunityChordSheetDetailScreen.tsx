@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react-native';
 import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -19,6 +18,7 @@ import { useCommunityChordSheet } from '../../application/useCommunityChordSheet
 import { useCommunityChordSheetView } from '../../application/useCommunityChordSheetView';
 import { useMusicLibraryItem } from '../../application/useMusicLibraryItem';
 import { PersonalChordSheetReadOnlyBody } from '../components/PersonalChordSheetReadOnlyBody';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'CommunityChordSheetDetail'>;
 
@@ -76,7 +76,7 @@ export function CommunityChordSheetDetailScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
       <View style={s.header}>
         <Pressable onPress={() => navigation.goBack()} style={s.iconBtn} accessibilityRole="button" accessibilityLabel="Voltar">

@@ -1,5 +1,6 @@
-import { View, Text, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { View, Text, type StyleProp, type ViewStyle } from 'react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   title: string;
@@ -15,6 +16,7 @@ type Props = {
 // Pílulas somente-leitura para instrumentos/gêneros no ViewProfileScreen —
 // distinto do MultiSelectChip (interativo, usado no EditProfileScreen/wizard).
 export function ProfileTagPills({ title, items, color, style }: Props) {
+  const s = useStyles();
   if (items.length === 0) return null;
 
   return (
@@ -31,7 +33,7 @@ export function ProfileTagPills({ title, items, color, style }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap: spacing.md,
   },
@@ -39,7 +41,7 @@ const s = StyleSheet.create({
     ...typography.caption,
     fontFamily:    'Inter-Bold',
     letterSpacing:  0.6,
-    color:          'rgba(255,255,255,0.55)',
+    color:          colors.text.secondary,
     textTransform:  'uppercase',
   },
   row: {
@@ -57,4 +59,4 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     fontFamily: 'Inter-SemiBold',
   },
-});
+}));

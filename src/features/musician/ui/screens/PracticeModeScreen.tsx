@@ -1,16 +1,17 @@
 import { useMemo, useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { useKeepAwake } from 'expo-keep-awake';
 import { ArrowLeft } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { ChordDiagramSheet } from '@/shared/components/ChordDiagramSheet';
 import type { LineState } from '@/shared/components/ChordTokenLine';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { extractApiMessage } from '@/shared/services/http/types';
+import { shouldPreferFlatsForKey } from '@/shared/utils/chord-transpose';
 import type { RepertoireScreenProps } from '@/navigation/types';
 import { useRepertoire } from '../../application/useRepertoire';
 import { useChordSheet } from '../../application/useChordSheet';
@@ -25,6 +26,7 @@ import { PlayModeChordSheetView } from '../components/PlayModeChordSheetView';
 import { PracticePrepareCard } from '../components/PracticePrepareCard';
 import { PracticeTransport } from '../components/PracticeTransport';
 import { StemMixerRow } from '../components/StemMixerRow';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'PracticeMode'>;
 
@@ -109,6 +111,7 @@ export function PracticeModeScreen({ navigation, route }: Props) {
 
   const [jobId, setJobId] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [selectedChord, setSelectedChord] = useState<string | null>(null);
 
   const { data: repertoire } = useRepertoire(musicianId, repertoireId);
   const { data: chordSheet, grid, isPending: sheetPending } = useChordSheet(
@@ -147,7 +150,7 @@ export function PracticeModeScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
 
       <View style={s.header}>
         <Pressable
@@ -180,7 +183,7 @@ export function PracticeModeScreen({ navigation, route }: Props) {
             flatLines={flatLines}
             scroll={scroll}
             lineState={lineState}
-            onPressChord={() => undefined}
+            onPressChord={setSelectedChord}
           />
 
           <View style={s.dock}>
@@ -228,6 +231,21 @@ export function PracticeModeScreen({ navigation, route }: Props) {
           />
         </ScrollView>
       )}
+
+      {/*
+       * 🔴 Até 25/set/2026 o toque no acorde era `() => undefined`: a linha
+       * vibrava e sublinhava o acorde como tocável, e nada abria — "clico no
+       * acorde e não aparece no instrumento". Sem controles de tom aqui, a
+       * cifra está no tom original: violão, sem capotraste.
+       */}
+      <ChordDiagramSheet
+        visible={!!selectedChord}
+        chordSymbol={selectedChord}
+        instrument="guitar"
+        capoFret={null}
+        preferFlats={shouldPreferFlatsForKey(chordSheet?.meta.key)}
+        onClose={() => setSelectedChord(null)}
+      />
     </SafeAreaView>
   );
 }

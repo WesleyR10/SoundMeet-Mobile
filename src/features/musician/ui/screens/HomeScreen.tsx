@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { spacing } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -23,6 +22,7 @@ import { DiscoveryCard } from '../components/DiscoveryCard';
 import { RecentActivityList } from '../components/RecentActivityList';
 import { RecentBadgesRow } from '../components/RecentBadgesRow';
 import type { MusicianTabScreenProps, RootStackParamList } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = MusicianTabScreenProps<'Home'>;
 
@@ -98,7 +98,7 @@ export function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground glows={homeGlows(colors)} />
 
       <ScrollView

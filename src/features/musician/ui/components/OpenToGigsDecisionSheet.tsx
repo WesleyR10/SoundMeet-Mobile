@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
@@ -7,6 +7,7 @@ import { RadarPulseIndicator } from '@/shared/components/RadarPulseIndicator';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { useUpdateOpenToGigs, getUpdateOpenToGigsErrorMessage } from '../../application/useUpdateOpenToGigs';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   visible:    boolean;
@@ -74,14 +75,9 @@ const useStyles = makeStyles((colors) => ({
 
 export function OpenToGigsDecisionSheet({ visible, onClose, musicianId }: Props) {
   const s = useStyles();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [error, setError] = useState<string | null>(null);
   const updateOpenToGigs = useUpdateOpenToGigs(musicianId);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -103,7 +99,7 @@ export function OpenToGigsDecisionSheet({ visible, onClose, musicianId }: Props)
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

@@ -37,7 +37,7 @@ export function PersonalChordSheetBody({ grid, mode, annotations, onPressChord, 
   let lineIndex = 0;
   return (
     <ScrollView style={s.root} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
-      <Text style={s.editHint}>Toque em qualquer palavra para corrigir, inserir ou anotar.</Text>
+      <Text style={s.editHint}>Toque num acorde para corrigir ou remover. Toque numa palavra para inserir um acorde nela ou anotar. A letra não muda.</Text>
       {grid.map((section, sectionIndex) => (
         <View key={sectionIndex} style={s.section}>
           {section.lines.length === 0 && section.label ? <Text style={s.emptySection}>{section.label}</Text> : null}

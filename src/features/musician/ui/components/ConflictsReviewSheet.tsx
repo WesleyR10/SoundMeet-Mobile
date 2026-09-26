@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, BottomSheetFlatList, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { AlertTriangle } from 'lucide-react-native';
@@ -6,6 +6,7 @@ import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import type { OverlayOutcome, OverlayConflictReason } from '../../domain/personal-chord-sheet.types';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   visible:          boolean;
@@ -99,13 +100,8 @@ const useStyles = makeStyles((colors) => ({
 export function ConflictsReviewSheet({ visible, outcomes, discardingEditId, onDiscard, onClose }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const conflicts = outcomes.filter((o) => o.status === 'conflict');
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -117,7 +113,7 @@ export function ConflictsReviewSheet({ visible, outcomes, discardingEditId, onDi
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

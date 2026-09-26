@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { MessageSquare } from 'lucide-react-native';
@@ -9,10 +9,13 @@ import { FormField } from '@/shared/components/FormField';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { annotationTextSchema, ANNOTATION_MAX_LENGTH } from '../../domain/personal-chord-sheet.validation';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   visible:   boolean;
   loading?:  boolean;
+  /** Erro do salvamento, vindo de fora (o de validação é local). */
+  serverError?: string | null;
   onConfirm: (text: string) => void;
   onClose:   () => void;
 };
@@ -52,21 +55,16 @@ const useStyles = makeStyles((colors) => ({
   },
 }));
 
-export function AnnotationSheet({ visible, loading, onConfirm, onClose }: Props) {
+export function AnnotationSheet({ visible, loading, serverError, onConfirm, onClose }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [text, setText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) setText('');
     setError(null);
-  }, [visible]);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
   }, [visible]);
 
   const renderBackdrop = useCallback(
@@ -89,7 +87,7 @@ export function AnnotationSheet({ visible, loading, onConfirm, onClose }: Props)
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
@@ -110,7 +108,7 @@ export function AnnotationSheet({ visible, loading, onConfirm, onClose }: Props)
           multiline
         />
 
-        {!!error && <ErrorBanner message={error} />}
+        {!!(error ?? serverError) && <ErrorBanner message={(error ?? serverError)!} />}
 
         <PrimaryButton label="Salvar anotação" onPress={handleConfirm} loading={loading} style={s.confirmBtn} />
       </BottomSheetView>

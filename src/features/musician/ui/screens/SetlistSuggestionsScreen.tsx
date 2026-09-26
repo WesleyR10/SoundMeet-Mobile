@@ -1,6 +1,5 @@
 import { ScrollView, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Lightbulb } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -11,6 +10,7 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { RootScreenProps } from '@/navigation/types';
 import { useSetlistSuggestions } from '../../application/usePerformance';
 import { SetlistSuggestionRow } from '../components/SetlistSuggestionRow';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'SetlistSuggestions'>;
 
@@ -98,7 +98,7 @@ export function SetlistSuggestionsScreen({ route }: Props) {
   if (isPending) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.list}><SkeletonList count={4} itemHeight={100} /></View>
       </SafeAreaView>
     );
@@ -107,7 +107,7 @@ export function SetlistSuggestionsScreen({ route }: Props) {
   if (isError || !data) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.center}>
           <ErrorBanner message="Não conseguimos calcular as sugestões." />
         </View>
@@ -119,7 +119,7 @@ export function SetlistSuggestionsScreen({ route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <Text style={s.title}>Setlist sugerido</Text>
         {!!establishmentName && (

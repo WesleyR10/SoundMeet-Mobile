@@ -1,6 +1,5 @@
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -12,6 +11,7 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useMusician } from '../../application/useMusician';
 import { QRCodeContent } from '../components/QRCodeContent';
 import type { ProfileScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = ProfileScreenProps<'QRCode'>;
 
@@ -94,7 +94,7 @@ export function QRCodeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <Pressable

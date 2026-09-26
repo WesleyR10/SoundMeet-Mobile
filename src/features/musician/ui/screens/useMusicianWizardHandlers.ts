@@ -10,6 +10,7 @@ import { toE164Br } from '@/shared/utils/phone';
 import { inferImageMimeType, inferImageFileName } from '@/shared/utils/image';
 import { setWizardCompleted } from '@/shared/services/storage/wizard.storage';
 import type { useMusicianWizardState } from './useMusicianWizardState';
+import type { MusicianProfile } from '../../domain/musician.types';
 
 type Wizard = ReturnType<typeof useMusicianWizardState>;
 
@@ -104,19 +105,18 @@ export function useMusicianWizardHandlers(
     if (!musicianId) return;
     // Flip reativo do gate (1.14): só agora — no tap final do Step 5, não logo
     // após o PATCH — o RootNavigator troca o wizard pelas MusicianTabs.
-    queryClient.setQueryData(musicianWizardGateKey(musicianId), {
-      id:          musicianId,
-      stage_name:  wizard.state.stageName.trim(),
-      bio:         wizard.state.bio.trim(),
-      instruments: wizard.state.instruments,
-      genres:      wizard.state.genres,
-      qr_code:     wizard.state.qrCode,
-    });
+    //
+    // 🔴 MESCLA com o perfil em cache, nunca substitui. A versão anterior
+    // escrevia o estado local do wizard inteiro — que, retomado no passo 3,
+    // tinha nome artístico VAZIO. O gate lia "sem nome", mandava de volta ao
+    // passo 1, e a tela montada seguia no passo 5: o botão não saía do lugar.
+    const stageName = wizard.state.stageName.trim();
+    queryClient.setQueryData<MusicianProfile>(musicianWizardGateKey(musicianId), (cached) =>
+      cached && stageName ? { ...cached, stage_name: stageName } : cached,
+    );
 
     // 1.20: persiste que o wizard chegou até o fim (Steps 3/4 puláveis já
-    // vistos), senão o gate reabriria o wizard no Step 3 no próximo boot.
-    // Cache otimista + persistência real (secure store) em paralelo — mesmo
-    // padrão do flip acima, só que sobrevivendo a um restart do app.
+    // vistos), senão o gate reabriria o wizard no próximo boot.
     queryClient.setQueryData(wizardCompletedKey(musicianId), true);
     void setWizardCompleted(musicianId);
   };

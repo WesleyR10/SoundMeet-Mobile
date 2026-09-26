@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
@@ -22,6 +21,7 @@ import { TopSongsList } from '../components/TopSongsList';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { MusicianTabParamList, ProfileScreenProps, RootStackParamList } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = ProfileScreenProps<'Analytics'>;
 
@@ -225,7 +225,7 @@ export function AnalyticsScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground glows={analyticsGlows(colors)} />
 
       <Pressable

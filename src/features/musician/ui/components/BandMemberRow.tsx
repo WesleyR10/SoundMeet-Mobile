@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { X, RotateCcw } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { useRemoveBandMember, getRemoveBandMemberErrorMessage } from '../../application/useRemoveBandMember';
 import { useInviteBandMember, getInviteBandMemberErrorMessage } from '../../application/useInviteBandMember';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import type { BandMember } from '../../domain/band.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 type Props = {
   member: BandMember;
@@ -26,16 +29,18 @@ const STATUS_LABEL: Record<BandMember['status'], string> = {
   declined: 'Recusou',
 };
 
-const STATUS_COLOR: Record<BandMember['status'], string> = {
+const STATUS_COLOR = (colors: ThemeColors): Record<BandMember['status'], string> => ({
   pending:  colors.status.warning,
   accepted: colors.status.success,
   declined: colors.status.error,
-};
+});
 
 // Linha de membro na BandDetailScreen — sem avatar (backend não expõe
 // nome/foto do músico aqui, só musician_id; resolver isso é trabalho de uma
 // v2 com um endpoint de lookup em lote, fora do escopo desta versão).
 export function BandMemberRow({ member, bandId, canManage }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const roleLabel = ROLE_LABEL[member.role] ?? member.role;
   const [error, setError] = useState<string | null>(null);
 
@@ -89,8 +94,8 @@ export function BandMemberRow({ member, bandId, canManage }: Props) {
           <Text style={s.role}>{roleLabel}</Text>
         </View>
 
-        <View style={[s.statusPill, { backgroundColor: `${STATUS_COLOR[member.status]}1F` }]}>
-          <Text style={[s.statusText, { color: STATUS_COLOR[member.status] }]}>{STATUS_LABEL[member.status]}</Text>
+        <View style={[s.statusPill, { backgroundColor: `${STATUS_COLOR(colors)[member.status]}1F` }]}>
+          <Text style={[s.statusText, { color: STATUS_COLOR(colors)[member.status] }]}>{STATUS_LABEL[member.status]}</Text>
         </View>
 
         {canManage && isBusy && <ActivityIndicator size="small" color={colors.text.muted} />}
@@ -112,7 +117,7 @@ export function BandMemberRow({ member, bandId, canManage }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     alignItems:    'center',
@@ -157,4 +162,4 @@ const s = StyleSheet.create({
   error: {
     marginTop: spacing.xs,
   },
-});
+}));

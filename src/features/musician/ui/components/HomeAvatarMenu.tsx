@@ -1,10 +1,13 @@
 import { useEffect, type ReactNode } from 'react';
-import { Alert, InteractionManager, Modal, Pressable, Text, View, StyleSheet } from 'react-native';
+import { Alert, InteractionManager, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { User, Users, Crown, LogOut } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
 import { logout } from '@/shared/services/auth/keycloak.service';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   visible:           boolean;
@@ -26,6 +29,8 @@ const PLAN_LABEL: Record<string, string> = {
 // O item "Trocar de conta" abre o RoleSwitchSheet (@gorhom/bottom-sheet,
 // 10.5.1) — o dropdown segue leve pra ações rápidas (perfil/planos/sair).
 export function HomeAvatarMenu({ visible, onClose, planTier, onNavigateProfile, onNavigatePlans, onOpenAccounts }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const insets   = useSafeAreaInsets();
   const progress = useSharedValue(0);
 
@@ -109,6 +114,7 @@ function MenuItem({ icon, label, labelColor, onPress }: {
   labelColor?: string;
   onPress:     () => void;
 }) {
+  const s = useStyles();
   return (
     <Pressable
       onPress={onPress}
@@ -122,7 +128,7 @@ function MenuItem({ icon, label, labelColor, onPress }: {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   backdrop: {
     flex:            1,
     backgroundColor: colors.bg.overlay,
@@ -145,7 +151,7 @@ const s = StyleSheet.create({
     paddingHorizontal:  spacing.lg,
   },
   itemPressed: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: withAlpha(colors.text.primary, 0.05),
   },
   itemLabel: {
     ...typography.body,
@@ -177,4 +183,4 @@ const s = StyleSheet.create({
     marginVertical:   spacing.xs,
     marginHorizontal: spacing.lg,
   },
-});
+}));

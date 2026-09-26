@@ -1,9 +1,12 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Star, CheckCircle2, XCircle, type LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { AnimatedCounter } from '@/shared/components/AnimatedCounter';
 import { ProfileStatCard } from './ProfileStatCard';
 import type { MusicianAnalytics } from '../../domain/analytics.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   analytics: MusicianAnalytics;
@@ -14,6 +17,8 @@ type Props = {
 // via AnimatedStatCard (abaixo), mesmo visual do ProfileStatCard mas com
 // AnimatedCounter (count-up) no lugar de <Text> estático.
 export function AnalyticsHeroStats({ analytics }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={s.row}>
       <ProfileStatCard
@@ -46,6 +51,7 @@ function AnimatedStatCard({
   label: string;
   accentColor: string;
 }) {
+  const s = useStyles();
   return (
     <View style={[s.card, { borderColor: `${accentColor}40` }]}>
       <View style={[s.iconBox, { backgroundColor: `${accentColor}24` }]}>
@@ -57,7 +63,7 @@ function AnimatedStatCard({
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -66,7 +72,7 @@ const s = StyleSheet.create({
     flex: 1,
     borderRadius: radius.lg,
     borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding: spacing.md,
     gap: spacing.xs,
   },
@@ -86,4 +92,4 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
-});
+}));

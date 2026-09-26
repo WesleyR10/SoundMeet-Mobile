@@ -11,6 +11,8 @@ type Props = {
   control:            Control<EditProfileFormValues>;
   avatarUri:          string | null;
   onChangeAvatarUri:  (uri: string) => void;
+  /** O disco gira enquanto a foto sobe. */
+  isUploadingAvatar?: boolean;
 };
 
 const useStyles = makeStyles((colors) => ({
@@ -31,11 +33,17 @@ const useStyles = makeStyles((colors) => ({
   },
 }));
 
-export function EditIdentitySection({ control, avatarUri, onChangeAvatarUri }: Props) {
+export function EditIdentitySection({ control, avatarUri, onChangeAvatarUri, isUploadingAvatar = false }: Props) {
   const s = useStyles();
   return (
     <View style={s.root}>
-      <AvatarPicker uri={avatarUri} onChange={onChangeAvatarUri} />
+      {/* Aqui escolher não grava: a foto pousa no disco e espera "Salvar foto". */}
+      <AvatarPicker
+        uri={avatarUri}
+        onChange={onChangeAvatarUri}
+        busy={isUploadingAvatar}
+        confirmBeforeChange
+      />
 
       <Controller
         control={control}

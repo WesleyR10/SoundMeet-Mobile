@@ -1,6 +1,8 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import { ChevronRight, type LucideIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   icon:         LucideIcon;
@@ -21,8 +23,12 @@ type Props = {
 // em box colorido + texto), mas navegável (Pressable + chevron), fundo
 // plano em vez de card com borda — pensada pra ficar densa dentro de um
 // ProfileMenuSection sem competir visualmente com os cards de banda/stats.
-export function ProfileMenuRow({ icon: Icon, label, subtitle, accentColor = colors.brand.primary, onPress, destructive, badgeCount }: Props) {
-  const color = destructive ? colors.status.error : accentColor;
+// Tema: `accentColor` SEM valor padrão na assinatura — o padrão seria avaliado
+// fora do corpo, onde o hook não alcança, e congelaria a paleta escura.
+export function ProfileMenuRow({ icon: Icon, label, subtitle, accentColor, onPress, destructive, badgeCount }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
+  const color = destructive ? colors.status.error : (accentColor ?? colors.brand.primary);
   const accessibilityLabel = badgeCount ? `${label}, ${badgeCount} pendente${badgeCount === 1 ? '' : 's'}` : label;
 
   return (
@@ -49,7 +55,7 @@ export function ProfileMenuRow({ icon: Icon, label, subtitle, accentColor = colo
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   row: {
     flexDirection:     'row',
     alignItems:        'center',
@@ -59,7 +65,7 @@ const s = StyleSheet.create({
     paddingHorizontal:  spacing.sm,
   },
   rowPressed: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: colors.brand.muted,
   },
   iconBox: {
     width:           32,
@@ -95,4 +101,4 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color:      colors.text.inverse,
   },
-});
+}));

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text } from 'react-native';
 import {
   BottomSheetModal,
@@ -17,6 +17,7 @@ import { formatCpf, stripDigits } from '@/shared/utils/cpf';
 import { formatCnpj } from '@/shared/utils/cnpj';
 import type { BillingCycle, MusicianPlan } from '../../../domain/plans.config';
 import { checkoutPayerSchema } from '../../../domain/subscription.validation';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 import {
   getSubscriptionErrorMessage,
   useCreateCheckout,
@@ -116,7 +117,7 @@ export function CheckoutSheet({
 }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [name, setName] = useState(defaultName);
   const [email, setEmail] = useState(defaultEmail);
   const [document, setDocument] = useState(defaultDocument ? maskDocument(defaultDocument) : '');
@@ -125,11 +126,6 @@ export function CheckoutSheet({
 
   const checkout = useCreateCheckout(musicianId);
   const amount = cycle === 'annual' ? plan.annualPriceBrl : plan.monthlyPriceBrl;
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const handleDismiss = () => {
     setFieldError(null);
@@ -193,7 +189,7 @@ export function CheckoutSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={handleDismiss}
+      onDismiss={trackDismiss(handleDismiss)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

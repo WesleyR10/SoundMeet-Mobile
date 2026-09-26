@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import type { BillingCycle } from '../../../domain/plans.config';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   cycle:    BillingCycle;
@@ -15,6 +16,7 @@ const TOGGLE_HEIGHT = 48;
 // Largura por flex 1/2 — o indicador anima translateX de 0 → 50% via
 // percentual do container medido, sem Dimensions.
 export function BillingCycleToggle({ cycle, onChange }: Props) {
+  const s = useStyles();
   const progress = useSharedValue(cycle === 'annual' ? 1 : 0);
 
   useEffect(() => {
@@ -51,6 +53,7 @@ function Segment({ label, badge, active, onPress }: {
   active:  boolean;
   onPress: () => void;
 }) {
+  const s = useStyles();
   return (
     <Pressable
       style={s.segment}
@@ -69,7 +72,7 @@ function Segment({ label, badge, active, onPress }: {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     flexDirection:   'row',
     height:           TOGGLE_HEIGHT,
@@ -112,4 +115,4 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.primary,
   },
-});
+}));

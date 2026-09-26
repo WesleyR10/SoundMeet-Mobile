@@ -59,6 +59,17 @@ export async function updateBandAddress(bandId: string, address: MusicianLocatio
   return data.data;
 }
 
+// PATCH /bands/:id — genérico, só o campo formed_in. Mesmo racional parcial do
+// updateBandAddress acima.
+//
+// ⚠️ Aceita `null` para APAGAR o ano: quem digitou errado precisa de caminho de
+// volta ao "não informado". O use-case do backend testa `!== undefined`
+// justamente para distinguir "apagar" de "não mandei".
+export async function updateBandFormedIn(bandId: string, formed_in: number | null): Promise<Band> {
+  const { data } = await httpClient.patch<ApiEnvelope<Band>>(`/bands/${bandId}`, { formed_in });
+  return data.data;
+}
+
 // POST /bands/:id/members — cria convite "pending" (nunca adiciona membro
 // direto). Se musician_id já teve convite "declined" nessa banda, o backend
 // reativa pra "pending" sozinho em vez de dar erro — mesma chamada serve

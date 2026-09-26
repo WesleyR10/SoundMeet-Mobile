@@ -1,31 +1,34 @@
 import { useEffect } from 'react';
-import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, View, Pressable } from 'react-native';
+import { BackHandler, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft } from 'lucide-react-native';
 import { spacing } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
-import { useTheme } from '@/shared/hooks/useTheme';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
-import { useMusicianWizardGate } from '../../application/useMusicianWizardGate';
+import { musicianWizardGateKey, useMusicianWizardGate } from '../../application/useMusicianWizardGate';
+import { useMusicianWallet } from '../../application/useMusicianWallet';
+import { previousStep } from '../../domain/wizard.rules';
+import type { MusicianProfile } from '../../domain/musician.types';
 import { useMusicianWizardState } from './useMusicianWizardState';
 import { useMusicianWizardHandlers } from './useMusicianWizardHandlers';
 import { WizardBackground } from '../components/WizardBackground';
 import { WizardProgress } from '../components/WizardProgress';
 import { WizardStepFooter } from '../components/WizardStepFooter';
+import { WizardBackButton } from '../components/WizardBackButton';
 import { StepOneIdentity } from '../components/StepOneIdentity';
 import { StepTwoTags } from '../components/StepTwoTags';
 import { StepThreePhoto } from '../components/StepThreePhoto';
 import { StepFourPix } from '../components/StepFourPix';
 import { StepFiveQrReveal } from '../components/StepFiveQrReveal';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 // Único screen com estado interno de step (não 5 entradas de stack) — o background
 // teal→violeta e o WizardProgress precisam de continuidade visual entre steps, que
-// um push/pop de navigation destruiria. Back de hardware é sempre bloqueado: a
-// única saída controlada do Step 2 é a seta "Voltar" em tela; do Step 3 em diante a
-// conta já foi persistida, então não existe "voltar". Handlers assíncronos vivem em
+// um push/pop de navigation destruiria. VOLTAR existe em todo passo depois do
+// primeiro (seta, back do Android e toque nas etapas já feitas do topo): refazer
+// nome/estilo é seguro, porque o "Continuar" do passo 2 repete um PATCH
+// idempotente. Até 25/set/2026 só o passo 2 voltava. Handlers assíncronos vivem em
 // useMusicianWizardHandlers.ts (limite de ~200 linhas por screen — CLAUDE.md).
 const useStyles = makeStyles((colors) => ({
   root: {
@@ -36,16 +39,6 @@ const useStyles = makeStyles((colors) => ({
   progressWrap: {
     alignItems: 'center',
     paddingTop: spacing.lg,
-  },
-  backBtn: {
-    position:       'absolute',
-    top:             spacing.lg,
-    left:            spacing.lg,
-    width:           48,
-    height:          48,
-    alignItems:     'center',
-    justifyContent: 'center',
-    zIndex:          10,
   },
   scroll: {
     paddingHorizontal: spacing.xl,
@@ -58,7 +51,6 @@ const useStyles = makeStyles((colors) => ({
 
 export function MusicianSetupWizardScreen() {
   const s = useStyles();
-  const { colors } = useTheme();
   const authUser = useAuthStore((s) => s.user);
   const musicianId = authUser?.musicianId ?? null;
   const queryClient = useQueryClient();
@@ -68,7 +60,14 @@ export function MusicianSetupWizardScreen() {
   // em vez de reiniciar do zero).
   const gate = useMusicianWizardGate();
   const resumeStep = gate.kind === 'needs-wizard' ? gate.resumeStep : 1;
-  const wizard = useMusicianWizardState(resumeStep);
+  // Perfil já em cache: o RootNavigator só monta esta tela depois de o gate
+  // resolvê-lo. Só é lido na montagem (inicializador do reducer).
+  const cachedProfile = musicianId
+    ? (queryClient.getQueryData<MusicianProfile>(musicianWizardGateKey(musicianId)) ?? null)
+    : null;
+  const wizard = useMusicianWizardState(resumeStep, cachedProfile);
+  const { data: wallet } = useMusicianWallet(musicianId);
+  const back = previousStep(wizard.state.step);
   const {
     step2Valid, isUpdatingMusician, isUploadingAvatar, isSavingPixKey,
     handleAdvanceStep1, handleAdvanceStep2, handleUploadAvatar, handleSavePix, handleGoHome,
@@ -87,10 +86,16 @@ export function MusicianSetupWizardScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wizard.state.step]);
 
+  // Back do Android volta um passo; no passo 1 continua bloqueado (sair do
+  // assistente deixaria o músico sem tela nenhuma para onde ir).
   useEffect(() => {
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => true);
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (back) wizard.goBackToStep(back);
+      return true;
+    });
     return () => sub.remove();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [back]);
 
   const contentStyle = useAnimatedStyle(() => ({
     opacity:   contentOpacity.value,
@@ -99,24 +104,14 @@ export function MusicianSetupWizardScreen() {
 
   return (
     <SafeAreaView style={s.root}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <WizardBackground progress={progress} step={wizard.state.step} />
 
       <View style={s.progressWrap}>
-        <WizardProgress step={wizard.state.step} />
+        <WizardProgress step={wizard.state.step} onStepPress={wizard.goBackToStep} />
       </View>
 
-      {wizard.state.step === 2 && (
-        <Pressable
-          onPress={wizard.goBackToStep1}
-          style={s.backBtn}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar para nome artístico"
-        >
-          <ArrowLeft size={22} color={colors.text.primary} />
-        </Pressable>
-      )}
+      {back && <WizardBackButton onPress={() => wizard.goBackToStep(back)} />}
 
       <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
@@ -145,6 +140,7 @@ export function MusicianSetupWizardScreen() {
                 avatarUri={wizard.state.avatarUri}
                 onChangeAvatarUri={wizard.setAvatarUri}
                 error={wizard.state.avatarError}
+                busy={isUploadingAvatar}
               />
             )}
 
@@ -180,6 +176,7 @@ export function MusicianSetupWizardScreen() {
                 loading={isUploadingAvatar}
                 onAdvance={handleUploadAvatar}
                 onSkip={wizard.advanceToStep4}
+                skipLabel={cachedProfile?.avatar ? 'Manter a foto atual' : undefined}
               />
             )}
             {wizard.state.step === 4 && (
@@ -188,7 +185,9 @@ export function MusicianSetupWizardScreen() {
                 loading={isSavingPixKey}
                 onAdvance={handleSavePix}
                 onSkip={wizard.advanceToStep5}
-                skipLabel="Pular por enquanto (sem receber pagamentos)"
+                skipLabel={
+                  wallet?.pix_key ? 'Manter a chave atual' : 'Pular por enquanto (sem receber pagamentos)'
+                }
               />
             )}
           </Animated.View>

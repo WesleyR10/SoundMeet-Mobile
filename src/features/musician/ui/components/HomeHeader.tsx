@@ -7,6 +7,7 @@ import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { HomeAvatarMenu } from './HomeAvatarMenu';
 import type { MusicianProfile } from '../../domain/musician.types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   musician: MusicianProfile | null | undefined;
@@ -96,7 +97,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:     radius.full,
     alignItems:      'center',
     justifyContent:  'center',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
   },
   balanceWrap: {
     flexDirection:    'row',
@@ -105,7 +106,7 @@ const useStyles = makeStyles((colors) => ({
     paddingVertical:   spacing.xs,
     paddingHorizontal: spacing.sm,
     borderRadius:      radius.md,
-    backgroundColor:  'rgba(255,255,255,0.03)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.03),
   },
   balance: {
     ...typography.body,

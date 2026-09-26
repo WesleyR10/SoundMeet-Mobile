@@ -16,7 +16,7 @@ const useStyles = makeStyles((colors) => ({
     flex:               1,
     borderRadius:       radius.lg,
     borderWidth:         1,
-    backgroundColor:    'rgba(255,255,255,0.03)',
+    backgroundColor:    colors.bg.surface,
     padding:             spacing.md,
     gap:                 spacing.xs,
   },

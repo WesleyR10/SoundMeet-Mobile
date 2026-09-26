@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Search } from 'lucide-react-native';
@@ -11,6 +11,8 @@ import { useMusicianSearch } from '../../application/useMusicianSearch';
 import { useInviteBandMember, getInviteBandMemberErrorMessage } from '../../application/useInviteBandMember';
 import { INSTRUMENT_OPTIONS } from '../../domain/musician.constants';
 import type { MusicianSearchResult } from '../../domain/musician-search.types';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   visible:           boolean;
@@ -52,7 +54,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:        radius.md,
     borderWidth:          1,
     borderColor:         colors.border.default,
-    backgroundColor:    'rgba(255,255,255,0.04)',
+    backgroundColor:    withAlpha(colors.text.primary, 0.04),
     paddingHorizontal:   spacing.sm,
   },
   searchInput: {
@@ -72,7 +74,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:      radius.md,
     paddingVertical:   spacing.sm,
     paddingHorizontal: spacing.sm,
-    backgroundColor:  'rgba(255,255,255,0.03)',
+    backgroundColor:  withAlpha(colors.text.primary, 0.03),
   },
   resultName: {
     ...typography.bodySm,
@@ -168,7 +170,7 @@ const useStyles = makeStyles((colors) => ({
 export function InviteMemberSheet({ visible, onClose, bandId, musicianId, existingMemberIds }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<MusicianSearchResult | null>(null);
   const [instrumentId, setInstrumentId] = useState<string | null>(null);
@@ -176,11 +178,6 @@ export function InviteMemberSheet({ visible, onClose, bandId, musicianId, existi
 
   const { data: results, isPending: isSearching } = useMusicianSearch(query);
   const invite = useInviteBandMember(bandId, musicianId);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const reset = () => {
     setQuery('');
@@ -218,7 +215,7 @@ export function InviteMemberSheet({ visible, onClose, bandId, musicianId, existi
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={handleDismiss}
+      onDismiss={trackDismiss(handleDismiss)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

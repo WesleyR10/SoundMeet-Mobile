@@ -1,6 +1,5 @@
 import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Plus, Mail, FileMusic } from 'lucide-react-native';
 import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -14,6 +13,7 @@ import type { RepertoireScreenProps } from '@/navigation/types';
 import { useRepertoires } from '../../application/useRepertoires';
 import { RepertoireCard } from '../components/RepertoireCard';
 import type { Repertoire } from '../../domain/repertoire.types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'RepertoireList'>;
 
@@ -141,7 +141,7 @@ export function RepertoireListScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

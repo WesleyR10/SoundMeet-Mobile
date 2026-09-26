@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Text, Pressable, TextInput } from 'react-native';
 import {
   BottomSheetModal,
@@ -11,6 +11,7 @@ import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { REJECTION_REASON_MAX_LENGTH } from '../../domain/request.types';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   /** Quantos pedidos serão recusados. `0` mantém o sheet fechado. */
@@ -80,13 +81,8 @@ const useStyles = makeStyles((colors) => ({
 export function BatchRejectSheet({ count, visible, loading, onConfirm, onClose }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [reason, setReason] = useState('');
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   // Reabrir noutro lote não pode herdar o motivo digitado no anterior.
   // Ajuste durante o render (padrão "adjusting state when a prop changes" do
@@ -108,7 +104,7 @@ export function BatchRejectSheet({ count, visible, loading, onConfirm, onClose }
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

@@ -7,6 +7,7 @@ import { spacing, radius, typography, gradients } from '@/shared/design-system/t
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { Avatar } from '@/shared/components/Avatar';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   title:            string;
@@ -70,7 +71,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:   radius.full,
     alignItems:     'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: withAlpha(colors.text.primary, 0.05),
   },
   badge: {
     minWidth:          28,
@@ -103,7 +104,7 @@ const useStyles = makeStyles((colors) => ({
   progressTrack: {
     height:          2,
     borderRadius:    1,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: withAlpha(colors.text.primary, 0.08),
     overflow:        'hidden',
   },
   progressFillWrap: {

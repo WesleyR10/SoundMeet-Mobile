@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withDelay, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { Award } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import type { UserBadge } from '@/shared/services/gamification/gamification.types';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   badges:    UserBadge[];
@@ -14,6 +17,8 @@ type Props = {
 // Glow pulsante (estilo `hm-badge` do mockup) só em badges desbloqueadas —
 // uma badge travada não pulsa, fica só em opacidade reduzida.
 function BadgeCard({ badge, index }: { badge: UserBadge; index: number }) {
+  const s = useStyles();
+  const { colors } = useTheme();
   // Helper não exportado chama o hook por conta própria (ver CLAUDE.md).
   const reducedMotion = useReducedMotion();
   const glow = useSharedValue(0.35);
@@ -50,6 +55,7 @@ function BadgeCard({ badge, index }: { badge: UserBadge; index: number }) {
 
 // Fonte real: GET /gamification/users/:user_id/badges (useMusicianBadges).
 export function RecentBadgesRow({ badges, isLoading }: Props) {
+  const s = useStyles();
   const recent = badges.slice(0, 3);
 
   return (
@@ -71,7 +77,7 @@ export function RecentBadgesRow({ badges, isLoading }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root:  { gap: spacing.md },
   title: { ...typography.title, color: colors.text.primary },
   empty: { ...typography.body, color: colors.text.secondary },
@@ -86,7 +92,7 @@ const s = StyleSheet.create({
     borderRadius:      radius.lg,
     borderWidth:        1,
     borderColor:      `${colors.accent.amber}40`,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding:            spacing.md,
     shadowColor:      colors.accent.amber,
     shadowOffset:     { width: 0, height: 0 },
@@ -109,4 +115,4 @@ const s = StyleSheet.create({
     color:     colors.text.secondary,
     textAlign: 'center',
   },
-});
+}));

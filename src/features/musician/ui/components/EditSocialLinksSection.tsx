@@ -1,14 +1,16 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Controller, type Control } from 'react-hook-form';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { FormField } from '@/shared/components/FormField';
 import type { EditProfileFormValues } from '../../domain/musician.validation';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   control: Control<EditProfileFormValues>;
 };
 
 export function EditSocialLinksSection({ control }: Props) {
+  const s = useStyles();
   return (
     <View style={s.root}>
       <Text style={s.label}>Links sociais</Text>
@@ -62,7 +64,7 @@ export function EditSocialLinksSection({ control }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap: spacing.md,
   },
@@ -70,7 +72,7 @@ const s = StyleSheet.create({
     ...typography.caption,
     fontFamily:    'Inter-Bold',
     letterSpacing:  0.6,
-    color:          'rgba(255,255,255,0.55)',
+    color:          colors.text.secondary,
     textTransform:  'uppercase',
   },
-});
+}));

@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from 'react';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { useKeepAwake } from 'expo-keep-awake';
 import { Radio } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
@@ -24,6 +23,7 @@ import { SelectionActionBar } from '../components/SelectionActionBar';
 import { BatchRejectSheet } from '../components/BatchRejectSheet';
 import { pruneSelection, summarizeBatchOutcome } from '../../domain/request-batch.rules';
 import type { MusicRequest, RespondToRequestAction } from '../../domain/request.types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 // Tela ao vivo (Bloco 4) — sempre dark, mesmo padrão de QRCodeScreen/
 // ViewProfileScreen (nenhuma tela do músico consome ThemeContext hoje).
@@ -293,7 +293,7 @@ export function LiveDashboardScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
 
       <View style={s.header}>
         <Text style={s.title}>Ao Vivo</Text>

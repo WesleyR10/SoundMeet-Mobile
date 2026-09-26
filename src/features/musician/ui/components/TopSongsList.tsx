@@ -5,6 +5,7 @@ import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 import type { TopRequestedSong } from '../../domain/analytics.types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   songs: TopRequestedSong[];
@@ -30,7 +31,7 @@ const useStyles = makeStyles((colors) => ({
     width: 36,
     height: 36,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: withAlpha(colors.text.primary, 0.04),
     alignItems: 'center',
     justifyContent: 'center',
   },

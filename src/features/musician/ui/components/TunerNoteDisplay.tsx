@@ -1,6 +1,9 @@
-import { Text, View, StyleSheet } from 'react-native';
-import { colors, spacing, typography } from '@/shared/design-system/tokens';
+import { Text, View } from 'react-native';
+import { spacing, typography } from '@/shared/design-system/tokens';
 import type { NoteName } from '../../domain/tuner.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 type Props = {
   note:        NoteName | null;
@@ -21,7 +24,7 @@ const CLOSE_CENTS = 15;
 // Verde dentro de ±5 cents, âmbar dentro de ±15, coral além disso — mesma
 // semântica de colors.status.* usada no resto do app (PIX confirmado/pendente/
 // erro), aplicada aqui à proximidade da afinação.
-function colorForCents(cents: number | null, hasSignal: boolean): string {
+function colorForCents(colors: ThemeColors, cents: number | null, hasSignal: boolean): string {
   if (!hasSignal || cents === null) return colors.text.muted;
   const abs = Math.abs(cents);
   if (abs <= IN_TUNE_CENTS) return colors.status.success;
@@ -30,7 +33,9 @@ function colorForCents(cents: number | null, hasSignal: boolean): string {
 }
 
 export function TunerNoteDisplay({ note, octave, frequencyHz, cents, hasSignal }: Props) {
-  const color = colorForCents(cents, hasSignal);
+  const s = useStyles();
+  const { colors } = useTheme();
+  const color = colorForCents(colors, cents, hasSignal);
   const hasReading = hasSignal && frequencyHz !== null;
 
   return (
@@ -44,7 +49,7 @@ export function TunerNoteDisplay({ note, octave, frequencyHz, cents, hasSignal }
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     alignItems: 'center',
     gap:         spacing.xs,
@@ -61,4 +66,4 @@ const s = StyleSheet.create({
     ...typography.body,
     color: colors.text.secondary,
   },
-});
+}));

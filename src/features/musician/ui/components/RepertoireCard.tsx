@@ -6,6 +6,7 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { GlowCard } from '@/shared/components/GlowCard';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import type { Repertoire } from '../../domain/repertoire.types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   repertoire: Repertoire;
@@ -54,7 +55,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:       radius.sm,
     paddingHorizontal:  spacing.sm,
     paddingVertical:    4,
-    backgroundColor:    'rgba(255,255,255,0.05)',
+    backgroundColor:    withAlpha(colors.text.primary, 0.05),
   },
   badgeText: {
     ...typography.caption,

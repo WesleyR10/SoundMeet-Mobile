@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { spacing, typography } from '@/shared/design-system/tokens';
@@ -34,6 +33,7 @@ import { PersonalNotesSheet } from '../components/PersonalNotesSheet';
 import { PersonalChordSheetSettingsSheet } from '../components/PersonalChordSheetSettingsSheet';
 import { ShareScopeSheet } from '../components/ShareScopeSheet';
 import { ConflictsReviewSheet } from '../components/ConflictsReviewSheet';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'PersonalChordSheetEditor'>;
 
@@ -104,7 +104,7 @@ export function PersonalChordSheetEditorScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
       <PersonalChordSheetTopBar
         title={item.data?.title ?? view.data.sheet.title}
@@ -129,9 +129,9 @@ export function PersonalChordSheetEditorScreen({ navigation, route }: Props) {
       />
 
       <ChordDiagramSheet visible={!!selectedChord} chordSymbol={selectedChord} instrument={instrument} capoFret={detail.data.view.capo_fret || null} preferFlats={preferFlats} onClose={() => setSelectedChord(null)} />
-      <ChordTokenActionSheet visible={editor.actionVisible} token={editor.selectedToken} onClose={editor.closeAction} onCorrectChord={() => editor.openPicker('replace')} onInsertChord={() => editor.openPicker('insert')} onRemoveChord={editor.removeChord} onAnnotate={editor.openAnnotation} />
-      <ChordPickerSheet visible={!!editor.pickerMode} initialSymbol={editor.pickerMode === 'replace' ? editor.selectedToken?.chordSymbol : null} instrument={instrument} preferFlats={preferFlats} onConfirm={editor.confirmChord} onClose={editor.closePicker} />
-      <AnnotationSheet visible={editor.annotationVisible} loading={editor.isSaving} onConfirm={editor.confirmAnnotation} onClose={editor.closeAnnotation} />
+      <ChordTokenActionSheet visible={editor.actionVisible} token={editor.selectedToken} onClose={editor.handleActionDismissed} onCorrectChord={() => editor.openPicker('replace')} onInsertChord={() => editor.openPicker('insert')} onRemoveChord={editor.removeChord} onAnnotate={editor.openAnnotation} />
+      <ChordPickerSheet visible={!!editor.pickerMode} initialSymbol={editor.pickerMode === 'replace' ? editor.selectedToken?.chordSymbol : null} instrument={instrument} preferFlats={preferFlats} onConfirm={editor.confirmChord} onClose={editor.closePicker} loading={editor.isSaving} error={editor.pickerMode ? editor.error : null} />
+      <AnnotationSheet visible={editor.annotationVisible} loading={editor.isSaving} serverError={editor.annotationVisible ? editor.error : null} onConfirm={editor.confirmAnnotation} onClose={editor.closeAnnotation} />
       <PersonalNotesSheet visible={openSheet === 'notes'} initialNotes={detail.data.notes} loading={updateNotes.isPending} onConfirm={(notes) => run(() => updateNotes.mutateAsync(notes))} onClose={() => setOpenSheet(null)} />
       <PersonalChordSheetSettingsSheet visible={openSheet === 'settings'} value={detail.data.view} loading={updateView.isPending} onSave={(patch) => run(() => updateView.mutateAsync(patch))} onClose={() => setOpenSheet(null)} />
       <ShareScopeSheet visible={openSheet === 'share'} currentScope={detail.data.share_scope} loading={busy} error={mutationError} onSelect={changeShareScope} onPressUpgrade={() => root?.navigate('Plans')} onClose={() => setOpenSheet(null)} />

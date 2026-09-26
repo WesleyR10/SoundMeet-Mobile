@@ -1,6 +1,5 @@
 import { ScrollView, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import {
   BadgeCheck,
   Building2,
@@ -19,6 +18,7 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { RootScreenProps } from '@/navigation/types';
 import { useMyResume } from '../../application/usePerformance';
 import { ReportStatCard } from '../components/ReportStatCard';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'MyResume'>;
 
@@ -130,7 +130,7 @@ export function MyResumeScreen(_props: Props) {
   if (isPending) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.skeleton}>
           {/* Números verificados no topo, depois a lista de shows. */}
           <SkeletonStatRow count={3} />
@@ -143,7 +143,7 @@ export function MyResumeScreen(_props: Props) {
   if (isError || !resume) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <View style={s.center}>
           <ErrorBanner message="Não conseguimos carregar seu currículo." />
         </View>
@@ -155,7 +155,7 @@ export function MyResumeScreen(_props: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
         <View style={s.titleRow}>
           <BadgeCheck size={22} color={colors.brand.primary} />

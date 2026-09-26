@@ -1,6 +1,5 @@
 import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Mail } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -14,6 +13,7 @@ import { useRepertoireInvites } from '../../application/useRepertoireInvites';
 import { RepertoireCard } from '../components/RepertoireCard';
 import type { Repertoire } from '../../domain/repertoire.types';
 import type { RepertoireScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RepertoireScreenProps<'RepertoireInvites'>;
 
@@ -70,7 +70,7 @@ export function RepertoireInvitesScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

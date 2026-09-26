@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, type BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { Music2, PlusCircle, Trash2, MessageSquare } from 'lucide-react-native';
@@ -6,6 +6,8 @@ import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import type { RenderableToken } from '@/shared/utils/chord-sheet';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   visible:          boolean;
@@ -62,7 +64,7 @@ const useStyles = makeStyles((colors) => ({
     minHeight:            48,
   },
   rowPressed: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: withAlpha(colors.text.primary, 0.04),
   },
   rowDisabled: {
     opacity: 0.35,
@@ -82,12 +84,7 @@ export function ChordTokenActionSheet({
 }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -98,9 +95,11 @@ export function ChordTokenActionSheet({
 
   if (!token) return null;
 
-  // Sem startMs não há onde ancorar a edição (nem insert_chord nem annotate
-  // funcionam sem um ponto no tempo) — token permanece só de leitura.
-  const canEdit = typeof token.startMs === 'number';
+  // Sem um ponto no tempo não há onde ancorar a edição — token só de leitura.
+  // O acorde vale pelo tempo DELE (`chordStartMs`): os de trecho instrumental
+  // ("—") não têm tempo de palavra, e exigir `startMs` desabilitava corrigir e
+  // remover justamente neles. Tempo que falta de fato é explicado no `hint`.
+  const canEdit = typeof (token.chordSymbol ? token.chordStartMs ?? token.startMs : token.startMs) === 'number';
 
   const rows: ActionRow[] = token.chordSymbol
     ? [
@@ -116,7 +115,7 @@ export function ChordTokenActionSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
