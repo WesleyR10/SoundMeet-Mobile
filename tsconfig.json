@@ -8,11 +8,14 @@
       "@/*": [
         "src/*"
       ]
-    }
+    },
+    // TS 6.0 mudou o default de `types` para [] (antes incluía tudo em
+    // node_modules/@types automaticamente) — sem isto, describe/it/expect
+    // dos arquivos *.test.ts somem do typecheck mesmo com @types/jest instalado.
+    "types": ["jest"]
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    "nativewind-env.d.ts"
+    "**/*.tsx"
   ]
 }
