@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +21,7 @@ import { useSocialSignup, getSocialSignupErrorMessage } from '@/features/auth/ap
 import { loginWithGoogle } from '@/shared/services/auth/keycloak.service';
 import { stripDigits } from '@/shared/utils/cpf';
 import type { AuthScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = AuthScreenProps<'Register'>;
 
@@ -138,7 +138,7 @@ export function RegisterScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AuthGlowBackground variant="subtle" />
 
       <Pressable

@@ -1,15 +1,20 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Check } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { checkPasswordRules, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH } from '@/features/auth/domain/auth.validation';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   password: string;
 };
 
 function Rule({ met, label }: { met: boolean; label: string }) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
 
   useEffect(() => {
@@ -23,7 +28,7 @@ function Rule({ met, label }: { met: boolean; label: string }) {
 
   return (
     <View style={s.row}>
-      <Animated.View style={[s.dot, dotStyle, { backgroundColor: met ? colors.status.success : 'rgba(255,255,255,0.08)' }]}>
+      <Animated.View style={[s.dot, dotStyle, { backgroundColor: met ? colors.status.success : withAlpha(colors.text.primary, 0.08) }]}>
         {met && <Check size={11} color={colors.text.inverse} strokeWidth={3} />}
       </Animated.View>
       <Text style={[s.label, met && s.labelMet]}>{label}</Text>
@@ -32,6 +37,7 @@ function Rule({ met, label }: { met: boolean; label: string }) {
 }
 
 export function PasswordStrengthHint({ password }: Props) {
+  const s = useStyles();
   const rules = checkPasswordRules(password);
 
   return (
@@ -43,7 +49,7 @@ export function PasswordStrengthHint({ password }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
     flexDirection: 'row',
     flexWrap:      'wrap',
@@ -68,4 +74,4 @@ const s = StyleSheet.create({
   labelMet: {
     color: colors.text.secondary,
   },
-});
+}));

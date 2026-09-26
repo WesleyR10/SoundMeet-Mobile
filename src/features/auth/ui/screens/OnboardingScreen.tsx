@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dimensions, View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -16,6 +15,7 @@ import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { OnboardingHero }       from '../components/OnboardingHero';
 import { SlideCarousel, SLIDE_COUNT } from '../components/SlideCarousel';
 import type { AuthScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 const SLIDE_INTERVAL_MS = 4500;
 const SW = Dimensions.get('window').width;
@@ -85,7 +85,7 @@ const useStyles = makeStyles((colors) => ({
   },
   loginRow: {
     ...typography.body,
-    color:     'rgba(255,255,255,0.55)',
+    color:     colors.text.secondary,
     textAlign: 'center',
   },
   loginLink: {
@@ -148,7 +148,7 @@ export function OnboardingScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
 
       <OnboardingBackground />
       <OnboardingHero />

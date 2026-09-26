@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Dimensions } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -11,6 +11,8 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { spacing, radius } from '@/shared/design-system/tokens';
 import { useTheme } from '@/shared/hooks/useTheme';
 import type { ThemeColors } from '@/shared/services/ThemeContext';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 /*
  * Função do tema, não constante de módulo: avaliada no carregamento, congelaria
@@ -62,10 +64,13 @@ const SWIPE_THRESHOLD = SW * 0.20; // 20% da tela para mudar slide
 // ── Dot animado ───────────────────────────────────────────────────────────────
 
 function AnimatedDot({ isActive }: { isActive: boolean }) {
+  const s = useStyles();
   // Helper é componente: chama o hook por conta própria.
   const { colors } = useTheme();
   const progress = useSharedValue(isActive ? 1 : 0);
   const dotWidth = useSharedValue(isActive ? 26 : 8);
+  // Fora do worklet: withAlpha é JS comum e não roda na thread de UI.
+  const idleColor = withAlpha(colors.text.primary, 0.22);
 
   useEffect(() => {
     progress.value = withTiming(isActive ? 1 : 0, { duration: 300 });
@@ -77,7 +82,7 @@ function AnimatedDot({ isActive }: { isActive: boolean }) {
     backgroundColor: interpolateColor(
       progress.value,
       [0, 1],
-      ['rgba(255,255,255,0.22)', colors.brand.primary],
+      [idleColor, colors.brand.primary],
     ),
   }));
 
@@ -92,6 +97,7 @@ type Props = {
 };
 
 export function SlideCarousel({ slide, onGoto }: Props) {
+  const s = useStyles();
   const { colors } = useTheme();
   // posição base do slide atual + offset do drag em andamento
   const baseX  = useSharedValue(-SW * slide);
@@ -159,7 +165,7 @@ export function SlideCarousel({ slide, onGoto }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   outer: {
     height:   150,
     overflow: 'hidden',
@@ -189,7 +195,7 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     fontSize:    17,
     lineHeight:  26,
-    color:      'rgba(255,255,255,0.82)',
+    color:      withAlpha(colors.text.primary, 0.82),
     textAlign:  'center',
   },
   dots: {
@@ -203,4 +209,4 @@ const s = StyleSheet.create({
     height:       8,
     borderRadius: 5,
   },
-});
+}));

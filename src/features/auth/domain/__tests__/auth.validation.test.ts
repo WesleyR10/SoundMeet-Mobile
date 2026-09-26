@@ -1,6 +1,7 @@
 import {
   checkPasswordRules,
   completeCadastroSchema,
+  loginSchema,
   passwordMeetsRules,
   registerSchema,
 } from '../auth.validation';
@@ -104,5 +105,21 @@ describe('completeCadastroSchema — login social pendente do músico', () => {
       phone: '(11) 99999-9999',
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('loginSchema', () => {
+  it('aceita e-mail com espaço do autocompletar e devolve aparado', () => {
+    const parsed = loginSchema.parse({ email: ' joao@soundmeet.dev ', password: 'x' });
+    expect(parsed.email).toBe('joao@soundmeet.dev');
+  });
+
+  it('não aplica regra de complexidade — isso é do cadastro', () => {
+    expect(loginSchema.safeParse({ email: 'a@b.com', password: 'fraca' }).success).toBe(true);
+  });
+
+  it('recusa senha vazia e e-mail inválido', () => {
+    expect(loginSchema.safeParse({ email: 'a@b.com', password: '' }).success).toBe(false);
+    expect(loginSchema.safeParse({ email: 'nao-e-email', password: 'x' }).success).toBe(false);
   });
 });

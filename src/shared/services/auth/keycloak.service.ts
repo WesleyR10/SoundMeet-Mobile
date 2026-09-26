@@ -13,6 +13,13 @@ import { useAuthStore } from '@/shared/services/auth/auth.store';
 import type { AuthUser } from '@/shared/services/auth/auth.store';
 import { usePendingGoogleSessionStore } from '@/shared/services/auth/pendingGoogleSession.store';
 import { clearLocalSession } from '@/shared/services/auth/clear-session';
+import { resolveSessionChannel } from '@/shared/services/auth/session-channel';
+import {
+  requestPasswordLogin,
+  requestSessionRefresh,
+  requestSessionRevocation,
+  type PasswordSessionTokens,
+} from '@/shared/services/auth/password-session.api';
 import {
   saveTokens,
   getTokens,
@@ -40,6 +47,7 @@ const SCOPES = ['openid', 'profile', 'email', 'offline_access'];
 
 interface JwtPayload {
   sub:              string;
+  azp?:             string;
   email?:           string;
   realm_access?:    { roles?: string[] };
   resource_access?: Record<string, { roles?: string[] } | undefined>;
@@ -87,7 +95,24 @@ export function buildAuthUser(accessToken: string): AuthUser {
 
 // ── Internal helpers ───────────────────────────────────────────────────────────
 
-async function persistAndApplyTokens(response: TokenResponse): Promise<void> {
+// Forma comum às duas origens de sessão: o `TokenResponse` do expo-auth-session
+// (Google/PKCE) já tem estes campos, e a resposta da nossa API é convertida
+// para eles por `fromPasswordSession`.
+type SessionTokens = Pick<TokenResponse, 'accessToken' | 'refreshToken' | 'idToken' | 'expiresIn'>;
+
+function fromPasswordSession(tokens: PasswordSessionTokens): SessionTokens {
+  return {
+    accessToken:  tokens.access_token,
+    refreshToken: tokens.refresh_token,
+    expiresIn:    tokens.expires_in,
+  };
+}
+
+function sessionChannelOf(accessToken: string) {
+  return resolveSessionChannel(decodeJwt(accessToken).azp, CLIENT_ID);
+}
+
+async function persistAndApplyTokens(response: SessionTokens): Promise<void> {
   const tokens: StoredTokens = {
     accessToken:  response.accessToken,
     refreshToken: response.refreshToken ?? '',
@@ -114,16 +139,14 @@ export const ESTABLISHMENT_LOGIN_MESSAGE =
 
 export type LoginResult =
   | 'success'
-  /** Usuário fechou o navegador antes de concluir. */
-  | 'dismissed'
   /** Conta de estabelecimento: persona web-only, o app não tem navegação. */
   | 'establishment-only'
   /** Identidade existe no Keycloak mas ainda não escolheu papel no SoundMeet. */
   | 'needs-role-selection';
 
-// Fluxo Authorization Code + PKCE genérico — usado tanto pelo login por browser
-// (Keycloak nativo) quanto pelo login social (com kc_idp_hint), que só difere
-// por um extra param que faz o Keycloak redirecionar direto pro provedor.
+// Fluxo Authorization Code + PKCE — hoje só o login com Google (kc_idp_hint faz
+// o Keycloak redirecionar direto pro provedor). O login por senha saiu daqui
+// no AUTH-3 e é nativo (`loginWithPassword`).
 async function runAuthorizationCodeFlow(
   extraParams?: Record<string, string>,
 ): Promise<TokenResponse | 'dismissed'> {
@@ -160,41 +183,33 @@ async function runAuthorizationCodeFlow(
 }
 
 /*
- * Login por Authorization Code + PKCE (AUTH-1).
+ * Login por e-mail e senha, com a tela DENTRO do app (AUTH-3, 25/set/2026).
  *
- * 🔴 Substituiu o `POST /auth/login`, que era Direct Access Grant: o app
- * coletava a senha num TextInput e a mandava para a nossa API, que a repassava
- * ao Keycloak. Três problemas que nenhum ajuste de código resolvia:
- *  - a senha passava pelo app e pelo Nest, então qualquer log, crash dump ou
- *    malware no aparelho via SENHA, não só token;
- *  - MFA não cabe num grant que é um POST só, sem tela de segundo fator;
- *  - o `client_id` público está dentro do APK, então um script batia direto no
- *    `/token` do Keycloak e **pulava o `@Throttle` do Nest inteiro**.
+ * 🔴 Não é a volta ao desenho anterior ao AUTH-1. Lá a senha ia para um grant
+ * no client PÚBLICO — cujo `client_id` está neste APK —, e dava para bater
+ * direto no Keycloak pulando o rate limit da API. Agora a senha vai só para
+ * `POST /auth/login`, que faz o grant no client CONFIDENCIAL (secret só no
+ * servidor): este app não tem como falar `grant_type=password` com o
+ * Keycloak, e nem precisa.
  *
- * O navegador abre DENTRO do app (Chrome Custom Tab no Android,
- * ASWebAuthenticationSession no iOS) — é o mesmo `promptAsync` que o login com
- * Google já usava, então a experiência não é nova para quem usa o app.
- *
- * De brinde: a tela do Keycloak traz "Esqueci a senha" de verdade
- * (`resetPasswordAllowed: true` no realm), que no app era um alerta "Em breve".
+ * O Google continua pelo navegador (`loginWithGoogle`): o Google recusa login
+ * em WebView, e o consentimento dele tem de ser a tela dele.
  */
-export async function login(): Promise<LoginResult> {
-  const tokens = await runAuthorizationCodeFlow();
-  if (tokens === 'dismissed') return 'dismissed';
-
+export async function loginWithPassword(email: string, password: string): Promise<LoginResult> {
+  const tokens = fromPasswordSession(await requestPasswordLogin(email, password));
   const user = buildAuthUser(tokens.accessToken);
 
   /*
-   * 🔴 A checagem de papel tem que vir ANTES de persistir, e o motivo é o mesmo
-   * já documentado em `loginWithGoogle`: `RootNavigator` decide o stack por
-   * `isAuthenticated` + `isAudience`, então uma sessão sem papel de app cai no
-   * ramo do músico com `musicianId` nulo — tela quebrada, sem erro visível.
-   *
-   * O backend fazia essa barreira em `useLogin` (o `role` vinha no corpo da
-   * resposta). Com PKCE não há corpo: a verdade são as roles do JWT.
+   * 🔴 A checagem de papel vem ANTES de persistir: `RootNavigator` decide o
+   * stack por `isAuthenticated` + `isAudience`, então uma sessão sem papel de
+   * app cairia no ramo do músico com `musicianId` nulo — tela quebrada, sem
+   * erro visível. A sessão recusada é revogada no provedor (best-effort):
+   * senão ela ficaria aberta no Keycloak até vencer, sem dono no aparelho.
    */
   if (!user.musicianId && !user.audienceId) {
-    await clearLocalSession();
+    if (tokens.refreshToken) {
+      requestSessionRevocation(tokens.refreshToken).catch(() => undefined);
+    }
     return user.roles.includes('establishment')
       ? 'establishment-only'
       : 'needs-role-selection';
@@ -245,16 +260,21 @@ export async function logout(): Promise<void> {
 
   await clearLocalSession();
 
-  // Best-effort revocation — do not block or throw on failure
+  // Best-effort — falha de rede não impede ninguém de sair. Cada sessão é
+  // revogada por quem a emitiu (ver `session-channel.ts`).
   if (stored?.refreshToken) {
-    revokeAsync(
-      {
-        clientId:      CLIENT_ID,
-        token:         stored.refreshToken,
-        tokenTypeHint: TokenTypeHint.RefreshToken,
-      },
-      discovery
-    ).catch(() => undefined);
+    const revocation =
+      sessionChannelOf(stored.accessToken) === 'api'
+        ? requestSessionRevocation(stored.refreshToken)
+        : revokeAsync(
+            {
+              clientId:      CLIENT_ID,
+              token:         stored.refreshToken,
+              tokenTypeHint: TokenTypeHint.RefreshToken,
+            },
+            discovery
+          );
+    revocation.catch(() => undefined);
   }
 }
 
@@ -262,10 +282,10 @@ export async function refreshTokens(): Promise<string> {
   const stored = await getTokens();
   if (!stored?.refreshToken) throw new Error('No refresh token available');
 
-  const response = await refreshAsync(
-    { clientId: CLIENT_ID, refreshToken: stored.refreshToken },
-    discovery
-  );
+  const response: SessionTokens =
+    sessionChannelOf(stored.accessToken) === 'api'
+      ? fromPasswordSession(await requestSessionRefresh(stored.refreshToken))
+      : await refreshAsync({ clientId: CLIENT_ID, refreshToken: stored.refreshToken }, discovery);
 
   await persistAndApplyTokens(response);
   return response.accessToken;

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { makeStyles } from '@/shared/design-system/makeStyles';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { useTheme } from '@/shared/hooks/useTheme';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
@@ -24,9 +26,15 @@ type Props = {
 // existente (ou desmontar/remontar ao alternar role) não rebinda de forma confiável no
 // Android, o que fazia o segundo role escolhido nunca aparecer. Troca de role só alterna
 // opacidade estática entre as duas views já montadas, sem recriar nenhuma superfície nativa.
+// O scrim existe para o TEXTO do tema ficar legível sobre o vídeo. No escuro o
+// texto é claro e o véu é preto; no claro o texto é tinta escura, então o véu
+// precisa ser claro — preto atrás de tinta escura deixava o título ilegível.
 const useStyles = makeStyles((colors) => ({
   scrim: {
     backgroundColor: colors.bg.overlay,
+  },
+  scrimLight: {
+    backgroundColor: withAlpha(colors.bg.primary, 0.82),
   },
   hidden: {
     opacity: 0,
@@ -35,6 +43,7 @@ const useStyles = makeStyles((colors) => ({
 
 export function RoleVideoBackground({ role }: Props) {
   const s = useStyles();
+  const { isDark } = useTheme();
   const musicianPlayer = useVideoPlayer(musicianVideoSource, (player) => {
     player.loop = true;
     player.muted = true;
@@ -88,7 +97,7 @@ export function RoleVideoBackground({ role }: Props) {
         nativeControls={false}
         surfaceType="textureView"
       />
-      {anyVisible && <View style={[StyleSheet.absoluteFill, s.scrim]} />}
+      {anyVisible && <View style={[StyleSheet.absoluteFill, isDark ? s.scrim : s.scrimLight]} />}
     </View>
   );
 }

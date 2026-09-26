@@ -1,206 +1,180 @@
-import { useEffect, useState } from 'react';
-import { Text, View, Pressable, ScrollView } from 'react-native';
+import { useCallback, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { ShieldCheck } from 'lucide-react-native';
-import { spacing, typography, radius } from '@/shared/design-system/tokens';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
+import * as Haptics from 'expo-haptics';
+import Animated, { FadeIn, FadeInDown, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
+import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
-import { useTheme } from '@/shared/hooks/useTheme';
-import { PrimaryButton } from '@/shared/components/PrimaryButton';
+import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import { GoogleAuthButton } from '@/shared/components/GoogleAuthButton';
 import { AuthDivider } from '@/shared/components/AuthDivider';
-import { ErrorBanner } from '@/shared/components/ErrorBanner';
+import { loginWithGoogle, ESTABLISHMENT_LOGIN_MESSAGE } from '@/shared/services/auth/keycloak.service';
 import { AuthGlowBackground } from '../components/AuthGlowBackground';
-import {
-  login,
-  loginWithGoogle,
-  ESTABLISHMENT_LOGIN_MESSAGE,
-} from '@/shared/services/auth/keycloak.service';
+import { StageLightsBackground } from '../components/StageLightsBackground';
+import { SoundwaveMark } from '../components/SoundwaveMark';
+import { LoginForm } from '../components/LoginForm';
+import { ForgotPasswordSheet } from '../components/ForgotPasswordSheet';
+import { useLoginWithPassword } from '../../application/useLoginWithPassword';
+import type { LoginFormValues } from '../../domain/auth.validation';
 import type { AuthScreenProps } from '@/navigation/types';
 
 type Props = AuthScreenProps<'Login'>;
 
 /*
- * 🔴 AUTH-1 — esta tela NÃO coleta mais senha, e a ausência dos campos é a
- * correção, não uma simplificação de UI.
+ * 🔴 AUTH-3 (25/set/2026) — e-mail e senha voltaram para DENTRO do app.
  *
- * Antes havia e-mail + senha num `useForm`, enviados a `POST /auth/login`
- * (Direct Access Grant). Hoje o botão abre o Keycloak em Chrome Custom Tab /
- * ASWebAuthenticationSession — dentro do app, sem sair para o navegador do
- * sistema — e o app só recebe o `code` no deep link. Exatamente o que o botão
- * do Google ao lado já fazia; a diferença é que agora vale para todo mundo.
- *
- * Não reintroduzir os campos: um `TextInput` de senha aqui só teria para onde
- * enviar o valor se o `POST /auth/login` voltasse a existir, e ele foi removido
- * do backend junto com o `LoginUseCase`.
+ * A senha vai só para `POST /auth/login`, que faz o grant no client
+ * CONFIDENCIAL do Keycloak (secret só no backend). É isso que a diferencia da
+ * tela anterior ao AUTH-1, cuja senha ia a um client público cujo id está no
+ * APK. O Google segue pelo navegador: o Google recusa login em WebView.
  */
 const useStyles = makeStyles((colors) => ({
-  root: {
-    flex: 1,
-    backgroundColor: colors.bg.primary,
-  },
+  root:   { flex: 1, backgroundColor: colors.bg.primary },
+  flex:   { flex: 1 },
   scroll: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxxl,
-    paddingBottom: spacing.xxxl,
-    gap: spacing.lg,
+    paddingTop:        spacing.xl,
+    paddingBottom:     spacing.xxxl,
+    gap:               spacing.xl,
   },
-  brand: {
-    ...typography.title,
-    color: colors.brand.primary,
-    letterSpacing: -0.3,
+  hero:    { alignItems: 'center', gap: spacing.md },
+  eyebrow: {
+    ...typography.caption,
+    fontFamily:    'SpaceGrotesk-Bold',
+    letterSpacing: 6,
+    color:         colors.text.brand,
+    marginTop:     spacing.lg,
   },
   title: {
-    ...typography.displayMd,
-    fontFamily: 'SpaceGrotesk-Bold',
-    color: colors.text.primary,
-    marginTop: spacing.lg,
+    ...typography.displayLg,
+    color:     colors.text.primary,
+    textAlign: 'center',
   },
+  titleAccent: { color: colors.brand.primary },
   subtitle: {
     ...typography.body,
-    color: colors.text.secondary,
+    color:     colors.text.secondary,
+    textAlign: 'center',
   },
-  assuranceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginTop: spacing.lg,
-    padding: spacing.lg,
-    borderRadius: radius.lg,
-    backgroundColor: colors.bg.surface,
-    borderWidth: 1,
-    borderColor: colors.border.default,
-  },
-  assuranceText: {
-    ...typography.bodySm,
-    color: colors.text.secondary,
-    flex: 1,
-  },
-  submitBtn: {
-    marginTop: spacing.sm,
-  },
-  socialBlock: {
-    gap: spacing.lg,
-    marginTop: spacing.sm,
-  },
-  registerRow: {
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  registerText: {
-    ...typography.body,
-    color: colors.text.secondary,
-  },
-  registerLink: {
-    fontFamily: 'Inter-SemiBold',
-    color: colors.brand.primary,
-  },
+  social:       { gap: spacing.lg },
+  registerRow:  { alignItems: 'center', minHeight: 48, justifyContent: 'center' },
+  registerText: { ...typography.body, color: colors.text.secondary },
+  registerLink: { fontFamily: 'Inter-SemiBold', color: colors.text.brand },
 }));
 
 export function LoginScreen({ navigation }: Props) {
   const s = useStyles();
-  const { colors } = useTheme();
-  const [bannerError, setBannerError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<'keycloak' | 'google' | null>(null);
+  const reducedMotion = useReducedMotion();
+  const login = useLoginWithPassword();
+  const energy = useSharedValue(0);
+  const [alarmSignal, setAlarmSignal] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState<string | null>(null);
 
-  const formOpacity = useSharedValue(0);
-  const formY = useSharedValue(16);
+  // Cada tecla dá um "golpe" na onda, que decai sozinho. Digitar rápido mantém
+  // a logo aberta; parar deixa ela voltar a respirar.
+  const pulse = useCallback(() => {
+    if (reducedMotion) return;
+    energy.value = withSequence(withTiming(1, { duration: 70 }), withTiming(0, { duration: 650 }));
+  }, [energy, reducedMotion]);
 
-  useEffect(() => {
-    formOpacity.value = withTiming(1, { duration: 400 });
-    formY.value = withTiming(0, { duration: 400 });
-  }, [formOpacity, formY]);
+  const signalFailure = () => {
+    setAlarmSignal((n) => n + 1);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+  };
 
-  const formStyle = useAnimatedStyle(() => ({
-    opacity: formOpacity.value,
-    transform: [{ translateY: formY.value }],
-  }));
-
-  // Os dois caminhos terminam igual: 'success' não navega (o RootNavigator
-  // reage a auth.store), 'dismissed' é o usuário fechando o browser e não é
-  // erro. Só o desfecho de papel difere entre entrar e entrar-com-Google.
-  const onLoginPress = async () => {
-    setBannerError(null);
-    setLoading('keycloak');
-    try {
-      const result = await login();
-      if (result === 'establishment-only') {
-        setBannerError(ESTABLISHMENT_LOGIN_MESSAGE);
-      } else if (result === 'needs-role-selection') {
-        navigation.navigate('RoleSelection');
-      }
-    } catch (err) {
-      setBannerError(err instanceof Error ? err.message : 'Não foi possível entrar agora.');
-    } finally {
-      setLoading(null);
-    }
+  // 'success' não navega: o RootNavigator reage ao auth.store.
+  const onSubmit = (values: LoginFormValues) => {
+    setNotice(null);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    login.mutate(values, {
+      onSuccess: (result) => {
+        if (result === 'establishment-only') setNotice(ESTABLISHMENT_LOGIN_MESSAGE);
+        else if (result === 'needs-role-selection') navigation.navigate('RoleSelection');
+      },
+      onError: signalFailure,
+    });
   };
 
   const onGooglePress = async () => {
-    setBannerError(null);
-    setLoading('google');
+    setNotice(null);
+    login.reset();
+    setGoogleLoading(true);
     try {
       const result = await loginWithGoogle();
-      if (result === 'needs-role-selection') {
-        navigation.navigate('RoleSelection');
-      }
+      if (result === 'needs-role-selection') navigation.navigate('RoleSelection');
     } catch (err) {
-      setBannerError(err instanceof Error ? err.message : 'Erro ao autenticar com Google');
+      setNotice(err instanceof Error ? err.message : 'Erro ao autenticar com Google');
+      signalFailure();
     } finally {
-      setLoading(null);
+      setGoogleLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={s.root}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
+      <StageLightsBackground />
       <AuthGlowBackground variant="subtle" />
 
-      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
-        <Animated.View style={formStyle}>
-          <Text style={s.brand}>SoundMeet</Text>
-          <Text style={s.title}>Entrar</Text>
-          <Text style={s.subtitle}>Que bom te ver de novo.</Text>
-
-          {/*
-            O aviso existe porque a tela muda de contexto visual por um instante.
-            Sem ele, quem vê o navegador abrir pensa que saiu do app — e é aí
-            que alguém desconfia de um login legítimo.
-          */}
-          <View style={s.assuranceCard}>
-            <ShieldCheck size={20} color={colors.brand.primary} />
-            <Text style={s.assuranceText}>
-              Sua senha é digitada direto no nosso servidor de identidade, sem passar pelo app.
-            </Text>
+      <KeyboardAvoidingView
+        style={s.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
+      >
+        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+          <View style={s.hero}>
+            <SoundwaveMark
+              energy={energy}
+              busy={login.isPending || googleLoading}
+              alarmSignal={alarmSignal}
+            />
+            <Animated.View entering={FadeInDown.delay(350).duration(600)} style={s.hero}>
+              <Text style={s.eyebrow}>SOUNDMEET</Text>
+              <Text style={s.title} accessibilityRole="header">
+                A noite{'\n'}começa <Text style={s.titleAccent}>aqui.</Text>
+              </Text>
+              <Text style={s.subtitle}>Músicos, fãs e palcos na mesma frequência.</Text>
+            </Animated.View>
           </View>
 
-          {!!bannerError && <ErrorBanner message={bannerError} />}
+          <Animated.View entering={FadeInDown.delay(550).duration(600)}>
+            <LoginForm
+              loading={login.isPending}
+              errorMessage={notice ?? login.errorMessage}
+              shakeSignal={alarmSignal}
+              onSubmit={onSubmit}
+              onKeystroke={pulse}
+              onForgotPassword={setForgotEmail}
+            />
+          </Animated.View>
 
-          <PrimaryButton
-            label="Entrar com e-mail e senha"
-            onPress={onLoginPress}
-            loading={loading === 'keycloak'}
-            style={s.submitBtn}
-          />
+          <Animated.View entering={FadeIn.delay(800).duration(500)} style={s.social}>
+            <AuthDivider label="ou" />
+            <GoogleAuthButton onPress={onGooglePress} loading={googleLoading} />
+            <Pressable
+              onPress={() => navigation.navigate('RoleSelection')}
+              style={s.registerRow}
+              accessibilityRole="button"
+              accessibilityLabel="Criar conta"
+            >
+              <Text style={s.registerText}>
+                Primeira vez aqui? <Text style={s.registerLink}>Criar conta</Text>
+              </Text>
+            </Pressable>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
-          <View style={s.socialBlock}>
-            <AuthDivider label="ou entre com" />
-            <GoogleAuthButton onPress={onGooglePress} loading={loading === 'google'} />
-          </View>
-
-          <Pressable
-            onPress={() => navigation.navigate('RoleSelection')}
-            style={s.registerRow}
-            accessibilityRole="button"
-            accessibilityLabel="Criar conta"
-          >
-            <Text style={s.registerText}>
-              Não tem conta? <Text style={s.registerLink}>Criar conta</Text>
-            </Text>
-          </Pressable>
-        </Animated.View>
-      </ScrollView>
+      <ForgotPasswordSheet
+        // Remonta a cada abertura para começar com o e-mail que estava digitado.
+        key={forgotEmail ?? 'closed'}
+        visible={forgotEmail !== null}
+        initialEmail={forgotEmail ?? ''}
+        onClose={() => setForgotEmail(null)}
+      />
     </SafeAreaView>
   );
 }

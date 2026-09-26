@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { ArrowLeft, Guitar, Users } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
@@ -16,6 +15,7 @@ import { usePendingGoogleSessionStore } from '@/shared/services/auth/pendingGoog
 import { useSocialSignup, getSocialSignupErrorMessage } from '@/features/auth/application/useSocialSignup';
 import type { AuthScreenProps } from '@/navigation/types';
 import type { RegisterRole } from '@/features/auth/domain/auth.types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = AuthScreenProps<'RoleSelection'>;
 
@@ -110,7 +110,7 @@ export function RoleSelectionScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AuthGlowBackground variant="full" role={role} />
       <RoleVideoBackground role={role} />
 

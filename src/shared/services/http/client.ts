@@ -44,10 +44,11 @@ function drainQueue(err: unknown, token: string | null): void {
  * Rotas onde 401 significa "credencial inválida", não "sessão expirada" — o
  * interceptor NÃO deve tentar refresh nem derrubar a sessão.
  *
- * `/auth/login` saiu daqui em AUTH-1: a rota foi removida do backend e o login
- * passou a ser Authorization Code + PKCE, que não usa o httpClient (fala com o
- * Keycloak por `expo-auth-session`). `/auth/register` fica: quem cadastra ainda
- * não tem sessão, então um 401 ali é do provedor de identidade.
+ * `/auth/login`, `/auth/refresh` e `/auth/logout` (AUTH-3) não passam por este
+ * client: usam a instância própria de `password-session.api.ts`, justamente
+ * para um 401 deles nunca cair no refresh abaixo — que chamaria a si mesmo.
+ * `/auth/register` fica: quem cadastra ainda não tem sessão, então um 401 ali
+ * é do provedor de identidade.
  */
 const AUTH_ENDPOINTS_WITHOUT_REFRESH = ['/auth/register'];
 

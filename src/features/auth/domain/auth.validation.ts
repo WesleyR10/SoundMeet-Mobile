@@ -58,7 +58,20 @@ export const registerSchema = z
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
 // Login não valida complexidade de senha — essa regra é de criação de conta,
-// não de autenticação (espelha LoginInput do backend).
+// não de autenticação (espelha LoginInput do backend). O `trim` do e-mail é
+// para o autocompletar do teclado, que costuma deixar um espaço no fim.
+export const loginSchema = z.object({
+  email:    z.string().trim().refine(isValidEmail, 'Confira o e-mail'),
+  password: z.string().min(1, 'Digite sua senha'),
+});
+
+export type LoginFormValues = z.infer<typeof loginSchema>;
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().refine(isValidEmail, 'Confira o e-mail'),
+});
+
+export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 // Usado só pelo fluxo de login social pendente (músico) — mesma regra de
 // obrigatoriedade de CPF/celular do cadastro por senha.

@@ -38,3 +38,13 @@ export async function addRole(payload: AddRolePayload): Promise<AddRoleResponse>
   const { data } = await httpClient.post<ApiEnvelope<AddRoleResponse>>('/auth/add-role', payload);
   return data.data;
 }
+
+// POST /auth/forgot-password — pública, resposta idêntica exista ou não conta.
+// O link que chega por e-mail é do Keycloak: a senha nova nunca passa por aqui.
+export async function requestPasswordReset(email: string): Promise<{ message: string }> {
+  const { data } = await httpClient.post<ApiEnvelope<{ message: string }>>(
+    '/auth/forgot-password',
+    { email },
+  );
+  return data.data;
+}
