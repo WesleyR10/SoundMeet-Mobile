@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
-import { View, Text, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { restoreSession } from '@/shared/services/auth/keycloak.service';
 import { useLiveSetStore } from '@/features/musician/application/liveSet.store';
@@ -25,16 +24,21 @@ import { PlansPaywallScreen } from '@/features/musician/ui/screens/PlansPaywallS
 import { useNotificationResponseListener, checkInitialNotificationResponse } from '@/shared/services/notifications/useNotificationResponseListener';
 import { useDeepLinkListener, checkInitialDeepLink } from '@/shared/services/deep-linking/useDeepLinkListener';
 import { useDeepLinkStore } from '@/shared/services/deep-linking/deep-link.store';
-import { colors, spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 import { AuthNavigator } from './AuthNavigator';
 import { MusicianTabNavigator } from './MusicianTabNavigator';
 import { FanTabNavigator } from './FanTabNavigator';
 import { navigationRef } from './navigationRef';
 import type { RootStackParamList } from './types';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
+  const styles = useStyles();
+  const { colors } = useTheme();
   const isLoading       = useAuthStore((s) => s.isLoading);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isAudience      = useAuthStore((s) => s.user?.roles.includes('audience') ?? false);
@@ -111,7 +115,7 @@ export function RootNavigator() {
   if (isLoading) {
     return (
       <View style={styles.loader}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <ActivityIndicator color={colors.brand.primary} size="large" />
       </View>
     );
@@ -123,7 +127,7 @@ export function RootNavigator() {
   if (isAuthenticated && gate.kind === 'loading') {
     return (
       <View style={styles.loader}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <ActivityIndicator color={colors.brand.primary} size="large" />
       </View>
     );
@@ -132,7 +136,7 @@ export function RootNavigator() {
   if (isAuthenticated && gate.kind === 'error') {
     return (
       <View style={styles.loader}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <Text style={styles.errorTitle}>Não conseguimos carregar seu perfil</Text>
         <Text style={styles.errorMsg}>Verifique sua conexão e tente novamente.</Text>
         <Pressable
@@ -155,7 +159,7 @@ export function RootNavigator() {
         checkInitialDeepLink();
       }}
     >
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <Stack.Screen
@@ -235,7 +239,7 @@ export function RootNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   loader: {
     flex:            1,
     alignItems:      'center',
@@ -267,4 +271,4 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color:      colors.text.inverse,
   },
-});
+}));

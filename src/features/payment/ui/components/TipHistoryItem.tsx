@@ -1,8 +1,12 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Clock, CheckCircle2, XCircle, RotateCcw } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { GlowCard } from '@/shared/components/GlowCard';
 import type { Tip } from '../../domain/tip.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   tip:   Tip;
@@ -11,12 +15,12 @@ type Props = {
 
 const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-const STATUS_META: Record<Tip['status'], { icon: typeof Clock; color: string; label: string }> = {
+const STATUS_META = (colors: ThemeColors): Record<Tip['status'], { icon: typeof Clock; color: string; label: string }> => ({
   pending:   { icon: Clock,        color: colors.status.warning, label: 'Pendente' },
   completed: { icon: CheckCircle2, color: colors.status.success, label: 'Confirmada' },
   failed:    { icon: XCircle,      color: colors.status.error,   label: 'Falhou' },
   refunded:  { icon: RotateCcw,    color: colors.text.muted,     label: 'Estornada' },
-};
+});
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -35,7 +39,9 @@ function formatBRL(value: number): string {
 // desabilitaria o próprio componente (ver Pressable3DCard.tsx) e nunca
 // animaria, deixando um wrapper "3D" morto/enganoso.
 export function TipHistoryItem({ tip, index }: Props) {
-  const meta = STATUS_META[tip.status];
+  const s = useStyles();
+  const { colors } = useTheme();
+  const meta = STATUS_META(colors)[tip.status];
   const StatusIcon = meta.icon;
 
   return (
@@ -63,7 +69,7 @@ export function TipHistoryItem({ tip, index }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     padding: spacing.md,
   },
@@ -76,7 +82,7 @@ const s = StyleSheet.create({
     width:            36,
     height:           36,
     borderRadius:     radius.md,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: withAlpha(colors.text.primary, 0.04),
     alignItems:      'center',
     justifyContent:  'center',
   },
@@ -105,4 +111,4 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.muted,
   },
-});
+}));

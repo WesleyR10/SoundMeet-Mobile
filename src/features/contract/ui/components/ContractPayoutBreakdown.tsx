@@ -1,7 +1,9 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { ShieldCheck } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { payoutFeePercentage, type ContractPayout } from '../../domain/payout.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   payout: ContractPayout | null;
@@ -35,6 +37,8 @@ function formatPercent(value: number): string {
  * um acerto que é entre o músico e a casa.
  */
 export function ContractPayoutBreakdown({ payout, compact = false }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   if (!payout) return null;
 
   const percent = formatPercent(payoutFeePercentage(payout));
@@ -73,6 +77,7 @@ export function ContractPayoutBreakdown({ payout, compact = false }: Props) {
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  const s = useStyles();
   return (
     <View style={s.row}>
       <Text style={s.label}>{label}</Text>
@@ -81,7 +86,7 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     backgroundColor: colors.bg.elevated,
     borderRadius:    radius.lg,
@@ -142,4 +147,4 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color:      colors.brand.primary,
   },
-});
+}));

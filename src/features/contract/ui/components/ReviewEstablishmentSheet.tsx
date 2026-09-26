@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text, TextInput } from 'react-native';
 import {
   BottomSheetModal,
@@ -18,6 +18,7 @@ import {
   useSubmitEstablishmentReview,
 } from '../../application/useEstablishmentReview';
 import { submitReviewSchema } from '../../domain/review.validation';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   establishmentId: string | null;
@@ -98,17 +99,12 @@ export function ReviewEstablishmentSheet({
 }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const submitReview = useSubmitEstablishmentReview(establishmentId);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   // Reabrir noutra reserva não pode herdar a nota nem o texto da anterior.
   useEffect(() => {
@@ -154,7 +150,7 @@ export function ReviewEstablishmentSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

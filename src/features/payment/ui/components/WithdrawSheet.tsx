@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, TextInput, Pressable } from 'react-native';
 import {
   BottomSheetModal,
@@ -23,6 +23,8 @@ import {
   type AmountRejection,
 } from '../../domain/withdraw.rules';
 import { useWithdraw } from '../../application/useWithdraw';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   visible: boolean;
@@ -118,7 +120,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border.default,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: withAlpha(colors.text.primary, 0.04),
     paddingHorizontal: spacing.md,
   },
   amountBoxInvalid: { borderColor: `${colors.status.error}80` },
@@ -182,7 +184,7 @@ const useStyles = makeStyles((colors) => ({
 export function WithdrawSheet({ visible, onClose, wallet, musicianId }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [amountText, setAmountText] = useState('');
   const [done, setDone] = useState<{ amount: number; days: number } | null>(null);
 
@@ -210,11 +212,6 @@ export function WithdrawSheet({ visible, onClose, wallet, musicianId }: Props) {
   };
   const availability = getWithdrawAvailability(wallet);
   const parsed = parseWithdrawAmount(amountText, availability);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const handleDismiss = () => {
     setAmountText('');
@@ -257,7 +254,7 @@ export function WithdrawSheet({ visible, onClose, wallet, musicianId }: Props) {
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={handleDismiss}
+      onDismiss={trackDismiss(handleDismiss)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

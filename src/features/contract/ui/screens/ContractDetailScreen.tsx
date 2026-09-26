@@ -8,7 +8,6 @@ import {
   type NativeScrollEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { Skeleton, SkeletonText } from '@/shared/components/Skeleton';
@@ -30,6 +29,7 @@ import { ContractReviewAction } from '../components/ContractReviewAction';
 import { ContractScreenHeader } from '../components/ContractScreenHeader';
 import { ContractSignSheet } from '../components/ContractSignSheet';
 import type { RootScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'ContractDetail'>;
 
@@ -153,7 +153,7 @@ export function ContractDetailScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <ContractScreenHeader title="Contrato" onBack={() => navigation.goBack()} />

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { useCallback, useState, type ReactNode } from 'react';
+import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -7,12 +7,16 @@ import {
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { Music2, Users, CheckCircle2, PlusCircle } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useAddRole, getAddRoleErrorMessage } from '@/features/auth/application/useAddRole';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { navigationRef } from '../navigationRef';
 import { BecomeMusicianForm } from './BecomeMusicianForm';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   visible: boolean;
@@ -27,7 +31,9 @@ type Props = {
 // (10.5.4): virar fã registra FanTabs; virar músico dispara o gate
 // needs-wizard e o RootNavigator troca pro wizard sozinho.
 export function RoleSwitchSheet({ visible, onClose, context }: Props) {
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const s = useStyles();
+  const { colors } = useTheme();
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const roles      = useAuthStore((s) => s.user?.roles ?? []);
   const isMusician = roles.includes('musician');
   const isFan      = roles.includes('audience');
@@ -35,11 +41,6 @@ export function RoleSwitchSheet({ visible, onClose, context }: Props) {
   const [showMusicianForm, setShowMusicianForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const addRole = useAddRole();
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -83,7 +84,7 @@ export function RoleSwitchSheet({ visible, onClose, context }: Props) {
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
@@ -154,6 +155,8 @@ function AccountRow({ icon, label, active, current, onPress }: {
   current:  boolean;
   onPress?: () => void;
 }) {
+  const s = useStyles();
+  const { colors } = useTheme();
   if (!active) return null;
   return (
     <Pressable
@@ -174,7 +177,7 @@ function AccountRow({ icon, label, active, current, onPress }: {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   sheetBg: {
     backgroundColor: colors.bg.elevated,
     borderRadius:     radius.xl,
@@ -204,7 +207,7 @@ const s = StyleSheet.create({
     backgroundColor:   colors.bg.surface,
   },
   rowPressed: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: withAlpha(colors.text.primary, 0.05),
   },
   accountTextCol: {
     flex: 1,
@@ -234,4 +237,4 @@ const s = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     color:      colors.text.primary,
   },
-});
+}));

@@ -7,7 +7,6 @@ import {
   RefreshControl,
   } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { FileSignature } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -23,6 +22,7 @@ import { ContractCard } from '../components/ContractCard';
 import { ContractScreenHeader } from '../components/ContractScreenHeader';
 import type { Contract } from '../../domain/contract.types';
 import type { RootScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'ContractList'>;
 
@@ -147,7 +147,7 @@ export function ContractListScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <ContractScreenHeader title="Contratos" onBack={() => navigation.goBack()} />

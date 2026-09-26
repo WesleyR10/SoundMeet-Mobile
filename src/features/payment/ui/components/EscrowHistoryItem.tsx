@@ -1,8 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Clock, CheckCircle2, Lock, RotateCcw, TriangleAlert } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { GlowCard } from '@/shared/components/GlowCard';
 import type { BookingEscrow, EscrowStatus } from '../../domain/escrow.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 type Props = {
   escrow: BookingEscrow;
@@ -18,10 +21,10 @@ const MONTHS = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', '
  * descreve o que importa para quem vai receber — e é a diferença entre a tela
  * parecer um bloqueio e parecer uma proteção.
  */
-const STATUS_META: Record<
+const STATUS_META = (colors: ThemeColors): Record<
   EscrowStatus,
   { icon: typeof Clock; color: string; label: string; hint: string }
-> = {
+> => ({
   pending: {
     icon:  Clock,
     color: colors.status.warning,
@@ -55,7 +58,7 @@ const STATUS_META: Record<
     label: 'Em contestação',
     hint:  'A casa abriu uma disputa — em mediação',
   },
-};
+});
 
 /** Status em que `resolution_note` é dirigido ao artista. */
 const SHOWS_RESOLUTION_NOTE = new Set<EscrowStatus>(['refunded', 'disputed']);
@@ -86,7 +89,9 @@ function formatBRL(value: number): string {
  * `TipHistoryItem`, mesma decisão).
  */
 export function EscrowHistoryItem({ escrow, index }: Props) {
-  const meta = STATUS_META[escrow.status];
+  const s = useStyles();
+  const { colors } = useTheme();
+  const meta = STATUS_META(colors)[escrow.status];
   const StatusIcon = meta.icon;
 
   return (
@@ -136,7 +141,7 @@ export function EscrowHistoryItem({ escrow, index }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     gap:     spacing.sm,
     padding: spacing.md,
@@ -191,4 +196,4 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
-});
+}));

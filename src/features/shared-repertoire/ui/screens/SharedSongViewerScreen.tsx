@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, FileX, SlidersHorizontal } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -14,6 +13,8 @@ import { useChordSheetControls } from '@/shared/hooks/useChordSheetControls';
 import { transposeTokenGrid, shouldPreferFlatsForKey } from '@/shared/utils/chord-transpose';
 import { useSharedChordSheet } from '../../application/useSharedRepertoire';
 import type { RootScreenProps } from '@/navigation/types';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'SharedSongViewer'>;
 
@@ -68,7 +69,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:   radius.full,
     alignItems:     'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: withAlpha(colors.text.primary, 0.05),
   },
   scrollContent: {
     paddingTop:    spacing.md,
@@ -105,7 +106,7 @@ export function SharedSongViewerScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
 
       <View style={s.header}>
         <Pressable onPress={() => navigation.goBack()} style={s.backBtn} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8}>

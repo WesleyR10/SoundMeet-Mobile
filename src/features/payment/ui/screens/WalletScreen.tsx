@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -22,6 +21,7 @@ import { WalletSectionHeader } from '../components/WalletSectionHeader';
 import { WithdrawProgressBar } from '../components/WithdrawProgressBar';
 import { WithdrawSheet } from '../components/WithdrawSheet';
 import { TipHistoryList } from '../components/TipHistoryList';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = MusicianTabScreenProps<'Wallet'>;
 
@@ -115,7 +115,7 @@ export function WalletScreen({ navigation }: Props) {
   if (isPending) {
     return (
       <SafeAreaView style={s.root} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <AmbientGlowBackground glows={WALLET_GLOWS} />
         <View style={[s.scroll, s.content]}>
           <Skeleton width={140} height={28} />
@@ -133,7 +133,7 @@ export function WalletScreen({ navigation }: Props) {
   if (isError || !wallet) {
     return (
       <SafeAreaView style={s.loaderRoot} edges={['top']}>
-        <StatusBar style="light" />
+        <ThemedStatusBar />
         <ErrorBanner message="Não conseguimos carregar sua carteira." style={s.errorBanner} />
         <Pressable onPress={() => refetch()} style={s.retryBtn} accessibilityRole="button" accessibilityLabel="Tentar novamente">
           <Text style={s.retryText}>Tentar novamente</Text>
@@ -147,7 +147,7 @@ export function WalletScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground glows={WALLET_GLOWS} />
 
       <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>

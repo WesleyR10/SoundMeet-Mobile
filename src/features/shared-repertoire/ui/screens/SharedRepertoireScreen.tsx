@@ -1,6 +1,5 @@
 import { View, Text, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Music2, PlayCircle } from 'lucide-react-native';
 import { spacing, radius, typography, shadows } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -12,6 +11,7 @@ import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import { useSharedRepertoire } from '../../application/useSharedRepertoire';
 import type { SharedRepertoireSong } from '../../domain/shared-repertoire.types';
 import type { RootScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'SharedRepertoire'>;
 
@@ -175,7 +175,7 @@ export function SharedRepertoireScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

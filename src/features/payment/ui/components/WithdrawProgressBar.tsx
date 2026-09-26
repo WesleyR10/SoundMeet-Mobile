@@ -8,6 +8,7 @@ import { useTheme } from '@/shared/hooks/useTheme';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
 import type { WithdrawEligibility } from '../../domain/tip.types';
 import type { WithdrawBlocker } from '../../domain/withdraw.rules';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   eligibility: WithdrawEligibility;
@@ -41,7 +42,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius:    radius.lg,
     borderWidth:      1,
     borderColor:     `${colors.accent.coral}30`,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding:          spacing.lg,
     gap:              spacing.sm,
   },
@@ -93,7 +94,7 @@ const useStyles = makeStyles((colors) => ({
   track: {
     height:           8,
     borderRadius:     radius.full,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: withAlpha(colors.text.primary, 0.08),
     overflow:         'hidden',
   },
   fill: {

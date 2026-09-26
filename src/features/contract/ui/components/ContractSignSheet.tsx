@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text, Pressable, TextInput } from 'react-native';
 import {
   BottomSheetModal,
@@ -21,6 +21,7 @@ import { challengeExpiryLabel } from '../../domain/contract.rules';
 import { ContractPayoutBreakdown } from './ContractPayoutBreakdown';
 import type { Contract, SignatureChallenge } from '../../domain/contract.types';
 import type { ContractPayout } from '../../domain/payout.types';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   contract:      Contract | null;
@@ -164,7 +165,7 @@ export function ContractSignSheet({
 }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(visible);
   const [accepted, setAccepted] = useState(false);
   const [code, setCode] = useState('');
   const [challenge, setChallenge] = useState<SignatureChallenge | null>(null);
@@ -172,11 +173,6 @@ export function ContractSignSheet({
 
   const requestChallenge = useRequestSignatureChallenge(contract?.id ?? null);
   const sign = useSignContract(musicianId, contract?.id ?? null);
-
-  useEffect(() => {
-    if (visible) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [visible]);
 
   // Estado local é por contrato: reabrir noutro não pode herdar o aceite nem o
   // código digitado no anterior.
@@ -224,7 +220,7 @@ export function ContractSignSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}

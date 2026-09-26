@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock, Wallet as WalletIcon } from 'lucide-react-native';
-import { colors, spacing, radius, typography, gradients, shadows } from '@/shared/design-system/tokens';
+import { spacing, radius, typography, gradients, shadows } from '@/shared/design-system/tokens';
 import { AnimatedBalance } from '@/shared/components/AnimatedBalance';
 import type { Wallet } from '../../domain/tip.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
 
 type Props = {
   wallet: Wallet;
@@ -15,6 +17,8 @@ type Props = {
 // coral pulsante-por-elevação (shadows.coral). "3D": profundidade via sombra +
 // gradiente diagonal, mesma filosofia hand-rolled do resto do app.
 export function WalletBalanceCard({ wallet }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <LinearGradient
       colors={gradients.energy}
@@ -67,6 +71,7 @@ export function WalletBalanceCard({ wallet }: Props) {
 }
 
 function MiniStat({ label, value }: { label: string; value: number }) {
+  const s = useStyles();
   const formatted = value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   return (
     <View style={s.miniStat}>
@@ -76,7 +81,7 @@ function MiniStat({ label, value }: { label: string; value: number }) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   ring: {
     borderRadius: radius.xl,
     padding:      1.5,
@@ -141,4 +146,4 @@ const s = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
   },
-});
+}));
