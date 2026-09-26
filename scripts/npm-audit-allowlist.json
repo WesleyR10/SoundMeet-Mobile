@@ -1,0 +1,50 @@
+{
+  "$comment": [
+    "Exceções do gate de auditoria (scripts/audit-gate.mjs).",
+    "Toda entrada aqui precisa responder DUAS perguntas, não uma: por que não dá para",
+    "corrigir agora, e por que o risco é aceitável até a data de revisão.",
+    "O gate reprova exceção vencida E exceção que não corresponde mais a aviso nenhum.",
+    "",
+    "Critério usado para tudo o que está abaixo: a dependência é ferramenta de BUNDLE",
+    "ou de CLI e não é empacotada no APK/IPA. Foi verificado com `npm ls <pkg> --omit=dev`,",
+    "caminho por caminho — nanoid e socket.io-parser PARECIAM ser desta categoria, não",
+    "eram (chegavam por @react-navigation/native e socket.io-client), e por isso foram",
+    "corrigidos com bump dentro do range em vez de entrar nesta lista.",
+    "",
+    "review_by casado com a próxima subida de SDK do Expo: é ela que traz metro,",
+    "@expo/cli e @expo/metro-config novos, e é `npx expo install --fix` que resolve —",
+    "nunca `npm audit fix`."
+  ],
+  "allow": [
+    {
+      "id": "GHSA-w3rx-r6r6-pgpr",
+      "package": "image-size",
+      "reason": "expo -> @expo/metro -> metro -> image-size. Loop infinito no parser de ICNS, alcançável só por arquivo passado ao bundler em tempo de build, na máquina do desenvolvedor ou no runner do EAS. Não existe no bundle publicado.",
+      "review_by": "2026-12-15"
+    },
+    {
+      "id": "GHSA-5p2g-fcmc-qvqq",
+      "package": "image-size",
+      "reason": "Mesma cadeia e mesmo alcance de GHSA-w3rx-r6r6-pgpr — parsers de JXL/HEIF do metro, em tempo de build.",
+      "review_by": "2026-12-15"
+    },
+    {
+      "id": "GHSA-5p4m-2wfm-xmqj",
+      "package": "js-yaml",
+      "reason": "expo -> @expo/cli -> @expo/xcpretty -> js-yaml (e react-native -> @react-native/jest-preset). Consumo quadrático de CPU ao resolver !!omap: a entrada é a saída do xcodebuild durante build de iOS e o preset do jest. Nenhum dos dois roda no aparelho.",
+      "review_by": "2026-12-15"
+    },
+    {
+      "id": "GHSA-fxqj-rqcc-2cmp",
+      "package": "postcss",
+      "reason": "expo -> @expo/metro-config -> postcss. Path traversal via sourceMappingURL controlado pelo autor do CSS — ou seja, por quem já tem commit no repositório. Ferramenta de build, ausente do bundle.",
+      "review_by": "2026-12-15"
+    },
+    {
+      "id": "GHSA-r28c-9q8g-f849",
+      "package": "postcss",
+      "reason": "Mesma cadeia e mesmo alcance de GHSA-fxqj-rqcc-2cmp — auto-carregamento de source map anterior, em tempo de build.",
+      "review_by": "2026-12-15"
+    }
+  ]
+}
