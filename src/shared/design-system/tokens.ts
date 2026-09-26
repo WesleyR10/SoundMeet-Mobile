@@ -28,7 +28,12 @@ export const colors = {
   text: {
     primary:   '#F8FAFC',
     secondary: '#94A3B8',
-    muted:     '#475569',
+    // 🔴 Era '#475569' e reprovava AA nas TRÊS superfícies do tema escuro
+    // (2.57 / 2.35 / 2.16). Ficava na allowlist `KNOWN_DARK_FAILURES` do teste
+    // como falha conhecida; deixou de ficar em 16/set/2026. '#7B8A9E' dá
+    // 5.54 / 5.07 / 4.65 e segue abaixo de `secondary`.
+    // ⚠️ Espelhado em soundmeet-web/src/app/globals.css.
+    muted:     '#7B8A9E',
     inverse:   '#0C0C14',
     brand:     '#00E0B8',
   },

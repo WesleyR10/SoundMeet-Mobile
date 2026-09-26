@@ -10,6 +10,7 @@ import Animated, {
 import type { LucideIcon } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   label:       string;
@@ -41,12 +42,15 @@ export function MultiSelectChip({ label, icon: Icon, selected, accentColor, onPr
     onPress();
   };
 
+  // Fora do worklet: withAlpha é JS comum e não roda na thread de UI.
+  const idleFill = withAlpha(colors.text.primary, 0.03);
+
   const chipStyle = useAnimatedStyle(() => ({
     borderColor: interpolateColor(progress.value, [0, 1], [colors.border.default, accent]),
     backgroundColor: interpolateColor(
       progress.value,
       [0, 1],
-      ['rgba(255,255,255,0.03)', `${accent}1F`],
+      [idleFill, `${accent}1F`],
     ),
     transform: [{ scale: scale.value }],
   }));

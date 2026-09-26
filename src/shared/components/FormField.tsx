@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { LayoutChangeEvent, Pressable, Text, TextInput, TextInputProps, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, interpolateColor } from 'react-native-reanimated';
 import { Eye, EyeOff } from 'lucide-react-native';
@@ -6,6 +6,7 @@ import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { TravelingBorderGlow } from '@/shared/components/TravelingBorderGlow';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   label:            string;
@@ -24,6 +25,11 @@ type Props = {
   importantForAutofill?: TextInputProps['importantForAutofill'];
   multiline?:       boolean;
   onBlur?:          () => void;
+  // Encadeamento de campos pelo teclado ("próximo" no e-mail foca a senha,
+  // "entrar" na senha envia) — sem isso o formulário exige tocar em cada campo.
+  inputRef?:        Ref<TextInput>;
+  returnKeyType?:   TextInputProps['returnKeyType'];
+  onSubmitEditing?: () => void;
 };
 
 const useStyles = makeStyles((colors) => ({
@@ -34,7 +40,8 @@ const useStyles = makeStyles((colors) => ({
     ...typography.caption,
     fontFamily:    'Inter-Bold',
     letterSpacing:  0.8,
-    color:          'rgba(255,255,255,0.55)',
+    // Era rgba(255,255,255,0.55): rótulo invisível no tema claro.
+    color:          colors.text.secondary,
     textTransform:  'uppercase',
   },
   container: {
@@ -43,7 +50,7 @@ const useStyles = makeStyles((colors) => ({
     minHeight:           52,
     borderWidth:         1,
     borderRadius:        radius.md,
-    backgroundColor:    'rgba(255,255,255,0.04)',
+    backgroundColor:    withAlpha(colors.text.primary, 0.04),
     paddingHorizontal:   spacing.md,
     gap:                 spacing.sm,
     shadowColor:         colors.brand.primary,
@@ -89,6 +96,9 @@ export function FormField({
   importantForAutofill,
   multiline = false,
   onBlur,
+  inputRef,
+  returnKeyType,
+  onSubmitEditing,
 }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
@@ -146,6 +156,12 @@ export function FormField({
           // Android e cancela o preview nativo do último caractere digitado.
           // O RHF continua sincronizado via onChangeText.
           {...(secureTextEntry ? { defaultValue: value } : { value })}
+          ref={inputRef}
+          returnKeyType={returnKeyType}
+          onSubmitEditing={onSubmitEditing}
+          // "próximo" mantém o teclado aberto enquanto o foco pula de campo;
+          // o envio final fecha o teclado.
+          submitBehavior={onSubmitEditing ? (returnKeyType === 'next' ? 'submit' : 'blurAndSubmit') : undefined}
           onChangeText={onChangeText}
           onFocus={handleFocus}
           onBlur={handleBlur}

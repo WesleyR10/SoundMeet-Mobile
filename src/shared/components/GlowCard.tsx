@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { StyleSheet } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withDelay, withTiming, Easing } from 'react-native-reanimated';
 import { spacing, radius } from '@/shared/design-system/tokens';
 import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
+import { makeStyles } from '@/shared/design-system/makeStyles';
 
 type Props = {
   children:     ReactNode;
@@ -20,6 +21,7 @@ type Props = {
 // (Próximo Show, Acesso Rápido, Descoberta, Atividade Recente) — evita 4
 // estilizações quase-duplicadas de borda/fundo/raio na mesma tela.
 export function GlowCard({ children, accentColor, style, riseDelay = 0, animated = true }: Props) {
+  const s = useStyles();
   const { colors } = useTheme();
   // Default resolvido no CORPO: na assinatura ele é avaliado fora do
   // escopo do hook, e como constante de módulo congelava a paleta dark.
@@ -46,12 +48,12 @@ export function GlowCard({ children, accentColor, style, riseDelay = 0, animated
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     borderRadius:    radius.lg,
     borderWidth:      1,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: withAlpha(colors.text.primary, 0.03),
     padding:          spacing.lg,
     gap:              spacing.sm,
   },
-});
+}));

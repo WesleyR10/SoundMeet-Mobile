@@ -3,6 +3,7 @@ import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { LucideIcon } from 'lucide-react-native';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   uri?:          string | null;
@@ -24,7 +25,7 @@ type Props = {
 // também da próxima vez que precisar mexer nele.
 const useStyles = makeStyles((colors) => ({
   plain: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: withAlpha(colors.text.primary, 0.05),
     alignItems:      'center',
     justifyContent:  'center',
     overflow:        'hidden',

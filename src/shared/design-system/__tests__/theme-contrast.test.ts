@@ -102,9 +102,6 @@ function solidTokens(p: Palette): Record<string, string> {
  *  - `border.strong` (1.63–1.94) — abaixo do 1.4.11 para borda de campo.
  */
 const KNOWN_DARK_FAILURES = [
-  'text.muted (#475569) sobre #0C0C14: 2.57',
-  'text.muted (#475569) sobre #0D1A18: 2.35',
-  'text.muted (#475569) sobre #102320: 2.16',
   'accent.violet (#7C3AED) sobre #0C0C14: 3.42',
   'accent.violet (#7C3AED) sobre #0D1A18: 3.13',
   'accent.violet (#7C3AED) sobre #102320: 2.87',

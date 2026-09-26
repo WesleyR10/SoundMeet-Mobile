@@ -11,6 +11,7 @@ import Animated, {
 import { radius, spacing } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useReducedMotion } from '@/shared/hooks/useReducedMotion';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 type Props = {
   width?: DimensionValue;
@@ -59,7 +60,7 @@ const useStyles = makeStyles((colors) => ({
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border.default,
-    backgroundColor: 'rgba(255,255,255,0.02)',
+    backgroundColor: withAlpha(colors.text.primary, 0.02),
     padding: spacing.lg,
   },
   cardBody: {

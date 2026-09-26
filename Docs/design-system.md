@@ -86,7 +86,7 @@ Teal  + #0C0C14 → Matrix/holograma, ultra premium    (backgrounds, dark mode)
 |-------|-----|-----|
 | `colors.text.primary` | #F8FAFC | Texto principal |
 | `colors.text.secondary` | #94A3B8 | Texto secundário, placeholders |
-| `colors.text.muted` | #475569 | Desabilitado, timestamps, captions |
+| `colors.text.muted` | #7B8A9E | Desabilitado, timestamps, captions. 🔴 Era `#475569` e **reprovava AA nas três superfícies** (2.57 / 2.35 / 2.16) — corrigido em 16/set/2026 para 5.54 / 5.07 / 4.65 |
 | `colors.text.inverse` | #0C0C14 | Texto sobre fundos claros/teal |
 | `colors.text.brand` | #00E0B8 | Links, valores em teal, destaques |
 
@@ -145,9 +145,19 @@ Teal  + #0C0C14 → Matrix/holograma, ultra premium    (backgrounds, dark mode)
 | `colors.border.brand` | `rgba(0,125,102,0.30)` | Borda da marca |
 
 ✅ **Medido, não estimado** (`design-system/__tests__/theme-contrast.test.ts`).
+
 ⚠️ O tema **escuro**, que está em produção, tem falhas conhecidas e deliberadamente não corrigidas
-(`accent.violet`, `text.muted`, `border.strong`) — fixadas como `KNOWN_DARK_FAILURES` num conjunto
-exato que não pode crescer.
+(`accent.violet`, `border.strong`) — fixadas como `KNOWN_DARK_FAILURES` num conjunto exato que não
+pode crescer.
+
+> 🔴 **`text.muted` SAIU dessa lista em 16/set/2026 — porque foi corrigido, não porque a régua
+> afrouxou.** Ele dava 2.57 / 2.35 / 2.16 e alimenta caption, timestamp e a dica de todo formulário;
+> `#7B8A9E` dá 5.54 / 5.07 / 4.65 e segue visivelmente abaixo de `text.secondary` (7.60 / 6.95 /
+> 6.38), que é a hierarquia que o token existe para expressar.
+>
+> ⚠️ **Mudou junto no `soundmeet-web`** (`globals.css`, bloco `@theme static`). A paridade entre os
+> dois só cobria o tema CLARO até essa data — o `theme-contrast.spec.ts` do web agora compara as
+> duas paletas, então divergir no escuro passou a falhar teste. Mexeu numa, mexa na outra.
 
 ---
 
