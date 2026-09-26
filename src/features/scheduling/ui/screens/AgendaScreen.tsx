@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, CalendarClock, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -15,7 +14,9 @@ import { UnavailabilityList } from '../components/UnavailabilityList';
 import { AddUnavailabilityModal } from '../components/AddUnavailabilityModal';
 import { BlockSelectionBar } from '../components/BlockSelectionBar';
 import { BlockPeriodModal } from '../components/BlockPeriodModal';
+import { GoogleCalendarCard } from '../components/GoogleCalendarCard';
 import type { RootScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'Agenda'>;
 
@@ -250,7 +251,7 @@ export function AgendaScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>
@@ -313,6 +314,8 @@ export function AgendaScreen({ navigation }: Props) {
           </View>
           <ChevronRight size={18} color={colors.text.muted} />
         </Pressable>
+
+        <GoogleCalendarCard musicianId={musicianId} />
 
         <View style={s.blocksSection}>
           <View style={s.sectionHeader}>

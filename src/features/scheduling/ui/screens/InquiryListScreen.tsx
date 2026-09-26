@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, Text, FlatList, Pressable, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Inbox } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -16,6 +15,7 @@ import { InquiryCard } from '../components/InquiryCard';
 import { InquiryDecisionSheet } from '../components/InquiryDecisionSheet';
 import type { Inquiry } from '../../domain/inquiry.types';
 import type { RootScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'InquiryList'>;
 
@@ -141,7 +141,7 @@ export function InquiryListScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

@@ -1,10 +1,13 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Users } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { GlowCard } from '@/shared/components/GlowCard';
 import { Pressable3DCard } from '@/shared/components/Pressable3DCard';
 import { expiryLabel, isBandInquiry, statusLabel, statusTone, type StatusTone } from '../../domain/inquiry.rules';
 import type { Inquiry } from '../../domain/inquiry.types';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import type { ThemeColors } from '@/shared/services/ThemeContext';
 
 type Props = {
   inquiry:           Inquiry;
@@ -14,12 +17,12 @@ type Props = {
 };
 
 /** O domínio devolve tom semântico; a cor mora aqui, que é a camada de UI. */
-const TONE_COLOR: Record<StatusTone, string> = {
+const TONE_COLOR = (colors: ThemeColors): Record<StatusTone, string> => ({
   pending:  colors.accent.amber,
   positive: colors.status.success,
   negative: colors.status.error,
   neutral:  colors.text.muted,
-};
+});
 
 /**
  * Linha da lista de propostas.
@@ -30,6 +33,8 @@ const TONE_COLOR: Record<StatusTone, string> = {
  * decisão de `ConversationListItem` quando o enriquecimento falha.
  */
 export function InquiryCard({ inquiry, establishmentName, onPress, riseDelay = 0 }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   const tone = statusTone(inquiry);
   const expiry = expiryLabel(inquiry);
   const name = establishmentName ?? 'Estabelecimento';
@@ -39,8 +44,8 @@ export function InquiryCard({ inquiry, establishmentName, onPress, riseDelay = 0
       <GlowCard accentColor={colors.accent.violet} riseDelay={riseDelay} style={s.card}>
         <View style={s.headerRow}>
           <Text style={s.name} numberOfLines={1}>{name}</Text>
-          <View style={[s.statusPill, { borderColor: TONE_COLOR[tone] }]}>
-            <Text style={[s.statusText, { color: TONE_COLOR[tone] }]}>{statusLabel(inquiry)}</Text>
+          <View style={[s.statusPill, { borderColor: TONE_COLOR(colors)[tone] }]}>
+            <Text style={[s.statusText, { color: TONE_COLOR(colors)[tone] }]}>{statusLabel(inquiry)}</Text>
           </View>
         </View>
 
@@ -68,7 +73,7 @@ export function InquiryCard({ inquiry, establishmentName, onPress, riseDelay = 0
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   card: {
     gap:     spacing.sm,
     padding: spacing.md,
@@ -122,4 +127,4 @@ const s = StyleSheet.create({
     color:      colors.accent.amber,
     marginLeft: 'auto',
   },
-});
+}));

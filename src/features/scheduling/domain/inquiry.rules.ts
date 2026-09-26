@@ -93,3 +93,24 @@ export function expiryLabel(inquiry: Inquiry, now: Date = new Date()): string | 
 export function isBandInquiry(inquiry: Inquiry): boolean {
   return inquiry.band_id !== null;
 }
+
+/**
+ * O que a tela da proposta oferece — decidido pelo que EXISTE de termos.
+ *
+ * 🔴 Uma inquiry ("conversar sobre uma data") não tem data, horário nem cachê
+ * no backend: só assunto e mensagem. Os termos nascem quando a casa a converte
+ * num booking. Até 25/set/2026 esta tela oferecia "Aceitar proposta" sobre uma
+ * inquiry sem termos — aceitar no escuro — e, depois da conversão, dizia "não
+ * está mais aberta" justamente quando havia um show com data e cachê
+ * esperando a resposta do músico.
+ *
+ * - `offer`    — há booking: os termos são dele, e a resposta também;
+ * - `interest` — sem termos e ainda aberta: aceitar é "tenho interesse";
+ * - `closed`   — sem termos e fechada (recusada, expirada, aceita).
+ */
+export type InquiryDecisionMode = 'offer' | 'interest' | 'closed';
+
+export function inquiryDecisionMode(inquiry: Inquiry, now: Date = new Date()): InquiryDecisionMode {
+  if (inquiry.booking_id) return 'offer';
+  return isActionable(inquiry, now) ? 'interest' : 'closed';
+}

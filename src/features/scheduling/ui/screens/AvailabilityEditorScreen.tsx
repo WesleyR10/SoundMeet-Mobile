@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft } from 'lucide-react-native';
 import { spacing, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
@@ -15,6 +14,7 @@ import { useAvailability, useSetWeeklyRules } from '../../application/useAvailab
 import { WeeklyRuleRow, isValidTime, type WeekdayDraft } from '../components/WeeklyRuleRow';
 import { WEEKDAY_LABELS, type WeeklyRuleInput } from '../../domain/availability.types';
 import type { RootScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'AvailabilityEditor'>;
 
@@ -125,7 +125,7 @@ export function AvailabilityEditorScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground />
 
       <View style={s.header}>

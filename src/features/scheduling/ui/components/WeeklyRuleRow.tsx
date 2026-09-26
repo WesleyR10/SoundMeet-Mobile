@@ -1,6 +1,9 @@
-import { View, Text, Switch, StyleSheet } from 'react-native';
-import { colors, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { View, Text, Switch } from 'react-native';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { FormField } from '@/shared/components/FormField';
+import { makeStyles } from '@/shared/design-system/makeStyles';
+import { useTheme } from '@/shared/hooks/useTheme';
+import { withAlpha } from '@/shared/design-system/withAlpha';
 
 export type WeekdayDraft = {
   enabled:    boolean;
@@ -32,6 +35,8 @@ export function isValidTime(value: string): boolean {
 // Uma linha da disponibilidade semanal: toggle do dia + janela início/fim.
 // v1 = uma janela por dia (o backend aceita várias; UI evolui se precisar).
 export function WeeklyRuleRow({ label, draft, error, onChange }: Props) {
+  const s = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={[s.root, draft.enabled && s.rootEnabled]}>
       <View style={s.headerRow}>
@@ -73,14 +78,14 @@ export function WeeklyRuleRow({ label, draft, error, onChange }: Props) {
   );
 }
 
-const s = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   root: {
     gap:               spacing.md,
     padding:           spacing.lg,
     borderRadius:      radius.md,
     borderWidth:        1,
     borderColor:       colors.border.default,
-    backgroundColor:   'rgba(255,255,255,0.03)',
+    backgroundColor:   withAlpha(colors.text.primary, 0.03),
   },
   rootEnabled: {
     borderColor: colors.border.brand,
@@ -109,4 +114,4 @@ const s = StyleSheet.create({
     ...typography.bodySm,
     color: colors.status.error,
   },
-});
+}));

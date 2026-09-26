@@ -16,6 +16,12 @@ export interface ListInquiriesParams {
   status?: InquiryStatus;
   page?: number;
   per_page?: number;
+  /**
+   * REFINA dentro do escopo do JWT, nunca o amplia (`SearchInquiriesDto`). Só
+   * o chat usa (18/set/2026): para achar a inquiry de uma conversa — não há
+   * `GET` de inquiry única — basta a lista daquela casa, que cabe numa página.
+   */
+  establishment_id?: string;
 }
 
 /**

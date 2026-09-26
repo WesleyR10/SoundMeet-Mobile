@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { View, Text, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
@@ -9,12 +8,15 @@ import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { AmbientGlowBackground } from '@/shared/components/AmbientGlowBackground';
 import { useAuthStore } from '@/shared/services/auth/auth.store';
 import { useChat, useSendMessage } from '../../application/useChat';
+import { useConversationOffer, useRespondToOffer } from '../../application/useBookingOffer';
 import { useChatSocket } from '../../application/useChatSocket';
 import { useMarkAsRead } from '../../application/useMarkAsRead';
 import { ChatHeader } from '../components/ChatHeader';
 import { ChatMessageList } from '../components/ChatMessageList';
 import { ChatInputBar } from '../components/ChatInputBar';
+import { ProposalCard } from '../components/ProposalCard';
 import type { RootScreenProps } from '@/navigation/types';
+import { ThemedStatusBar } from '@/shared/components/ThemedStatusBar';
 
 type Props = RootScreenProps<'Chat'>;
 
@@ -69,10 +71,20 @@ export function ChatScreen({ route, navigation }: Props) {
   const sendMessage = useSendMessage(conversationId, userId);
   const markAsRead = useMarkAsRead(conversationId, musicianId);
 
+  // A proposta de show em jogo (18/set/2026) — o que o artista aceita ou
+  // recusa aqui mesmo. `null` enquanto a conversa não virou proposta.
+  const { offer, refresh: refreshOffer } = useConversationOffer(data?.conversation);
+  const respond = useRespondToOffer(conversationId);
+
   // `userId` decide se um message.new recebido é eco da própria mensagem
   // (ignorado, useSendMessage.onSuccess já reconcilia) ou de fato do outro
-  // lado da conversa — só nesse segundo caso marcamos como lida.
-  useChatSocket(conversationId, userId, () => markAsRead.mutate());
+  // lado da conversa — só nesse segundo caso marcamos como lida. Mensagem da
+  // casa também recarrega a proposta: é assim que chega uma proposta nova ou
+  // ajustada pelo painel (ela entra no fio junto com o registro em texto).
+  useChatSocket(conversationId, userId, () => {
+    markAsRead.mutate();
+    refreshOffer();
+  });
 
   useEffect(() => {
     markAsRead.mutate();
@@ -114,7 +126,7 @@ export function ChatScreen({ route, navigation }: Props) {
 
   return (
     <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <ThemedStatusBar />
       <AmbientGlowBackground glows={CHAT_GLOWS} />
 
       <ChatHeader
@@ -123,6 +135,17 @@ export function ChatScreen({ route, navigation }: Props) {
         avatar={establishmentAvatar}
         establishmentId={data?.conversation.establishment_id ?? null}
       />
+
+      {offer ? (
+        <ProposalCard
+          offer={offer}
+          accepting={respond.accept.isPending}
+          declining={respond.decline.isPending}
+          errorMessage={respond.errorMessage}
+          onAccept={() => respond.accept.mutate(offer)}
+          onDecline={() => respond.decline.mutate(offer)}
+        />
+      ) : null}
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

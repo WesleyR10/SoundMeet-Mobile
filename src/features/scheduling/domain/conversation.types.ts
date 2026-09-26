@@ -30,7 +30,17 @@ export interface ConversationLastMessage {
 // GET /conversations/:id/messages).
 export interface ConversationSummary {
   conversation_id: string;
-  inquiry_id:      string;
+  // 🔴 EXATAMENTE UM dos dois vem preenchido — a conversa pertence à
+  // NEGOCIAÇÃO, e ela nasce de duas portas: `inquiry_id` ("conversar sobre uma
+  // data") ou `booking_id` ("propor um show").
+  //
+  // Até 17/set/2026 só existia `inquiry_id`, NOT NULL, e isso não era decisão
+  // de produto: era o schema. Propor um show mandava data e cachê e deixava o
+  // artista sem onde responder "pode ser 22h?" — só aceitar ou recusar seco.
+  // As duas colunas são @unique e o banco tem uma CHECK
+  // (`conversations_exactly_one_negotiation`) que recusa nenhuma e as duas.
+  inquiry_id:      string | null;
+  booking_id:      string | null;
   establishment_id: string;
   musician_id:      string | null;
   band_id:          string | null;

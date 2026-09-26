@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, TextInput, ActivityIndicator } from 'react-native';
+import { useCallback, useState } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
@@ -10,12 +10,16 @@ import { Users } from 'lucide-react-native';
 import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
-import { PrimaryButton } from '@/shared/components/PrimaryButton';
 import { ErrorBanner } from '@/shared/components/ErrorBanner';
 import { StageTechSpecSection } from '@/shared/components/StageTechSpecSection';
 import { useDecideInquiry, useInquiryEstablishment, getDecideInquiryErrorMessage } from '../../application/useInquiries';
-import { expiryLabel, isActionable, isBandInquiry, statusLabel } from '../../domain/inquiry.rules';
+import { useBookingOfferById, useRespondToOffer } from '../../application/useBookingOffer';
+import { expiryLabel, inquiryDecisionMode, isBandInquiry, statusLabel } from '../../domain/inquiry.rules';
+import { ProposalCard } from './ProposalCard';
+import { TermsPendingNotice } from './TermsPendingNotice';
+import { InquiryInterestActions } from './InquiryInterestActions';
 import type { Inquiry } from '../../domain/inquiry.types';
+import { useSheetModalVisibility } from '@/shared/hooks/useSheetModalVisibility';
 
 type Props = {
   inquiry:    Inquiry | null;
@@ -32,6 +36,13 @@ type Props = {
  *
  * ⚠️ `BottomSheetScrollView`, não `BottomSheetView`: a ficha técnica completa
  * não cabe numa altura dinâmica e o conteúdo ficaria cortado sem rolagem.
+ *
+ * 🔴 Os TERMOS vêm primeiro (25/set/2026). A pergunta número um é "quando e
+ * quanto?", e a tela mostrava ficha técnica e passagem de som sem nunca dizer o
+ * horário do show nem o cachê. Uma inquiry não os tem — só o booking em que ela
+ * vira. Por isso: com booking, o bilhete (`ProposalCard`, o mesmo do chat) e a
+ * resposta é sobre o SHOW; sem booking, o aviso de que ainda não há termos e o
+ * botão vira "Tenho interesse". Ver `inquiryDecisionMode`.
  *
  * ⚠️ A casa é buscada AQUI, não na lista. `InquiryPresenter` carrega só o
  * `establishment_id`, e resolver por linha seria um N+1 visível — a ficha só
@@ -85,43 +96,9 @@ const useStyles = makeStyles((colors) => ({
   loader: {
     marginVertical: spacing.lg,
   },
-  actions: {
-    gap:       spacing.md,
-    alignItems: 'center',
-    marginTop:  spacing.sm,
-  },
-  fullWidth: {
-    width: '100%',
-  },
-  declineBtn: {
-    width:          '100%',
-    height:          48,
-    borderRadius:    radius.xl,
-    borderWidth:      1,
-    borderColor:     colors.border.strong,
-    alignItems:      'center',
-    justifyContent:  'center',
-  },
-  declineLabel: {
-    ...typography.body,
-    fontFamily: 'Inter-SemiBold',
-    color:      colors.text.primary,
-  },
-  laterLabel: {
-    ...typography.bodySm,
-    color:              colors.text.muted,
-    textDecorationLine: 'underline',
-  },
-  reasonInput: {
-    width:            '100%',
-    minHeight:         88,
-    borderRadius:      radius.md,
-    borderWidth:        1,
-    borderColor:       colors.border.default,
-    padding:            spacing.md,
-    ...typography.body,
-    color:             colors.text.primary,
-    textAlignVertical: 'top',
+  flush: {
+    paddingHorizontal: 0,
+    paddingTop:        0,
   },
   closedNotice: {
     ...typography.bodySm,
@@ -134,26 +111,15 @@ const useStyles = makeStyles((colors) => ({
 export function InquiryDecisionSheet({ inquiry, musicianId, onClose }: Props) {
   const s = useStyles();
   const { colors } = useTheme();
-  const sheetRef = useRef<BottomSheetModal>(null);
+  const { sheetRef, trackDismiss } = useSheetModalVisibility(!!inquiry);
   const [error, setError] = useState<string | null>(null);
-  const [rejecting, setRejecting] = useState(false);
-  const [reason, setReason] = useState('');
 
   const { accept, reject } = useDecideInquiry(musicianId);
   const establishmentQuery = useInquiryEstablishment(inquiry?.establishment_id ?? null);
-
-  useEffect(() => {
-    if (inquiry) sheetRef.current?.present();
-    else sheetRef.current?.dismiss();
-  }, [inquiry]);
-
-  // Estado local é por decisão: reabrir o sheet noutra proposta não pode
-  // herdar o motivo digitado na anterior.
-  useEffect(() => {
-    setError(null);
-    setRejecting(false);
-    setReason('');
-  }, [inquiry?.id]);
+  const offerQuery = useBookingOfferById(inquiry?.booking_id ?? null);
+  // Sem conversa aqui: a resposta ao show não deixa mensagem no fio (o
+  // painel da casa é avisado pelo `booking.updated` do mesmo jeito).
+  const respond = useRespondToOffer(null);
 
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -165,18 +131,15 @@ export function InquiryDecisionSheet({ inquiry, musicianId, onClose }: Props) {
   if (!inquiry) return null;
 
   const establishment = establishmentQuery.data ?? null;
-  const actionable = isActionable(inquiry);
-  const isPending = accept.isPending || reject.isPending;
+  const mode = inquiryDecisionMode(inquiry);
+  const offer = offerQuery.data ?? null;
 
-  async function decide(action: 'accept' | 'reject') {
+  async function decide(action: 'accept' | 'reject', reason?: string) {
     if (!inquiry) return;
     setError(null);
     try {
-      if (action === 'accept') {
-        await accept.mutateAsync(inquiry.id);
-      } else {
-        await reject.mutateAsync({ inquiryId: inquiry.id, reason });
-      }
+      if (action === 'accept') await accept.mutateAsync(inquiry.id);
+      else await reject.mutateAsync({ inquiryId: inquiry.id, reason });
       onClose();
     } catch (err) {
       setError(getDecideInquiryErrorMessage(err));
@@ -186,7 +149,7 @@ export function InquiryDecisionSheet({ inquiry, musicianId, onClose }: Props) {
   return (
     <BottomSheetModal
       ref={sheetRef}
-      onDismiss={onClose}
+      onDismiss={trackDismiss(onClose)}
       backdropComponent={renderBackdrop}
       backgroundStyle={s.sheetBg}
       handleIndicatorStyle={s.handle}
@@ -198,6 +161,24 @@ export function InquiryDecisionSheet({ inquiry, musicianId, onClose }: Props) {
           {statusLabel(inquiry)}
           {expiryLabel(inquiry) ? ` · ${expiryLabel(inquiry)}` : ''}
         </Text>
+
+        {mode === 'offer' && (offer ? (
+          <ProposalCard
+            offer={offer}
+            accepting={respond.accept.isPending}
+            declining={respond.decline.isPending}
+            errorMessage={respond.errorMessage}
+            onAccept={() => respond.accept.mutate(offer)}
+            onDecline={() => respond.decline.mutate(offer)}
+            style={s.flush}
+          />
+        ) : offerQuery.isError ? (
+          <ErrorBanner message="Não conseguimos carregar data e cachê desta proposta. Feche e abra de novo." />
+        ) : (
+          <ActivityIndicator color={colors.brand.primary} style={s.loader} />
+        ))}
+
+        {mode === 'interest' && <TermsPendingNotice />}
 
         {!!inquiry.subject && <Text style={s.subject}>{inquiry.subject}</Text>}
 
@@ -224,59 +205,18 @@ export function InquiryDecisionSheet({ inquiry, musicianId, onClose }: Props) {
 
         {!!error && <ErrorBanner message={error} />}
 
-        {actionable ? (
-          <View style={s.actions}>
-            {rejecting ? (
-              <>
-                <TextInput
-                  value={reason}
-                  onChangeText={setReason}
-                  placeholder="Motivo (opcional)"
-                  placeholderTextColor={colors.text.muted}
-                  style={s.reasonInput}
-                  multiline
-                  accessibilityLabel="Motivo da recusa"
-                />
-                <PrimaryButton
-                  label="Confirmar recusa"
-                  onPress={() => decide('reject')}
-                  loading={reject.isPending}
-                  style={s.fullWidth}
-                />
-                <Pressable
-                  onPress={() => setRejecting(false)}
-                  disabled={isPending}
-                  accessibilityRole="button"
-                  accessibilityLabel="Voltar"
-                  hitSlop={8}
-                >
-                  <Text style={s.laterLabel}>Voltar</Text>
-                </Pressable>
-              </>
-            ) : (
-              <>
-                <PrimaryButton
-                  label="Aceitar proposta"
-                  onPress={() => decide('accept')}
-                  loading={accept.isPending}
-                  style={s.fullWidth}
-                />
-                <Pressable
-                  onPress={() => setRejecting(true)}
-                  disabled={isPending}
-                  style={s.declineBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Recusar proposta"
-                >
-                  <Text style={s.declineLabel}>Recusar</Text>
-                </Pressable>
-                <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel="Decidir depois" hitSlop={8}>
-                  <Text style={s.laterLabel}>Decidir depois</Text>
-                </Pressable>
-              </>
-            )}
-          </View>
-        ) : (
+        {mode === 'interest' && (
+          <InquiryInterestActions
+            key={inquiry.id}
+            accepting={accept.isPending}
+            rejecting={reject.isPending}
+            onAccept={() => decide('accept')}
+            onReject={(reason) => decide('reject', reason)}
+            onLater={onClose}
+          />
+        )}
+
+        {mode === 'closed' && (
           // Sem botões quando o servidor recusaria: proposta já respondida ou
           // com prazo vencido devolve 422. Oferecer a ação seria pior que
           // escondê-la.

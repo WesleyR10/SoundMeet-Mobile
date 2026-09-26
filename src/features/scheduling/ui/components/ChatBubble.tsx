@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check, CheckCheck } from 'lucide-react-native';
-import { gradients, spacing, radius, typography } from '@/shared/design-system/tokens';
+import { spacing, radius, typography } from '@/shared/design-system/tokens';
 import { makeStyles } from '@/shared/design-system/makeStyles';
 import { useTheme } from '@/shared/hooks/useTheme';
 import { formatHHMM } from '@/shared/utils/date-format';
@@ -85,10 +85,12 @@ export function ChatBubble({ message, isOwn }: Props) {
     </View>
   );
 
+  // Gradiente do tema, não `gradients.brand`: o teal fixo #00E0B8 com o texto
+  // branco do tema claro dava 1,6:1 — a mensagem enviada ficava ilegível.
   return (
     <View style={[s.row, isOwn ? s.rowOwn : s.rowOther]}>
       {isOwn ? (
-        <LinearGradient colors={gradients.brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.bubble, s.bubbleOwn]}>
+        <LinearGradient colors={[colors.brand.primary, colors.brand.dark]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[s.bubble, s.bubbleOwn]}>
           <Text style={[s.content, s.contentOwn]}>{message.content}</Text>
           {footer}
         </LinearGradient>

@@ -18,6 +18,15 @@ function handleResponse(response: Notifications.NotificationResponse | null): vo
   if (data.type === 'chat.message.new' && typeof data.conversation_id === 'string') {
     navigationRef.navigate('Chat', { conversationId: data.conversation_id });
   }
+
+  // Proposta de show nova ou ajustada (18/set/2026). O push traz o
+  // `booking_id`, não a conversa — e não há rota de backend que resolva uma
+  // pela outra. A lista de conversas é o destino certo: a conversa da casa
+  // sobe para o topo com a mensagem que registrou a proposta, e o cartão de
+  // aceitar/recusar está dentro dela.
+  if (data.type === 'booking.proposed' || data.type === 'booking.revised') {
+    navigationRef.navigate('ConversationList');
+  }
 }
 
 // Cold start (app fechado, usuário toca na notificação e o app abre do zero)
